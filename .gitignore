@@ -1,7 +1,10 @@
+!.gitignore
+
 *.o
 *.lo
 *.a
 *.so
+aclocal.m4
 Makefile
 Makefile.in
 configure.in
