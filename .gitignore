@@ -10,6 +10,7 @@ Makefile
 Makefile.in
 configure.in
 configure
+libtool
 
 .deps
 /aclocal.m4
