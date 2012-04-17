@@ -1,0 +1,8 @@
+*.o
+*.lo
+*.a
+*.so
+Makefile
+Makefile.in
+configure.in
+configure
