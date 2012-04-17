@@ -11,7 +11,8 @@ Makefile.in
 configure.in
 configure
 
+.deps
 /aclocal.m4
 /autom4te.cache/
-/config.
+/config.*
 /config/
