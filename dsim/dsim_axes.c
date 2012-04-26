@@ -19,5 +19,68 @@
  */
 
 #include "dsim_axes.h"
+#include <stdio.h>
 
+/* Declares *_init functions */
+G_DEFINE_TYPE (DAxes , d_axes, G_TYPE_OBJECT);
 
+/* Create new DAxes instance */
+DAxes*
+d_axes_new()
+{
+    return D_AXES(g_object_new(D_TYPE_AXES, NULL));
+}
+
+/* Dispose and Finalize functions */
+static void
+d_axes_dispose (GObject *gobject)
+{
+    DAxes *self = D_AXES (gobject);
+    G_OBJECT_CLASS(d_axes_parent_class)->dispose(gobject);
+}
+
+static void
+d_axes_finalize (GObject *gobject)
+{
+    DAxes *self = D_AXES(gobject);
+    G_OBJECT_CLASS (d_axes_parent_class) ->finalize (gobject);
+}
+
+/* Init functions */
+static void
+d_axes_init ( DAxes *self )
+{
+    self->axis[0] = 0.0;
+    self->axis[1] = 0.0;
+    self->axis[2] = 0.0;
+}
+
+static void
+d_axes_class_init ( DAxesClass *klass )
+{
+    /* Stub */
+    GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+    gobject_class->dispose = d_axes_dispose;
+    gobject_class->finalize = d_axes_finalize;
+}
+
+/* Methods */
+
+DAxes*
+d_axes_substract (DAxes* a, DAxes *b)
+{
+    DAxes *res = d_axes_new();
+    res->axis[0] = a->axis[0] - b->axis[0];
+    res->axis[1] = a->axis[1] - b->axis[1];
+    res->axis[2] = a->axis[2] - b->axis[2];
+    return res;
+}
+
+void
+d_axes_to_string (DAxes *self, gchar* string, int n)
+{
+    g_snprintf(string, n, "Axis: %f; %f; %f",
+                self->axis[0],
+                self->axis[1],
+                self->axis[2]);
+}

@@ -21,20 +21,40 @@
 #ifndef DAXES_H
 #define DAXES_H
 
-#include <dsim/dsim_common.h>
+#include <glib-object.h>
 
-BEGIN_C_DECLS
+/* Type macros */
+#define D_TYPE_AXES             (d_axes_get_type ())
+#define D_AXES(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), D_TYPE_AXES, DAxes))
+#define D_IS_AXES(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), D_TYPE_AXES))
+#define D_AXES_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), D_TYPE_AXES, DAxesClass))
+#define D_IS_AXES_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), D_TYPE_AXES))
+#define D_AXES_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), D_TYPE_AXES, DAxesClass))
 
-typedef struct {
-    double rax[3];
-} DAxes;
+/* Instance Structure of DAxes */
+typedef struct _DAxes DAxes;
+struct _DAxes {
+    GObject         parent_instance;
+    /* instance members */
+    gdouble         axis[3];
+};
 
-typedef struct {
-    DAxes limb[3];
-} DExtendedAxes;
+/* Class Structure of DAxes */
+typedef struct _DAxesClass DAxesClass;
+struct _DAxesClass {
+    GObjectClass      parent_class;
+};
 
-END_C_DECLS
-//int
-//daxes_fromvectorf(const gsl_vector_float* t, DAxes* axes);
+/* Returns GType associated with this object type */
+GType   d_axes_get_type (void);
+
+/* Methods */
+DAxes*  d_axes_new          (void);
+
+gdouble d_axes_get_axis     (DAxes *self, gint index);
+void    d_axes_set_axis     (DAxes *self, gint index, gdouble value);
+
+DAxes*  d_axes_substract    (DAxes *a, DAxes *b);
+void    d_axes_to_string    (DAxes *self, gchar* string, int n);
 
 #endif
