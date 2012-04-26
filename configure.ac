@@ -23,6 +23,8 @@ AC_CHECK_HEADERS([stdlib.h unistd.h])
 
 # Checks for library functions.
 PKG_CHECK_MODULES([glu], [glu])
+PKG_CHECK_MODULES([glib], [glib-2.0])
+PKG_CHECK_MODULES([gthread], [gthread-2.0])
 PKG_CHECK_MODULES([gtk2], [gtk+-2.0])
 PKG_CHECK_MODULES([gtkglext], [gtkglext-1.0])
 
