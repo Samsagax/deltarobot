@@ -18,19 +18,43 @@
  * along with PROJECTNAME. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DPOS_H
-#define DPOS_H
 
-#include <gsl/gsl_vector_float.h>
+#ifndef  DSIM_POS_INC
+#define  DSIM_POS_INC
 
-typedef struct {
-    double x, y, z;
-} DPos;
+#include <dsim/dsim_vector.h>
 
-/**
- * Returns a pointer to a vector of length 3 out of the given pos structure.
- * The vector memmory needs to be freed afterwards by calling gsl_vector_free.
- */
-int dpos_tovectorf( const DPos* p, gsl_vector_float* v );
+/* Type macros */
+#define D_TYPE_POS             (d_pos_get_type ())
+#define D_POS(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), D_TYPE_POS, DPos))
+#define D_IS_POS(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), D_TYPE_POS))
+#define D_POS_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), D_TYPE_POS, DPosClass))
+#define D_IS_POS_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), D_TYPE_POS))
+#define D_POS_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), D_TYPE_POS, DPosClass))
 
-#endif //DPOS_H
+/* Instance Structure of DPos */
+typedef struct _DPos DPos;
+struct _DPos {
+    DVector3        parent_instance;
+};
+
+/* Class Structure of DPos */
+typedef struct _DPosClass DPosClass;
+struct _DPosClass {
+    DVector3Class   parent_class;
+};
+
+/* Returns GType associated with this object type */
+GType       d_pos_get_type  (void);
+
+/* Create new instance */
+DPos*       d_pos_new       (void);
+
+/* Virtual methods */
+gdouble d_pos_get           (DPos *self, gint index);
+void    d_pos_set           (DPos *self, gint index, gdouble value);
+void    d_pos_substract     (DPos *self, DPos *a);
+void    d_pos_add           (DPos *self, DPos *a);
+
+#endif   /* ----- #ifndef DSIM_POS_INC  ----- */
+

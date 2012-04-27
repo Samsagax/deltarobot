@@ -23,6 +23,7 @@
  */
 
 #include "dsim_vector.h"
+#include <stdio.h>
 
 /* GType register */
 G_DEFINE_TYPE (DVector3, d_vector3, G_TYPE_OBJECT);
@@ -71,9 +72,13 @@ d_vector3_new()
 static void
 d_vector3_dispose (GObject *gobject)
 {
+    printf("Vector3 disposed\n");
     DVector3 *self = D_VECTOR3(gobject);
     /* Free allocated resources */
-    g_free(self->data);
+    if (self->data) {
+        g_free(self->data);
+        self->data = NULL;
+    }
     /* Chain up */
     G_OBJECT_CLASS(d_vector3_parent_class)->dispose(gobject);
 }
@@ -89,6 +94,7 @@ d_vector3_finalize (GObject *gobject)
 static void
 d_vector3_class_init(DVector3Class* klass)
 {
+    printf("DVector3 class init\n");
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
     gobject_class->dispose = d_vector3_dispose;
     gobject_class->finalize = d_vector3_finalize;
@@ -101,12 +107,9 @@ d_vector3_class_init(DVector3Class* klass)
 static void
 d_vector3_init (DVector3 *self)
 {
+    printf("DVector3 instance init\n");
     self->length = 3;
-    self->data = g_alloca((self->length)*sizeof(gdouble));
-    {
-        int i;
-        for(i = 0; i < self->length; i++) {
-            self->data[i] = 0.0;
-        }
+    if (!(self->data)) {
+        self->data = g_malloc0((self->length)*sizeof(gdouble));
     }
 }

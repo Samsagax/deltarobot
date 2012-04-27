@@ -18,13 +18,62 @@
  * along with PROJECTNAME. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <dsim/dsim_pos.h>
+#include <stdio.h>
+#include "dsim_pos.h"
 
-int
-dpos_tovectorf(const DPos* p, gsl_vector_float* v) {
-    gsl_vector_float_set(v, 0, p->x);
-    gsl_vector_float_set(v, 1, p->y);
-    gsl_vector_float_set(v, 2, p->z);
-    return 0;
+/* GType register */
+G_DEFINE_TYPE (DPos, d_pos, D_TYPE_VECTOR3);
+
+/* Virtual Methods */
+void
+d_pos_set (DPos *self, gint i, gdouble value)
+{
+    D_VECTOR3_CLASS(d_pos_parent_class)->set(D_VECTOR3(self), i, value);
 }
+
+gdouble
+d_pos_get (DPos* self, gint i)
+{
+    return D_VECTOR3_CLASS(d_pos_parent_class)->get(D_VECTOR3(self), i);
+}
+
+/* Create new DPos instance */
+DPos*
+d_pos_new (void)
+{
+    DPos* pos;
+    pos = g_object_new(D_TYPE_POS, NULL);
+    return pos;
+}
+
+/* Dispose and finalize functions */
+static void
+d_pos_dispose (GObject *gobject)
+{
+    printf("DPos being disposed\n");
+    /* Chain up */
+    G_OBJECT_CLASS(d_pos_parent_class)->dispose(gobject);
+}
+
+static void
+d_pos_finalize (GObject *gobject)
+{
+    /* Chain up */
+    G_OBJECT_CLASS(d_pos_parent_class)->finalize(gobject);
+}
+
+/* Initialization functions */
+static void
+d_pos_init (DPos* self)
+{
+
+}
+
+static void
+d_pos_class_init (DPosClass *klass)
+{
+    GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+    gobject_class->dispose = d_pos_dispose;
+    gobject_class->finalize = d_pos_finalize;
+}
+
