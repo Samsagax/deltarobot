@@ -72,13 +72,6 @@ d_vector3_new()
 static void
 d_vector3_dispose (GObject *gobject)
 {
-    printf("Vector3 disposed\n");
-    DVector3 *self = D_VECTOR3(gobject);
-    /* Free allocated resources */
-    if (self->data) {
-        g_free(self->data);
-        self->data = NULL;
-    }
     /* Chain up */
     G_OBJECT_CLASS(d_vector3_parent_class)->dispose(gobject);
 }
@@ -86,6 +79,12 @@ d_vector3_dispose (GObject *gobject)
 static void
 d_vector3_finalize (GObject *gobject)
 {
+    DVector3 *self = D_VECTOR3(gobject);
+    /* Free allocated resources */
+    if (self->data) {
+        g_free(self->data);
+        self->data = NULL;
+    }
     /* Chain up */
     G_OBJECT_CLASS(d_vector3_parent_class)->finalize(gobject);
 }
@@ -94,7 +93,6 @@ d_vector3_finalize (GObject *gobject)
 static void
 d_vector3_class_init(DVector3Class* klass)
 {
-    printf("DVector3 class init\n");
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
     gobject_class->dispose = d_vector3_dispose;
     gobject_class->finalize = d_vector3_finalize;
@@ -107,7 +105,6 @@ d_vector3_class_init(DVector3Class* klass)
 static void
 d_vector3_init (DVector3 *self)
 {
-    printf("DVector3 instance init\n");
     self->length = 3;
     if (!(self->data)) {
         self->data = g_malloc0((self->length)*sizeof(gdouble));

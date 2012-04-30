@@ -22,7 +22,7 @@
 #include <stdio.h>
 
 /* Declares *_init functions */
-G_DEFINE_TYPE (DAxes , d_axes, G_TYPE_OBJECT);
+G_DEFINE_TYPE (DAxes , d_axes, D_TYPE_VECTOR3);
 
 /* Create new DAxes instance */
 DAxes*
@@ -48,12 +48,7 @@ d_axes_finalize (GObject *gobject)
 
 /* Init functions */
 static void
-d_axes_init ( DAxes *self )
-{
-    self->axis[0] = 0.0;
-    self->axis[1] = 0.0;
-    self->axis[2] = 0.0;
-}
+d_axes_init ( DAxes *self ) {}
 
 static void
 d_axes_class_init ( DAxesClass *klass )
@@ -66,14 +61,11 @@ d_axes_class_init ( DAxesClass *klass )
 
 /* Methods */
 
-DAxes*
-d_axes_substract (DAxes* a, DAxes *b)
+void
+d_axes_substract (DAxes* self, DAxes *a)
 {
-    DAxes *res = d_axes_new();
-    res->axis[0] = a->axis[0] - b->axis[0];
-    res->axis[1] = a->axis[1] - b->axis[1];
-    res->axis[2] = a->axis[2] - b->axis[2];
-    return res;
+    return ;
+    //TODO!!!
 }
 
 void

@@ -5,6 +5,7 @@
 *.lo
 *.a
 *.so
+tags
 autoscan.log
 Makefile
 Makefile.in

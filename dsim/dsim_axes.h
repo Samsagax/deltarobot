@@ -21,7 +21,7 @@
 #ifndef DAXES_H
 #define DAXES_H
 
-#include <glib-object.h>
+#include <dsim/dsim_vector.h>
 
 /* Type macros */
 #define D_TYPE_AXES             (d_axes_get_type ())
@@ -34,27 +34,25 @@
 /* Instance Structure of DAxes */
 typedef struct _DAxes DAxes;
 struct _DAxes {
-    GObject         parent_instance;
-    /* instance members */
-    gdouble         axis[3];
+    DVector3        parent_instance;
 };
 
 /* Class Structure of DAxes */
 typedef struct _DAxesClass DAxesClass;
 struct _DAxesClass {
-    GObjectClass      parent_class;
+    DVector3Class   parent_class;
 };
 
 /* Returns GType associated with this object type */
 GType   d_axes_get_type (void);
 
-/* Methods */
+/* Create new instance */
 DAxes*  d_axes_new          (void);
 
-gdouble d_axes_get_axis     (DAxes *self, gint index);
-void    d_axes_set_axis     (DAxes *self, gint index, gdouble value);
-
-DAxes*  d_axes_substract    (DAxes *a, DAxes *b);
-void    d_axes_to_string    (DAxes *self, gchar* string, int n);
+/* Virtual methods */
+gdouble d_axes_get          (DAxes *self, gint index);
+void    d_axes_set          (DAxes *self, gint index, gdouble value);
+void    d_axes_add          (DAxes *self, Daxes *a)
+void    d_axes_substract    (DAxes *self, DAxes *a);
 
 #endif
