@@ -50,6 +50,9 @@ GType       d_pos_get_type  (void);
 /* Create new instance */
 DPos*       d_pos_new       (void);
 
+/* Methods */
+gchar*  d_pos_to_string     (DPos *self);
+
 /* Virtual methods */
 gdouble d_pos_get           (DPos *self, gint index);
 void    d_pos_set           (DPos *self, gint index, gdouble value);
