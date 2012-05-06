@@ -18,9 +18,10 @@
  * along with PROJECTNAME. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DAXES_H
-#define DAXES_H
+#ifndef  DSIM_AXES_INC
+#define  DSIM_AXES_INC
 
+#include <glib-object.h>
 #include <dsim/dsim_vector.h>
 
 /* Type macros */
@@ -48,11 +49,15 @@ GType   d_axes_get_type (void);
 
 /* Create new instance */
 DAxes*  d_axes_new          (void);
+DAxes*  d_axes_new_full     (gdouble ax1, gdouble ax2, gdouble ax3);
+
+/* Mathods */
+gchar*  d_axes_to_string    (DAxes *self);
 
 /* Virtual methods */
 gdouble d_axes_get          (DAxes *self, gint index);
 void    d_axes_set          (DAxes *self, gint index, gdouble value);
-void    d_axes_add          (DAxes *self, Daxes *a)
+void    d_axes_add          (DAxes *self, DAxes *a);
 void    d_axes_substract    (DAxes *self, DAxes *a);
 
-#endif
+#endif   /* ----- #ifndef DSIM_AXES_INC  ----- */

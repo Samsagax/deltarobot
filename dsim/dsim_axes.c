@@ -19,10 +19,9 @@
  */
 
 #include "dsim_axes.h"
-#include <stdio.h>
 
-/* Declares *_init functions */
-G_DEFINE_TYPE (DAxes , d_axes, D_TYPE_VECTOR3);
+/* Register Type */
+G_DEFINE_TYPE (DAxes, d_axes, D_TYPE_VECTOR3);
 
 /* Create new DAxes instance */
 DAxes*
@@ -31,24 +30,34 @@ d_axes_new()
     return D_AXES(g_object_new(D_TYPE_AXES, NULL));
 }
 
+DAxes*
+d_axes_new_full ( gdouble ax1,
+                  gdouble ax2,
+                  gdouble ax3 )
+{
+    DAxes* a = d_axes_new();
+    d_axes_set(a, 0, ax1);
+    d_axes_set(a, 1, ax2);
+    d_axes_set(a, 2, ax3);
+    return a;
+}
+
 /* Dispose and Finalize functions */
 static void
 d_axes_dispose (GObject *gobject)
 {
-    DAxes *self = D_AXES (gobject);
     G_OBJECT_CLASS(d_axes_parent_class)->dispose(gobject);
 }
 
 static void
 d_axes_finalize (GObject *gobject)
 {
-    DAxes *self = D_AXES(gobject);
-    G_OBJECT_CLASS (d_axes_parent_class) ->finalize (gobject);
+    G_OBJECT_CLASS (d_axes_parent_class)->finalize (gobject);
 }
 
 /* Init functions */
 static void
-d_axes_init ( DAxes *self ) {}
+d_axes_init ( DAxes* self ) {}
 
 static void
 d_axes_class_init ( DAxesClass *klass )
@@ -60,19 +69,37 @@ d_axes_class_init ( DAxesClass *klass )
 }
 
 /* Methods */
-
-void
-d_axes_substract (DAxes* self, DAxes *a)
+gdouble
+d_axes_get ( DAxes* self,
+             gint   index )
 {
-    return ;
-    //TODO!!!
+    return D_VECTOR3_CLASS(d_axes_parent_class)->get(D_VECTOR3(self), index);
 }
 
 void
-d_axes_to_string (DAxes *self, gchar* string, int n)
+d_axes_set ( DAxes*     self,
+             gint       index,
+             gdouble    value )
 {
-    g_snprintf(string, n, "Axis: %f; %f; %f",
-                self->axis[0],
-                self->axis[1],
-                self->axis[2]);
+    D_VECTOR3_CLASS(d_axes_parent_class)->set(D_VECTOR3(self), index, value);
+}
+
+void
+d_axes_add ( DAxes* self,
+             DAxes* a )
+{
+    D_VECTOR3_CLASS(d_axes_parent_class)->add(D_VECTOR3(self), D_VECTOR3(a));
+}
+
+void
+d_axes_substract ( DAxes* self,
+                   DAxes *a)
+{
+    D_VECTOR3_CLASS(d_axes_parent_class)->substract(D_VECTOR3(self), D_VECTOR3(a));
+}
+
+gchar*
+d_axes_to_string ( DAxes* self )
+{
+    return d_vector3_to_string(D_VECTOR3(self));
 }
