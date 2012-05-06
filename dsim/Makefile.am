@@ -1,8 +1,8 @@
-AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir)
+AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) ${gobject_CFLAGS}
 noinst_LTLIBRARIES = libdsim.la
-libdsim_la_SOURCES = dsim_calc.c dsim_pos.c dsim_axes.c dsim_error.c
-libdsim_la_LIBADD = -lgsl -lgslcblas -lm 
+libdsim_la_SOURCES = dsim_vector.c dsim_pos.c dsim_axes.c dsim_trajectory.c dsim_geometry.c dsim_solver.c
+libdsim_la_LIBADD = ${gobject_LIBS} -lm
 
 noinst_PROGRAMS = ../test/dsim
-___test_dsim_SOURCES = main.c
+___test_dsim_SOURCES = main.c libdsim.a
 ___test_dsim_LDADD = -ldsim
