@@ -60,6 +60,14 @@ d_vector3_add (DVector3 *self, DVector3 *a)
     }
 }
 
+gchar*
+d_vector3_to_string ( DVector3* self )
+{
+    return g_strdup_printf( "[ %f ; %f ; %f ]",
+                     self->data[0],
+                     self->data[1],
+                     self->data[2] );
+}
 
 /* Create new DVector3 instance */
 DVector3*
