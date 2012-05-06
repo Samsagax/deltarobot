@@ -18,51 +18,50 @@
  * along with PROJECTNAME. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "dsim_common.h"
-#include "dsim_calc.h"
-
-static const DGeometry robot = {40.0f, 50.0f, 20.0f, 30.0f};
-static DPos point = { 0, 0, 50 };
-
-void
-print_robot(const DGeometry* r) {
-    printf("Robot:\n");
-    printf("Moving platform length: %f\n", r->h);
-    printf("Fixed platform length: %f\n", r->r);
-    printf("Motor limb length: %f\n", r->a);
-    printf("Free limb length: %f\n", r->b);
-}
-
-void
-print_DPos(const DPos* p) {
-    printf("Position:\n");
-    printf("X: %f\n", p->x);
-    printf("Y: %f\n", p->y);
-    printf("Z: %f\n", p->z);
-}
-void
-print_DAxes(const DAxes* r) {
-    printf("Axis: %f; %f; %f\n", r->rax[0], r->rax[1], r->rax[2]);
-}
-
-void
-print_DExtendedAxes(const DExtendedAxes* extaxes) {
-    int i;
-    for ( i = 0; i < 3 ; i++ ) {
-        printf("Limb %i: ", i);
-        print_DAxes(&(extaxes->limb[i]));
-    }
-}
+#include <stdio.h>
+#include "dsim_solver.h"
+#include "dsim_axes.h"
+#include "dsim_pos.h"
+#include "dsim_geometry.h"
 
 int
 main (int argc, char* argv[]) {
-    print_DPos(&point);
-    DAxes rb;
-    DExtendedAxes extax;
-    solve_inverse(&robot, &point, &rb, &extax);
-    print_DExtendedAxes(&extax);
-    DPos np;
-    solve_direct(&robot, &rb, &np);
-    print_DPos(&np);
+    g_type_init();
+    DGeometry   *geometry;
+    DPos        *pos;
+    DAxes       *axes;
+    geometry = d_geometry_new(40.0, 50.0, 30.0, 20.0);
+    pos = d_pos_new_full(0.0, 0.0, 50.0);
+    axes = d_axes_new();
+    
+    gchar* str = d_pos_to_string(pos);
+    printf("DPOS : %s\n", str);
+    g_free(str);
+    str = d_axes_to_string(axes);
+    printf("DAXES: %s\n", str);
+    g_free(str);
+
+    d_solver_solve_inverse(geometry, pos, axes);
+
+    str = d_pos_to_string(pos);
+    printf("DPOS : %s\n", str);
+    g_free(str);
+    str = d_axes_to_string(axes);
+    printf("DAXES: %s\n", str);
+    g_free(str);
+
+    
+    d_solver_solve_direct(geometry, axes, pos);
+    
+    str = d_pos_to_string(pos);
+    printf("DPOS : %s\n", str);
+    g_free(str);
+    str = d_axes_to_string(axes);
+    printf("DAXES: %s\n", str);
+    g_free(str);
+    
+    g_object_unref(geometry);
+    g_object_unref(pos);
+    g_object_unref(axes);
     return 0;
 }
