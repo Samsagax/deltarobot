@@ -29,6 +29,7 @@ d_pos_to_string ( DPos *self )
 {
     return d_vector3_to_string(D_VECTOR3(self));
 }
+
 /* Virtual Methods */
 void
 d_pos_set (DPos *self, gint i, gdouble value)
@@ -49,6 +50,18 @@ d_pos_new (void)
     DPos* pos;
     pos = g_object_new(D_TYPE_POS, NULL);
     return pos;
+}
+
+DPos*
+d_pos_new_full ( gdouble x,
+                 gdouble y,
+                 gdouble z )
+{
+    DPos* a = d_pos_new();
+    d_pos_set(a, 0, x);
+    d_pos_set(a, 1, y);
+    d_pos_set(a, 2, z);
+    return a;
 }
 
 /* Dispose and finalize functions */
