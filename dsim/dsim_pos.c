@@ -18,7 +18,6 @@
  * along with PROJECTNAME. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
 #include "dsim_pos.h"
 
 /* GType register */
@@ -50,7 +49,6 @@ d_pos_new (void)
 static void
 d_pos_dispose (GObject *gobject)
 {
-    printf("DPos being disposed\n");
     /* Chain up */
     G_OBJECT_CLASS(d_pos_parent_class)->dispose(gobject);
 }
