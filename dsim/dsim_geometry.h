@@ -57,6 +57,9 @@ struct _DGeometryClass {
 GType       d_geometry_get_type     (void);
 
 /* Create new instance */
-DGeometry*  d_geometry_new          (void);
+DGeometry*  d_geometry_new          ( gdouble a,
+                                      gdouble b,
+                                      gdouble h,
+                                      gdouble r );
 
 #endif   /* ----- #ifndef DSIM_GEOMETRY_INC  ----- */

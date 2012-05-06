@@ -27,4 +27,43 @@
 /* GType Register */
 G_DEFINE_TYPE(DGeometry, d_geometry, G_TYPE_OBJECT);
 
-/*  */
+/* Create new DGeometry object */
+DGeometry*
+d_geometry_new ( gdouble a,
+                 gdouble b,
+                 gdouble h,
+                 gdouble r )
+{
+    DGeometry *g = D_GEOMETRY(g_object_new(D_TYPE_GEOMETRY, NULL));
+    g->a = a;
+    g->b = b;
+    g->r = h;
+    g->h = r;
+    return g;
+}
+
+/* Dispose and Finalize functions */
+static void
+d_geometry_dispose (GObject *gobject)
+{
+    G_OBJECT_CLASS(d_geometry_parent_class)->dispose(gobject);
+}
+
+static void
+d_geometry_finalize (GObject *gobject)
+{
+    G_OBJECT_CLASS (d_geometry_parent_class)->finalize (gobject);
+}
+
+/* Init functions */
+static void
+d_geometry_init ( DGeometry* self ) {}
+
+static void
+d_geometry_class_init ( DGeometryClass *klass )
+{
+    /* Stub */
+    GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+    gobject_class->dispose = d_geometry_dispose;
+    gobject_class->finalize = d_geometry_finalize;
+}
