@@ -29,6 +29,15 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
+#include "dviewer_engine.h"
+
+static GLdouble v_rotX = 0.0;
+static GLdouble v_rotY = 0.0;
+static GLdouble v_rotZ = 0.0;
+
+/*
+ * Initialize drawing area
+ */
 static void
 draw_init (GtkWidget    *widget,
            gpointer      data)
@@ -36,16 +45,24 @@ draw_init (GtkWidget    *widget,
     GdkGLContext    *glcontext = gtk_widget_get_gl_context(widget);
     GdkGLDrawable   *gldrawable = gtk_widget_get_gl_drawable(widget);
 
+    /* OpenGL BEGIN */
     if (!gdk_gl_drawable_gl_begin (gldrawable, glcontext)){
         return;
     }
     glEnable(GL_CULL_FACE);
+    glFrontFace(GL_CCW);
+    glEnable(GL_COLOR_MATERIAL);
     glEnable(GL_DEPTH_TEST);
+    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
+    /* OpenGL END */
     gdk_gl_drawable_gl_end(gldrawable);
 }
 
+/*
+ * Draw scene
+ */
 static gboolean
 draw ( GtkWidget        *widget,
        GdkEventExpose   *event,
@@ -59,20 +76,25 @@ draw ( GtkWidget        *widget,
         g_printf("Error\n");
         return FALSE;
     }
+    // Save current transformation
+    glPushMatrix();
 
     glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glPushMatrix();
-    GLUquadricObj *pObj;
-    pObj = gluNewQuadric();
-    gluQuadricDrawStyle(pObj, GLU_FILL);
-    gluQuadricNormals(pObj, GLU_SMOOTH);
-    gluQuadricOrientation(pObj, GLU_OUTSIDE);
-    glColor3f(0.7f, 0.2f, 0.2f);
-    gluSphere(pObj, 1.0, 20, 10);
-    glColor3f(0.5f, 0.5f, 0.5f);
+    // Rotate view
+    glRotatef(v_rotX , 1.0, 0.0, 0.0);
+    glRotatef(v_rotY , 0.0, 1.0, 0.0);
+    glRotatef(v_rotZ , 0.0, 0.0, 1.0);
 
-    gluDeleteQuadric(pObj);
+    d_viewer_draw_reference_frame   ( 10.0,
+                                      0.5,
+                                      GL_FILL );
+    d_viewer_draw_platform          ( 20.0,
+                                      5.0,
+                                      5.0,
+                                      GL_FILL );
+
+    // Finish drawing, restore transformation
     glPopMatrix();
 
     if (gdk_gl_drawable_is_double_buffered (gldrawable)) {
@@ -83,8 +105,6 @@ draw ( GtkWidget        *widget,
     gdk_gl_drawable_gl_end(gldrawable);
     /* OpenGL END */
 
-    g_object_unref(G_OBJECT(glcontext));
-    g_object_unref(G_OBJECT(gldrawable));
     return TRUE;
 }
 
@@ -96,19 +116,30 @@ reshape (GtkWidget          *widget,
     GdkGLContext    *glcontext = gtk_widget_get_gl_context (widget);
     GdkGLDrawable   *gldrawable = gtk_widget_get_gl_drawable (widget);
 
-    GLfloat h = (GLfloat) (widget->allocation.height) / (GLfloat) (widget->allocation.width);
+    GLfloat h = widget->allocation.height;
+    GLfloat w = widget->allocation.width;
+    // Prevent division by zero
+    if (h == 0) {
+        h = 1.0;
+    }
+    GLfloat aspect = w/h;
 
     /* OpenGL BEGIN */
     if (!gdk_gl_drawable_gl_begin (gldrawable, glcontext)) {
         return FALSE;
     }
 
-    glViewport(0, 0, widget->allocation.width, widget->allocation.height);
+    glViewport(0, 0, w, h);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(30.0, h, 1.0, 400.0);
+    gluPerspective(30.0, aspect, 1.0, 400.0);
     glMatrixMode (GL_MODELVIEW);
-    glTranslatef(0.0, 0.0, -50.0);
+    glLoadIdentity();
+    glTranslatef(0.0, -20.0, -200.0);
+    glRotatef   (-90.0, 1.0, 0.0, 0.0);
+    glRotatef   (-90.0, 0.0, 0.0, 1.0);
+    glRotatef   (30.0, 0.0, 1.0, 0.0);
+    glRotatef   (-45.0, 0.0, 0.0, 1.0);
 
     gdk_gl_drawable_gl_end(gldrawable);
     /* OpenGL END */
@@ -120,6 +151,24 @@ key_handler ( GtkWidget     *widget,
               gpointer       data )
 {
     switch (event->keyval) {
+        case GDK_KEY_Page_Up:
+            v_rotZ += 5.0;
+            break;
+        case GDK_KEY_Page_Down:
+            v_rotZ -= 5.0;
+            break;
+        case GDK_KEY_Up:
+            v_rotX += 5.0;
+            break;
+        case GDK_KEY_Down:
+            v_rotX -= 5.0;
+            break;
+        case GDK_KEY_Left:
+            v_rotY += 5.0;
+            break;
+        case GDK_KEY_Right:
+            v_rotY -= 5.0;
+            break;
         case GDK_KEY_Escape:
             gtk_main_quit();
             break;
