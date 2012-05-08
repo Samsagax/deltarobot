@@ -23,7 +23,6 @@
  */
 
 #include <math.h>
-#include <stdio.h>
 #include "dviewer_engine.h"
 
 /*
@@ -31,13 +30,12 @@
  */
 void
 d_viewer_draw_reference_frame ( GLfloat     axisLength,
-                                GLfloat     axisRadius,
-                                GLenum      drawStyle )
+                                GLfloat     axisRadius )
 {
     glPushMatrix();
     GLUquadricObj *pObj;
     pObj = gluNewQuadric();
-    gluQuadricDrawStyle(pObj, drawStyle);
+    gluQuadricDrawStyle(pObj, GLU_FILL);
     gluQuadricNormals(pObj, GLU_SMOOTH);
     gluQuadricOrientation(pObj, GLU_OUTSIDE);
     glColor3f(0.7f, 0.2f, 0.2f);
@@ -131,20 +129,57 @@ d_viewer_draw_reference_frame ( GLfloat     axisLength,
 void
 d_viewer_draw_platform ( GLfloat    length,
                          GLfloat    thick,
-                         GLfloat    jdiam,
-                         GLenum     drawStyle )
+                         GLfloat    jdiam )
 {
     // Save transformation
     glPushMatrix();
 
+    GLfloat x = length - jdiam / 2.0;
+    GLfloat y = jdiam / 2.0 * tan (30.0 / 180.0 * M_PI);
+    GLfloat z = 0.5 * thick;
+
+    // Small sides
+    glBegin(GL_QUADS);
+        {
+            int i;
+            for (i = 0; i < 3; i++) {
+                GLfloat phi = ((GLfloat) i ) * 120.0 / 180.0 * M_PI;
+                GLfloat X = x * cos (phi) - y * sin (phi);
+                GLfloat Y = x * sin (phi) + y * cos (phi);
+                glVertex3f(X, Y, -z);
+                glVertex3f(X, Y,  z);
+                X = x * cos (phi) + y * sin (phi);
+                Y = x * sin (phi) - y * cos (phi);
+                glVertex3f(X, Y,  z);
+                glVertex3f(X, Y, -z);
+            }
+        }
+    glEnd();
+
+    // Big sides
+    glBegin(GL_QUADS);
+        {
+            int i;
+            for (i = 0; i < 3; i++) {
+                GLfloat phi = ((GLfloat) i ) * 120.0 / 180.0 * M_PI;
+                GLfloat X = x * cos (phi) - y * sin (phi);
+                GLfloat Y = x * sin (phi) + y * cos (phi);
+                glVertex3f(X, Y,  z);
+                glVertex3f(X, Y, -z);
+                phi = ((GLfloat) i + 1) * 120.0 / 180.0 * M_PI;
+                X = x * cos (phi) + y * sin (phi);
+                Y = x * sin (phi) - y * cos (phi);
+                glVertex3f(X, Y, -z);
+                glVertex3f(X, Y,  z);
+            }
+        }
+    glEnd();
     // Move upward by half the thickness
     glTranslatef(0.0, 0.0, 0.5 * thick);
 
     // Use polygons
-    glColor3f(1.0, 0.3, 0.0);
+
     // UP
-    GLfloat x = length - jdiam / 2.0;
-    GLfloat y = jdiam / 2.0 * tan (30.0 / 180.0 * M_PI);
     glBegin(GL_POLYGON);
         {
             int i;
@@ -160,19 +195,9 @@ d_viewer_draw_platform ( GLfloat    length,
         }
     glEnd();
 
-    // SIDES
-    {
-        int i;
-        for (i = 0; i < 3; i++) {
-            ;
-        }
-    }
-
-    glPopMatrix();
-    glPushMatrix();
     // DOWN
     glRotatef(180.0, 1.0, 0.0, 0.0);
-    glTranslatef(0.0, 0.0, thick / 2.0);
+    glTranslatef(0.0, 0.0, thick );
     glBegin(GL_POLYGON);
         {
             int i;
@@ -188,5 +213,91 @@ d_viewer_draw_platform ( GLfloat    length,
         }
     glEnd();
     // Reset transformation
+    glPopMatrix();
+}
+
+
+void
+d_viewer_draw_upper_limb ( GLfloat  length,
+                           GLfloat  jdiam )
+{
+    glPushMatrix();
+
+    GLUquadricObj *pObj;
+    pObj = gluNewQuadric();
+    gluQuadricDrawStyle(pObj, GLU_FILL);
+    gluQuadricNormals(pObj, GLU_SMOOTH);
+    gluQuadricOrientation(pObj, GLU_OUTSIDE);
+
+    gluSphere(pObj, jdiam / 2.0, 20, 30);
+    gluCylinder(pObj, jdiam / 4.0, jdiam / 4.0, length, 20, 30);
+    glTranslatef(0.0, 0.0, length);
+    gluSphere(pObj, jdiam / 2.0, 20, 30);
+
+    gluDeleteQuadric(pObj);
+    glPopMatrix();
+}
+
+void
+d_viewer_draw_limb ( GLfloat  length,
+                     GLfloat  jdiam )
+{
+    glPushMatrix();
+
+    GLUquadricObj *pObj;
+    pObj = gluNewQuadric();
+    gluQuadricDrawStyle(pObj, GLU_FILL);
+    gluQuadricNormals(pObj, GLU_SMOOTH);
+    gluQuadricOrientation(pObj, GLU_OUTSIDE);
+
+    gluSphere(pObj, jdiam / 2.0, 20, 30);
+    gluCylinder(pObj, jdiam / 4.0, jdiam / 4.0, length, 20, 30);
+    glTranslatef(0.0, 0.0, length);
+    gluSphere(pObj, jdiam / 2.0, 20, 30);
+
+    gluDeleteQuadric(pObj);
+    glPopMatrix();
+}
+
+void
+d_viewer_draw_arm ( GLfloat a,
+                    GLfloat b,
+                    GLfloat theta1,
+                    GLfloat theta2,
+                    GLfloat theta3,
+                    GLfloat jdiam )
+{
+    glPushMatrix();
+
+    // Will assume orientation on the X axis for theta1
+    GLfloat t1 = theta1 / M_PI * 180.0;
+    GLfloat t2 = theta2 / M_PI * 180.0;
+    GLfloat t3 = theta3 / M_PI * 180.0;
+
+    glRotatef(t1 - 90.0 , 0.0, -1.0, 0.0);
+    d_viewer_draw_limb(a, jdiam);
+    glTranslatef(0.0, 0.0, a);
+    //Draw a little joint
+
+    glPushMatrix();
+    glTranslatef(0.0, jdiam, 0.0);
+    glRotatef(t2, 0.0, -1.0, 0.0);
+    glRotatef(t3 - 90.0, 1.0, 0.0, 0.0);
+    d_viewer_draw_limb(b, jdiam);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(0.0, - jdiam, 0.0);
+    glRotatef(t2, 0.0, -1.0, 0.0);
+    glRotatef(t3 - 90.0, 1.0, 0.0, 0.0);
+    d_viewer_draw_limb(b, jdiam);
+    glPopMatrix();
+
+    //Draw a little joint
+//    glRotatef(t2, 0.0, 1.0, 0.0);
+//    glRotatef(t3 - 90.0, 1.0, 0.0, 0.0);
+//    glTranslatef(0.0, 0.0, b);
+//    glRotatef(90.0 - t3, 1.0, 0.0, 0.0);
+
     glPopMatrix();
 }

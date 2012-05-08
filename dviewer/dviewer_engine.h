@@ -31,21 +31,30 @@
 //#include <dsim/dsim_pos.h>
 //#include <dsim/dsim_axes.h>
 
-void        d_viewer_draw_reference_frame   ( GLfloat   axisRadius,
-                                              GLfloat   axisLength,
-                                              GLenum    drawStyle );
+void    d_viewer_draw_reference_frame   ( GLfloat   axisRadius,
+                                          GLfloat   axisLength );
 
-void        d_viewer_draw_platform          ( GLfloat   platformLength,
-                                              GLfloat   platformThickness,
-                                              GLfloat   jointDiameter,
-                                              GLenum    drawStyle );
+void    d_viewer_draw_platform          ( GLfloat   platformLength,
+                                          GLfloat   platformThickness,
+                                          GLfloat   jointDiameter );
 
-//void        d_viewer_draw_limb              ( DPos      *origin,
-//                                              DAxes     *angles,
-//                                              GLfloat   lengthA,
-//                                              GLfloat   lengthB );
+void    d_viewer_draw_limb              ( GLfloat   length,
+                                          GLfloat   jointDiameter );
 
-//void        d_viewer_draw_robot             ( DPos      *origin,
-//                                              DPos      *pos );
+void    d_viewer_draw_lower_limb        ( GLfloat   length,
+                                          GLfloat   jointDiameter );
+
+void    d_viewer_draw_upper_limb        ( GLfloat   length,
+                                          GLfloat   jointDiameter );
+
+void    d_viewer_draw_arm               ( GLfloat   a,
+                                          GLfloat   b,
+                                          GLfloat   theta1,
+                                          GLfloat   theta2,
+                                          GLfloat   theta3,
+                                          GLfloat   jointDiameter );
+
+//void    d_viewer_draw_robot             ( DGeometry *geometry,
+//                                          DPos      *pos );
 
 #endif   /* ----- #ifndef DVIEWER_ENGINE_INC  ----- */

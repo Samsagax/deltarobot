@@ -46,7 +46,7 @@ draw_init (GtkWidget    *widget,
     GdkGLDrawable   *gldrawable = gtk_widget_get_gl_drawable(widget);
 
     /* OpenGL BEGIN */
-    if (!gdk_gl_drawable_gl_begin (gldrawable, glcontext)){
+    if (!gdk_gl_drawable_gl_begin (gldrawable, glcontext)) {
         return;
     }
     glEnable(GL_CULL_FACE);
@@ -86,13 +86,23 @@ draw ( GtkWidget        *widget,
     glRotatef(v_rotY , 0.0, 1.0, 0.0);
     glRotatef(v_rotZ , 0.0, 0.0, 1.0);
 
-    d_viewer_draw_reference_frame   ( 10.0,
-                                      0.5,
-                                      GL_FILL );
-    d_viewer_draw_platform          ( 20.0,
-                                      5.0,
-                                      5.0,
-                                      GL_FILL );
+    GLfloat r = 30.0;
+    d_viewer_draw_reference_frame   ( 10.0, 0.5 );
+    glColor3f(1.0, 0.5, 0.0);
+    d_viewer_draw_platform          ( r, 2.0, 5.0 );
+
+    {
+        int i;
+        for (i = 0; i < 3; i++) {
+            GLfloat phi = 120.0 * (GLfloat) i;
+            glPushMatrix();
+            glRotatef(phi, 0.0, 0.0, 1.0);
+            glTranslatef(r, 0.0, 0.0);
+            glColor3f(0.5, 0.5, 1.0);
+            d_viewer_draw_arm(30.0, 40.0, 1.0, 1.5708, 1.5708, 2.0);
+            glPopMatrix();
+        }
+    }
 
     // Finish drawing, restore transformation
     glPopMatrix();
@@ -180,9 +190,22 @@ key_handler ( GtkWidget     *widget,
     return TRUE;
 }
 
+static void
+show_about  ( GtkMenuItem   *item,
+              gpointer      data )
+{
+    gtk_show_about_dialog   ( data,
+                              "title", "About DSim Viewer",
+                              "program-name", "DSim Viewer",
+                              "version", "0.1",
+                              "copyright", "Copyright 2012. Joaquín Ignacio Aramendía GNU GPL",
+                              NULL );
+}
+
 static GtkWidget*
 create_main_window(void) {
     GtkWidget       *window;
+    GtkWidget       *vbox;
     GtkWidget       *drawing_area;
 
     /* Print OpenGL version */
@@ -217,7 +240,7 @@ create_main_window(void) {
                                    NULL,
                                    TRUE,
                                    GDK_GL_RGBA_TYPE);
-//    g_object_unref(glconfig);
+    g_object_unref(glconfig);
 
     /* Set up drawing area behaviour */
     gtk_widget_add_events ( drawing_area, GDK_VISIBILITY_NOTIFY_MASK );
@@ -234,13 +257,43 @@ create_main_window(void) {
                               G_CALLBACK(draw),
                               NULL );
 
+    /*
+     * Create Menus
+     */
+    GtkWidget       *menu_bar;
+    GtkWidget       *menu_item_file, *menu_item_help;
+    GtkWidget       *menu_file, *menu_help;
+
+    menu_bar = gtk_menu_bar_new();
+
+    menu_item_file  = gtk_menu_item_new_with_label("File");
+    menu_file       = gtk_menu_new();
+
+    menu_item_help  = gtk_menu_item_new_with_label("Help");
+    menu_help       = gtk_menu_new();
+
+    GtkWidget   *menu_item_quit = gtk_image_menu_item_new_from_stock(GTK_STOCK_QUIT, NULL);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu_file), menu_item_quit);
+    g_signal_connect        ( G_OBJECT(menu_item_quit),
+                              "activate",
+                              G_CALLBACK(gtk_main_quit),
+                              NULL );
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item_file), menu_file);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), menu_item_file);
+
+    GtkWidget   *menu_item_about = gtk_image_menu_item_new_from_stock(GTK_STOCK_ABOUT, NULL);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu_help), menu_item_about);
+    g_signal_connect        ( G_OBJECT(menu_item_about),
+                              "activate",
+                              G_CALLBACK(show_about),
+                              window );
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item_help), menu_help);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), menu_item_help);
+
     /* Create the window */
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title (GTK_WINDOW(window), "DSim GL Viewer");
     gtk_window_set_icon_name(GTK_WINDOW(window), "applications-system");
-
-    /* Set layout */
-    gtk_container_add (GTK_CONTAINER (window), drawing_area);
 
     /* Set window behaviour */
     gtk_container_set_reallocate_redraws (GTK_CONTAINER(window), TRUE);
@@ -252,6 +305,12 @@ create_main_window(void) {
                                   "destroy",
                                   G_CALLBACK(gtk_main_quit),
                                   NULL );
+
+    /* Set layout */
+    vbox = gtk_vbox_new(FALSE, 0);
+    gtk_box_pack_start  (GTK_BOX(vbox), menu_bar, FALSE, FALSE, 0);
+    gtk_box_pack_start  (GTK_BOX(vbox), drawing_area, TRUE, TRUE, 0);
+    gtk_container_add   (GTK_CONTAINER(window), vbox);
 
     return window;
 }
