@@ -30,10 +30,12 @@ main (int argc, char* argv[]) {
     DGeometry   *geometry;
     DPos        *pos;
     DAxes       *axes;
+    DExtAxes    *extaxes;
     geometry = d_geometry_new(40.0, 50.0, 30.0, 20.0);
     pos = d_pos_new_full(0.0, 0.0, 50.0);
     axes = d_axes_new();
-    
+    extaxes = d_ext_axes_new();
+
     gchar* str = d_pos_to_string(pos);
     printf("DPOS : %s\n", str);
     g_free(str);
@@ -41,7 +43,7 @@ main (int argc, char* argv[]) {
     printf("DAXES: %s\n", str);
     g_free(str);
 
-    d_solver_solve_inverse(geometry, pos, axes);
+    d_solver_solve_inverse(geometry, pos, axes, NULL);
 
     str = d_pos_to_string(pos);
     printf("DPOS : %s\n", str);
@@ -50,18 +52,19 @@ main (int argc, char* argv[]) {
     printf("DAXES: %s\n", str);
     g_free(str);
 
-    
+
     d_solver_solve_direct(geometry, axes, pos);
-    
+
     str = d_pos_to_string(pos);
     printf("DPOS : %s\n", str);
     g_free(str);
     str = d_axes_to_string(axes);
     printf("DAXES: %s\n", str);
     g_free(str);
-    
+
     g_object_unref(geometry);
     g_object_unref(pos);
     g_object_unref(axes);
+    g_object_unref(extaxes);
     return 0;
 }
