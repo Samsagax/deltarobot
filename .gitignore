@@ -3,6 +3,7 @@
 *.swp
 *.o
 *.lo
+*.la
 *.a
 *.so
 tags
@@ -18,3 +19,4 @@ libtool
 /autom4te.cache/
 /config.*
 /config/
+/test/
