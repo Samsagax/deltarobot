@@ -20,6 +20,9 @@
 
 #include "dsim_axes.h"
 
+
+/* ################ Simple DAxes ###################### */
+
 /* Register Type */
 G_DEFINE_TYPE (DAxes, d_axes, D_TYPE_VECTOR3);
 
@@ -57,7 +60,10 @@ d_axes_finalize (GObject *gobject)
 
 /* Init functions */
 static void
-d_axes_init ( DAxes* self ) {}
+d_axes_init ( DAxes* self )
+{
+    /* Stub Initialize function */
+}
 
 static void
 d_axes_class_init ( DAxesClass *klass )
@@ -102,4 +108,81 @@ gchar*
 d_axes_to_string ( DAxes* self )
 {
     return d_vector3_to_string(D_VECTOR3(self));
+}
+
+/* ################ Extended DExtAxes ###################### */
+
+/* Register Type */
+G_DEFINE_TYPE (DExtAxes, d_ext_axes, G_TYPE_OBJECT);
+
+/* Create new DAxes instance */
+DExtAxes*
+d_ext_axes_new()
+{
+    return D_EXTAXES(g_object_new(D_TYPE_EXTAXES, NULL));
+}
+
+/* Dispose and Finalize functions */
+static void
+d_ext_axes_dispose (GObject *gobject)
+{
+    DExtAxes *self = D_EXTAXES(gobject);
+    /* Unref all */
+    {
+        int i;
+        for (i = 0; i < 3; i++) {
+            if (self->axes[i]) {
+                g_object_unref(self->axes[i]);
+                self->axes[i] = NULL;
+            }
+        }
+    }
+    /* Chain up */
+    G_OBJECT_CLASS(d_ext_axes_parent_class)->dispose(gobject);
+}
+
+static void
+d_ext_axes_finalize (GObject *gobject)
+{
+    G_OBJECT_CLASS (d_ext_axes_parent_class)->finalize (gobject);
+}
+
+/* Init functions */
+static void
+d_ext_axes_init ( DExtAxes* self )
+{
+    /* Stub initialize function */
+    {
+        int i;
+        for (i = 0; i < 3; i++) {
+            self->axes[i] = d_axes_new();
+        }
+    }
+}
+
+static void
+d_ext_axes_class_init ( DExtAxesClass *klass )
+{
+    /* Stub */
+    GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+    gobject_class->dispose = d_ext_axes_dispose;
+    gobject_class->finalize = d_ext_axes_finalize;
+}
+
+/* Methods */
+void
+d_ext_axes_set ( DExtAxes   *self,
+                 gint       i,
+                 gint       j,
+                 gdouble    value )
+{
+    d_axes_set(self->axes[i], j, value);
+}
+
+gdouble
+d_ext_axes_get ( DExtAxes   *self,
+                 gint       i,
+                 gint       j )
+{
+    return d_axes_get(self->axes[i], j);
 }

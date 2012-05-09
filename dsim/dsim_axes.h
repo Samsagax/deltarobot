@@ -24,7 +24,7 @@
 #include <glib-object.h>
 #include <dsim/dsim_vector.h>
 
-/* Type macros */
+/* Type macros Simple Axes */
 #define D_TYPE_AXES             (d_axes_get_type ())
 #define D_AXES(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), D_TYPE_AXES, DAxes))
 #define D_IS_AXES(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), D_TYPE_AXES))
@@ -60,4 +60,38 @@ void    d_axes_set          (DAxes *self, gint index, gdouble value);
 void    d_axes_add          (DAxes *self, DAxes *a);
 void    d_axes_substract    (DAxes *self, DAxes *a);
 
-#endif   /* ----- #ifndef DSIM_AXES_INC  ----- */
+/* Type macros Extended ExtAxes */
+#define D_TYPE_EXTAXES             (d_ext_axes_get_type ())
+#define D_EXTAXES(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), D_TYPE_EXTAXES, DExtAxes))
+#define D_IS_EXTAXES(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), D_TYPE_EXTAXES))
+#define D_EXTAXES_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), D_TYPE_EXTAXES, DExtAxesClass))
+#define D_IS_EXTAXES_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), D_TYPE_EXTAXES))
+#define D_EXTAXES_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), D_TYPE_EXTAXES, DExtAxesClass))
+
+/* Instance Structure of DExtAxes */
+typedef struct _DExtAxes DExtAxes;
+struct _DExtAxes {
+    GObject         parent_instance;
+    DAxes           *axes[];           /* Axes[limb][angle] */
+};
+
+/* Class Structure of DExtAxes */
+typedef struct _DExtAxesClass DExtAxesClass;
+struct _DExtAxesClass {
+    GObjectClass    parent_class;
+};
+
+/* Returns GType associated with this object type */
+GType       d_ext_axes_get_type     (void);
+
+/* Create new instance */
+DExtAxes*   d_ext_axes_new          (void);
+void        d_ext_axes_set          ( DExtAxes *self,
+                                      gint      i,
+                                      gint      j,
+                                      gdouble   value);
+gdouble     d_ext_axes_get          ( DExtAxes *self,
+                                      gint      i,
+                                      gint      j );
+
+#endif   /* ----- #ifndef DSIM_EXTAXES_INC  ----- */
