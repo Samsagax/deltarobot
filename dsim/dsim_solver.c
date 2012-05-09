@@ -89,9 +89,11 @@ d_solver_solve_direct ( DGeometry*  geometry,
 
 void
 d_solver_solve_inverse ( DGeometry  *geometry,
-                         DPos*      pos,
-                         DAxes*     axes )
+                         DPos       *pos,
+                         DAxes      *axes,
+                         DExtAxes   *extaxes )
 {
+    gboolean extcalc = extaxes ? TRUE : FALSE;
     {
         int i;
         for (i = 0; i < 3; i++) {
@@ -112,9 +114,9 @@ d_solver_solve_inverse ( DGeometry  *geometry,
             } //TODO: Add check for sen3 == 0
             gdouble sen3 = sqrt(1.0 - cos3 * cos3);
             //TODO:Add extended axes calculation
-//            if (extcalc) {
-//                extaxes[i][2] = atan2(sen3, cos3);
-//            }
+            if (extcalc) {
+                d_ext_axes_set(extaxes, i, 2, atan2(sen3, cos3));
+            }
 
             /* Calculate theta 2 */
             gdouble cnormsq = ci[0] * ci[0] + ci[1] * ci[1] + ci[2] * ci[2];
@@ -125,18 +127,18 @@ d_solver_solve_inverse ( DGeometry  *geometry,
                 return;
             }
             gdouble sen2 = sqrt(1.0 - cos2 * cos2);
-//            if ( extcalc ) {
-//                extaxes[i][1] = atan2(sen2, cos2);
-//            }
+            if ( extcalc ) {
+                d_ext_axes_set(extaxes, i, 1, atan2(sen2, cos2));
+            }
 
             /* Calculate theta 1 */
             gdouble x1 = geometry->a + geometry->b * cos2 * sen3;
             gdouble x2 = geometry->b * sen2 * sen3;
             gdouble sen1 = ci[2] * x1 - ci[0] * x2;
             gdouble cos1 = ci[2] * x2 + ci[0] * x1;
-//            if ( extcalc ) {
-//                extaxes[i][0] = atan2(sen1, cos1);
-//            }
+            if ( extcalc ) {
+                d_ext_axes_set(extaxes, i, 0, atan2(sen1, cos1));
+            }
             d_axes_set(axes, i, atan2(sen1, cos1));
         }
     }

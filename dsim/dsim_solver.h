@@ -63,9 +63,10 @@ void d_solver_solve_direct          (DGeometry* geometry,
                                      DAxes*     axes,
                                      DPos*      pos);
 
-void d_solver_solve_inverse         (DGeometry* geometry,
-                                     DPos*      pos,
-                                     DAxes*     axes);
+void d_solver_solve_inverse         (DGeometry *geometry,
+                                     DPos      *pos,
+                                     DAxes     *axes,
+                                     DExtAxes   *extaxes);
 
 
 #endif   /* ----- #ifndef DSIM_SOLVER_INC  ----- */
