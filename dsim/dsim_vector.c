@@ -60,10 +60,13 @@ d_vector3_add (DVector3 *self, DVector3 *a)
     }
 }
 
-gchar*
-d_vector3_to_string ( DVector3* self )
+void
+d_vector3_to_string ( DVector3  *self,
+                      GString   *string )
 {
-    return g_strdup_printf( "[ %f ; %f ; %f ]",
+
+    g_string_printf( string,
+                     "[ %f ; %f ; %f ]",
                      self->data[0],
                      self->data[1],
                      self->data[2] );

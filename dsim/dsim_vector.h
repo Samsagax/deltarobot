@@ -63,7 +63,8 @@ GType       d_vector3_get_type  (void);
 DVector3*   d_vector3_new       (void);
 
 /* Methods */
-gchar*  d_vector3_to_string     (DVector3 *self);
+void    d_vector3_to_string     ( DVector3  *self,
+                                  GString   *string);
 
 /* Virtual methods */
 gdouble d_vector3_get           (DVector3 *self, gint index);

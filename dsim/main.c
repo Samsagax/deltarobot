@@ -27,44 +27,42 @@
 int
 main (int argc, char* argv[]) {
     g_type_init();
+    GString     *string;
     DGeometry   *geometry;
     DPos        *pos;
     DAxes       *axes;
     DExtAxes    *extaxes;
+    string = g_string_new(NULL);
     geometry = d_geometry_new(40.0, 50.0, 30.0, 20.0);
     pos = d_pos_new_full(0.0, 0.0, 50.0);
     axes = d_axes_new();
     extaxes = d_ext_axes_new();
 
-    gchar* str = d_pos_to_string(pos);
-    printf("DPOS : %s\n", str);
-    g_free(str);
-    str = d_axes_to_string(axes);
-    printf("DAXES: %s\n", str);
-    g_free(str);
+
+    d_pos_to_string(pos, string);
+    printf("DPOS : %s\n", string->str);
+    d_axes_to_string(axes, string);
+    printf("DAXES: %s\n", string->str);
 
     d_solver_solve_inverse(geometry, pos, axes, NULL);
 
-    str = d_pos_to_string(pos);
-    printf("DPOS : %s\n", str);
-    g_free(str);
-    str = d_axes_to_string(axes);
-    printf("DAXES: %s\n", str);
-    g_free(str);
+    d_pos_to_string(pos, string);
+    printf("DPOS : %s\n", string->str);
+    d_axes_to_string(axes, string);
+    printf("DAXES: %s\n", string->str);
 
 
     d_solver_solve_direct(geometry, axes, pos);
 
-    str = d_pos_to_string(pos);
-    printf("DPOS : %s\n", str);
-    g_free(str);
-    str = d_axes_to_string(axes);
-    printf("DAXES: %s\n", str);
-    g_free(str);
+    d_pos_to_string(pos, string);
+    printf("DPOS : %s\n", string->str);
+    d_axes_to_string(axes, string);
+    printf("DAXES: %s\n", string->str);
 
     g_object_unref(geometry);
     g_object_unref(pos);
     g_object_unref(axes);
     g_object_unref(extaxes);
+    g_string_free(string, TRUE);
     return 0;
 }

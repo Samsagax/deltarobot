@@ -52,7 +52,7 @@ DPos*       d_pos_new       (void);
 DPos*       d_pos_new_full  (gdouble x, gdouble y, gdouble z);
 
 /* Methods */
-gchar*  d_pos_to_string     (DPos *self);
+void    d_pos_to_string     (DPos *self, GString *string);
 
 /* Virtual methods */
 gdouble d_pos_get           (DPos *self, gint index);

@@ -104,10 +104,11 @@ d_axes_substract ( DAxes* self,
     D_VECTOR3_CLASS(d_axes_parent_class)->substract(D_VECTOR3(self), D_VECTOR3(a));
 }
 
-gchar*
-d_axes_to_string ( DAxes* self )
+void
+d_axes_to_string ( DAxes    *self,
+                   GString  *string )
 {
-    return d_vector3_to_string(D_VECTOR3(self));
+    d_vector3_to_string(D_VECTOR3(self), string);
 }
 
 /* ################ Extended DExtAxes ###################### */

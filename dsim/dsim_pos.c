@@ -24,10 +24,10 @@
 G_DEFINE_TYPE (DPos, d_pos, D_TYPE_VECTOR3);
 
 /* Methods */
-gchar*
-d_pos_to_string ( DPos *self )
+void
+d_pos_to_string ( DPos *self, GString *string )
 {
-    return d_vector3_to_string(D_VECTOR3(self));
+    d_vector3_to_string(D_VECTOR3(self), string);
 }
 
 /* Virtual Methods */
