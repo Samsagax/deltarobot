@@ -28,8 +28,8 @@
 
 #include <GL/gl.h>
 #include <GL/glu.h>
-//#include <dsim/dsim_pos.h>
-//#include <dsim/dsim_axes.h>
+
+#include <dsim/dsim.h>
 
 void    d_viewer_draw_reference_frame   ( GLfloat   axisRadius,
                                           GLfloat   axisLength );
@@ -54,7 +54,7 @@ void    d_viewer_draw_arm               ( GLfloat   a,
                                           GLfloat   theta3,
                                           GLfloat   jointDiameter );
 
-//void    d_viewer_draw_robot             ( DGeometry *geometry,
-//                                          DPos      *pos );
+void    d_viewer_draw_robot_at_pos      ( DGeometry *geometry,
+                                          DPos      *pos );
 
 #endif   /* ----- #ifndef DVIEWER_ENGINE_INC  ----- */

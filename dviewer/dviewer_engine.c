@@ -262,7 +262,7 @@ d_viewer_draw_limb ( GLfloat  length,
 void
 d_viewer_draw_arm ( GLfloat a,
                     GLfloat b,
-                    GLfloat theta1,
+                    GLfloat theta1,     /* Angles in radians */
                     GLfloat theta2,
                     GLfloat theta3,
                     GLfloat jdiam )
@@ -300,4 +300,63 @@ d_viewer_draw_arm ( GLfloat a,
 //    glRotatef(90.0 - t3, 1.0, 0.0, 0.0);
 
     glPopMatrix();
+}
+
+/*
+ * Draw the entire robot at a given DPos value
+ */
+void
+d_viewer_draw_robot_at_pos  ( DGeometry *geometry,
+                              DPos      *pos )
+{
+    // First Make sure the position is reachable
+    DAxes       *axes       = d_axes_new();
+    DExtAxes    *extaxes    = d_ext_axes_new();
+    // TODO: Use GError for error handling!!!
+    d_solver_solve_inverse  ( geometry,
+                              pos,
+                              axes,
+                              extaxes );
+    GLfloat jdiam = 3.0;
+    GLfloat thick = 3.0;
+
+    // Save current transformation
+    glPushMatrix();
+
+    glColor3f(0.5, 1.0, 0.0);
+    // Fixed platform
+    d_viewer_draw_platform(geometry->r, thick, jdiam);
+
+    glColor3f(1.0, 0.4, 0.1);
+    // 3 Limbs
+    {
+        int i;
+        for (i = 0; i < 3; i++) {
+            glPushMatrix();
+            GLfloat phi = ((GLfloat) i) * 120.0;
+            glRotatef(phi, 0.0, 0.0, 1.0);
+            glTranslatef(geometry->r, 0.0, 0.0);
+            d_viewer_draw_arm   ( geometry->a,
+                                  geometry->b,
+                                  d_ext_axes_get(extaxes, i, 0),
+                                  d_ext_axes_get(extaxes, i, 1),
+                                  d_ext_axes_get(extaxes, i, 2),
+                                  jdiam );
+            glPopMatrix();
+        }
+    }
+
+    // Moving platform
+    glColor3f(0.0, 1.0, 0.4);
+    glTranslatef( d_pos_get(pos, 0),
+                  d_pos_get(pos, 1),
+                  d_pos_get(pos, 2));
+    d_viewer_draw_platform(geometry->h, thick, jdiam);
+
+    // Restore current transformation
+    glPopMatrix();
+
+    // Release used memory
+    g_object_unref(extaxes);
+    g_object_unref(axes);
 }
