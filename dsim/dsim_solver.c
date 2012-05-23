@@ -40,9 +40,13 @@ d_solver_solve_direct ( DGeometry*  geometry,
         int i;
         for(i = 0; i < 3; i++) {
             gdouble phi = ((gdouble)i) * G_PI * 2.0 / 3.0;
-            pb[i][0] = cos(phi) * (geometry->r + geometry->a* cos(d_axes_get(axes, i)) - geometry->h);
-            pb[i][1] = sin(phi) * (geometry->r + geometry->a* cos(d_axes_get(axes, i)) - geometry->h);
-            pb[i][2] = geometry->a * sin(d_axes_get(axes, i));
+            gdouble bx = geometry->r + geometry->a * cos(d_axes_get(axes, i)) - geometry->h;
+            gdouble by = 0.0;
+            gdouble bz = geometry->a * sin(d_axes_get(axes,i));
+
+            pb[i][0] = bx * cos(phi) - by * sin(phi);
+            pb[i][1] = by * cos(phi) + bx * sin(phi);
+            pb[i][2] = bz;
         }
     }
     gdouble e[4][2];
@@ -61,28 +65,28 @@ d_solver_solve_direct ( DGeometry*  geometry,
                    e[0][1]*e[2][0] - e[0][0]*e[2][1],
                    e[3][1]*e[2][0] - e[3][0]*e[2][1],
                    e[0][0]*e[1][1] - e[0][1]*e[1][0],
-                   e[3][0]*e[1][1] - e[3][1]*e[0][0] };
-    gdouble k0 = (l[1]/l[0]) * (l[1]/l[0]) +
-                (l[3]/l[0]) * (l[3]/l[0]) +
-                pb[0][0] * pb[0][0] +
-                pb[0][1] * pb[0][1] +
-                pb[0][2] * pb[0][2] -
-                geometry->b * geometry->b -
+                   e[3][0]*e[1][1] - e[3][1]*e[1][0] };
+    gdouble k0 = pow(l[1]/l[0], 2.0) +
+                pow(l[3]/l[0], 2.0) +
+                pow(pb[0][0], 2.0) +
+                pow(pb[0][1], 2.0) +
+                pow(pb[0][2], 2.0) -
+                pow(geometry->b, 2.0) -
                 2.0 * pb[0][0] * l[1] / l[0] -
                 2.0 * pb[0][1] * l[3] / l[0];
-    gdouble k1 = 2.0 * l[1]*l[2]/(l[0]*l[0])
-              + 2.0 * l[3]*l[4]/(l[0]*l[0])
+    gdouble k1 = 2.0 * l[1]*l[2]/pow(l[0],2.0)
+              + 2.0 * l[3]*l[4]/pow(l[0],2.0)
               - 2.0 * pb[0][0] * l[2] / l[0]
               - 2.0 * pb[0][1] * l[4] / l[0]
               - 2.0 * pb[0][2];
-    gdouble k2 = (l[2]/l[0])*(l[2]/l[0]) + (l[4]/l[0])*(l[4]/l[0]) + 1.0;
+    gdouble k2 = pow(l[2]/l[0], 2.0) + pow(l[4]/l[0], 2.0) + 1.0;
 
     gdouble disc = k1 * k1 - 4.0 * k2 * k0;
     if ( disc < 0.0) {
         g_warning("Unreachable point");
         return;
     }
-    d_pos_set(pos, 2, (-k1 + sqrt(disc)) / 2.0 * k2);
+    d_pos_set(pos, 2, ((-k1 + sqrt(disc))) / (2.0 * k2));
     d_pos_set(pos, 1, l[3]/l[0] + l[4]/l[0] * d_pos_get(pos, 2));
     d_pos_set(pos, 0, l[1]/l[0] + l[2]/l[0] * d_pos_get(pos, 2));
 }
