@@ -30,5 +30,6 @@
 #include <dsim/dsim_pos.h>
 #include <dsim/dsim_solver.h>
 #include <dsim/dsim_vector.h>
+#include <dsim/dsim_trajectory.h>
 
 #endif   /* ----- #ifndef DSIM_INC  ----- */

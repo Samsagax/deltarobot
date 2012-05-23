@@ -19,21 +19,19 @@
  */
 
 #include <stdio.h>
-#include "dsim_solver.h"
-#include "dsim_axes.h"
-#include "dsim_pos.h"
-#include "dsim_geometry.h"
-#include "dsim_speed.h"
+#include "dsim.h"
 
 int
 main (int argc, char* argv[]) {
+
     g_type_init();
+
     GString     *string;
     DGeometry   *geometry;
-    DPos        *pos;
-    DAxes       *axes;
-    DExtAxes    *extaxes;
+    DAxes       *from;
+    DAxes       *to;
     DSpeed      *speed;
+
     string = g_string_new(NULL);
     geometry = d_geometry_new(
                 40.0,               /* Lower Limb */
@@ -41,40 +39,30 @@ main (int argc, char* argv[]) {
                 30.0,               /* Fixed Platform */
                 20.0                /* Moving Platform */
                 );
-    pos = d_pos_new_full(4.0, 32.0, 36.0);
-    axes = d_axes_new();
-    extaxes = d_ext_axes_new();
-
-
-    d_pos_to_string(pos, string);
-    printf("DPOS : %s\n", string->str);
-    d_axes_to_string(axes, string);
-    printf("DAXES: %s\n", string->str);
-
-    d_solver_solve_inverse(geometry, pos, axes, NULL);
-
-    d_pos_to_string(pos, string);
-    printf("DPOS : %s\n", string->str);
-    d_axes_to_string(axes, string);
-    printf("DAXES: %s\n", string->str);
-
-
-    d_solver_solve_direct(geometry, axes, pos);
-
-    d_pos_to_string(pos, string);
-    printf("DPOS : %s\n", string->str);
-    d_axes_to_string(axes, string);
-    printf("DAXES: %s\n", string->str);
-
+    from = d_axes_new_full(0.0, 0.0, 0.0);
+    to = d_axes_new_full(0.0, 0.0, 3.0);
     speed = d_speed_new(90.0, 90.0, 90.0);
+
+    d_axes_to_string(from, string);
+    g_print("FROM : %s\n", string->str);
+    d_axes_to_string(to, string);
+    g_print("TO:    %s\n", string->str);
     d_speed_to_string(speed, string);
     g_print("SPEED: %s\n", string->str);
 
+    DJointTrajectory *movej = d_joint_trajectory_new(from, from, to, speed);
+    for (int i = 0; i < 100; i++) {
+        DAxes* current = D_AXES(d_trajectory_next(D_ITRAJECTORY(movej)));
+        d_vector3_to_string(D_VECTOR3(current), string);
+        g_print("AT:    %s\n", string->str);
+        g_object_unref(current);
+    }
+
+    g_object_unref(movej);
     g_object_unref(speed);
     g_object_unref(geometry);
-    g_object_unref(pos);
-    g_object_unref(axes);
-    g_object_unref(extaxes);
+    g_object_unref(from);
+    g_object_unref(to);
     g_string_free(string, TRUE);
     return 0;
 }
