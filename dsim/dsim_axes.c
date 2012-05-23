@@ -45,6 +45,15 @@ d_axes_new_full ( gdouble ax1,
     return a;
 }
 
+DAxes*
+d_axes_copy ( DVector3  *source )
+{
+    DAxes* a = d_axes_new();
+    for (int i = 0; i < 3; i++) {
+        d_axes_set(a, i, d_vector3_get(source, i));
+    }
+    return a;
+}
 /* Dispose and Finalize functions */
 static void
 d_axes_dispose (GObject *gobject)

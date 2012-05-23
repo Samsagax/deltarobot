@@ -50,6 +50,7 @@ GType   d_axes_get_type (void);
 /* Create new instance */
 DAxes*  d_axes_new          (void);
 DAxes*  d_axes_new_full     (gdouble ax1, gdouble ax2, gdouble ax3);
+DAxes*  d_axes_copy         (DVector3 *source);
 
 /* Mathods */
 void    d_axes_to_string    (DAxes *self, GString *string);
