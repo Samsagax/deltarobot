@@ -9,7 +9,6 @@ AM_INIT_AUTOMAKE([foreign -Wall -Werror])
 AC_CONFIG_SRCDIR([dsim/main.c])
 AM_PROG_AR
 LT_INIT
-#AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_PROG_CC
