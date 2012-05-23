@@ -61,6 +61,7 @@ GType       d_vector3_get_type  (void);
 
 /* Create new instance */
 DVector3*   d_vector3_new       (void);
+DVector3*   d_vector3_copy      (DVector3   *source);
 
 /* Methods */
 void    d_vector3_to_string     ( DVector3  *self,

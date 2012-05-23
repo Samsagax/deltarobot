@@ -79,6 +79,16 @@ d_vector3_new()
     return D_VECTOR3(g_object_new(D_TYPE_VECTOR3, NULL));
 }
 
+DVector3*
+d_vector3_copy ( DVector3   *source )
+{
+    DVector3* cpy = d_vector3_new();
+    for (int i = 0; i < 3; i++) {
+        d_vector3_set(cpy, i, d_vector3_get(source, i));
+    }
+    return cpy;
+}
+
 /* Dispose and finalize functions */
 static void
 d_vector3_dispose (GObject *gobject)
