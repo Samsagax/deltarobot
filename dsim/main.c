@@ -23,6 +23,7 @@
 #include "dsim_axes.h"
 #include "dsim_pos.h"
 #include "dsim_geometry.h"
+#include "dsim_speed.h"
 
 int
 main (int argc, char* argv[]) {
@@ -32,9 +33,15 @@ main (int argc, char* argv[]) {
     DPos        *pos;
     DAxes       *axes;
     DExtAxes    *extaxes;
+    DSpeed      *speed;
     string = g_string_new(NULL);
-    geometry = d_geometry_new(40.0, 50.0, 30.0, 20.0);
-    pos = d_pos_new_full(0.0, 0.0, 50.0);
+    geometry = d_geometry_new(
+                40.0,               /* Lower Limb */
+                50.0,               /* Upper Limb */
+                30.0,               /* Fixed Platform */
+                20.0                /* Moving Platform */
+                );
+    pos = d_pos_new_full(4.0, 32.0, 36.0);
     axes = d_axes_new();
     extaxes = d_ext_axes_new();
 
@@ -59,6 +66,11 @@ main (int argc, char* argv[]) {
     d_axes_to_string(axes, string);
     printf("DAXES: %s\n", string->str);
 
+    speed = d_speed_new(90.0, 90.0, 90.0);
+    d_speed_to_string(speed, string);
+    g_print("SPEED: %s\n", string->str);
+
+    g_object_unref(speed);
     g_object_unref(geometry);
     g_object_unref(pos);
     g_object_unref(axes);
