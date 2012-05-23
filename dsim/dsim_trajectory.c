@@ -26,15 +26,252 @@
 #include <math.h>
 #include "dsim_trajectory.h"
 
+
+/* #####   VARIABLES  -  LOCAL TO THIS SOURCE FILE   ################## */
+struct _DLinearTrajectoryPrivate {
+    DVector3    *dummy;/* private members of DLinearTrajectory */
+};
+
+struct _DJointTrajectoryPrivate {
+    /* private members of DJointTrajectory */
+    DAxes       *axes;          /* Instant position */
+    DSpeed      *speed;         /* Axes Speed */
+    DAxes       *deltaA;        /* Distance to current destination */
+    DAxes       *deltaC;        /* Distance from current/next destination */
+    DAxes       *pointB;        /* Current destination */
+    gdouble     time;           /* Segment Time starts at -accTime */
+    gdouble     accTime;        /* Acceleration Time */
+    gdouble     stepTime;       /* Step time for calculation */
+    gdouble     moveTime;       /* Total Movement Time */
+};
+
+/* #####   PROTOTYPES  -  LOCAL TO THIS SOURCE FILE   ################# */
+static void     d_linear_trajectory_interface_init  (DITrajectoryInterface * iface);
+static DVector3*    d_linear_trajectory_next        (DITrajectory  *self);
+
+static void     d_joint_trajectory_interface_init   (DITrajectoryInterface * iface);
+static DVector3*    d_joint_trajectory_next         (DITrajectory  *self);
+
+static gdouble      calculateMoveTime           ( DVector3      *deltaC,
+                                                  DVector3      *speed,
+                                                  gdouble       accTime );
+
+/* #####   DTRAJECTORYINTERFACE IMPLEMENTATION   ###################### */
+G_DEFINE_INTERFACE(DITrajectory, d_itrajectory, G_TYPE_OBJECT);
+
+static void d_itrajectory_default_init (DITrajectoryInterface *klass) {}
+
+DVector3*
+d_trajectory_next ( DITrajectory   *self )
+{
+    g_return_val_if_fail (D_IS_ITRAJECTORY(self), NULL);
+    return D_ITRAJECTORY_GET_INTERFACE(self)->next(self);
+}
+
+/* #####   DLINEARTRAJECTORY IMPLEMENTATION   ######################### */
+G_DEFINE_TYPE_WITH_CODE ( DLinearTrajectory,
+                          d_linear_trajectory,
+                          G_TYPE_OBJECT,
+                          G_IMPLEMENT_INTERFACE ( D_TYPE_ITRAJECTORY,
+                                                  d_linear_trajectory_interface_init));
+
+/* Create new DLinearTrajectory object */
+DLinearTrajectory*
+d_linear_trajectory_new  (void)
+{
+    DLinearTrajectory* djt;
+    djt = g_object_new ( D_TYPE_LINEAR_TRAJECTORY, NULL );
+    return djt;
+}
+
+/* Dispose and finalize */
+static void
+d_linear_trajectory_dispose ( GObject    *obj )
+{
+    /* Chain up */
+    G_OBJECT_CLASS(d_linear_trajectory_parent_class)->dispose(obj);
+}
+static void
+d_linear_trajectory_finalize ( GObject   *obj )
+{
+    /* Chain up */
+    G_OBJECT_CLASS(d_linear_trajectory_parent_class)->finalize(obj);
+}
+
+/* Init functions */
+static void
+d_linear_trajectory_init ( DLinearTrajectory  *self )
+{
+
+}
+
+static void
+d_linear_trajectory_class_init ( DLinearTrajectoryClass   *klass )
+{
+    GObjectClass *goc = G_OBJECT_CLASS(klass);
+    goc->dispose = d_linear_trajectory_dispose;
+    goc->finalize = d_linear_trajectory_finalize;
+}
+
+static void
+d_linear_trajectory_interface_init ( DITrajectoryInterface    *iface )
+{
+    iface->next = d_linear_trajectory_next;
+}
+
+/* Methods */
+static DVector3*
+d_linear_trajectory_next (DITrajectory  *self)
+{
+    g_warning("d_linear_trajectory_next is a stub!!!");
+    return d_pos_new();
+}
+
+/* #####   DJOINTTRAJECTORY IMPLEMENTATION   ########################## */
+G_DEFINE_TYPE_WITH_CODE ( DJointTrajectory,
+                          d_joint_trajectory,
+                          G_TYPE_OBJECT,
+                          G_IMPLEMENT_INTERFACE ( D_TYPE_ITRAJECTORY,
+                                                  d_joint_trajectory_interface_init));
+
+/* Create new DJointTrajectory object */
+DJointTrajectory*
+d_joint_trajectory_new ( DAxes      *currentPosition,
+                         DAxes      *currentDestination,
+                         DAxes      *nextDestination,
+                         DSpeed     *maxSpeed )
+{
+    return d_joint_trajectory_new_full ( currentPosition,
+                                         currentDestination,
+                                         nextDestination,
+                                         maxSpeed,
+                                         D_IT_DEFAULT_ACC_TIME,
+                                         D_IT_DEFAULT_STEP_TIME );
+}
+
+DJointTrajectory*
+d_joint_trajectory_new_full ( DAxes     *currentPosition,
+                              DAxes     *currentDestination,
+                              DAxes     *nextDestination,
+                              DSpeed    *maxSpeed,
+                              gdouble   accTime,
+                              gdouble   stepTime )
+{
+    DJointTrajectory* djt;
+    djt = g_object_new ( D_TYPE_JOINT_TRAJECTORY, NULL );
+    DJTPrivate *priv = D_JOINT_TRAJECTORY_GET_PRIVATE(djt);
+
+    priv->axes = d_axes_copy(currentPosition);
+    priv->deltaA = d_axes_copy(currentDestination);
+    d_axes_substract(priv->deltaA, currentPosition);
+
+    priv->deltaC = d_axes_copy(nextDestination);
+    d_axes_substract(priv->deltaC, currentDestination);
+
+    priv->pointB = d_axes_copy(currentDestination);
+
+    priv->speed = maxSpeed;
+    g_object_ref(maxSpeed);
+
+    priv->time = -accTime;
+    priv->accTime = accTime;
+    priv->stepTime = stepTime;
+    priv->moveTime = calculateMoveTime ( D_VECTOR3(priv->deltaC),
+                                         D_VECTOR3(maxSpeed),
+                                         accTime);
+    return djt;
+}
+
+/* Dispose and finalize */
+static void
+d_joint_trajectory_dispose ( GObject    *obj )
+{
+    DJointTrajectory *self = D_JOINT_TRAJECTORY(obj);
+    if (self->priv->axes) {
+        g_object_unref(self->priv->axes);
+        self->priv->axes = NULL;
+    }
+    if (self->priv->speed) {
+        g_object_unref(self->priv->speed);
+        self->priv->speed = NULL;
+    }
+    if (self->priv->deltaA) {
+        g_object_unref(self->priv->deltaA);
+        self->priv->deltaA = NULL;
+    }
+    if (self->priv->pointB) {
+        g_object_unref(self->priv->pointB);
+        self->priv->pointB = NULL;
+    }
+    if (self->priv->deltaC) {
+        g_object_unref(self->priv->deltaC);
+        self->priv->deltaC = NULL;
+    }
+    /* Chain up */
+    G_OBJECT_CLASS(d_joint_trajectory_parent_class)->dispose(obj);
+}
+
+static void
+d_joint_trajectory_finalize ( GObject   *obj )
+{
+    /* Chain up */
+    G_OBJECT_CLASS(d_joint_trajectory_parent_class)->finalize(obj);
+}
+
+/* Init functions */
+static void
+d_joint_trajectory_init ( DJointTrajectory  *self )
+{
+    g_print("Initializing Joint Trajectory\n");
+    DJTPrivate *priv;
+    self->priv = priv = D_JOINT_TRAJECTORY_GET_PRIVATE(self);
+    /* Initialize private fields */
+    priv->axes = NULL;
+    priv->speed = NULL;
+    priv->deltaA = NULL;
+    priv->pointB = NULL;
+    priv->deltaC = NULL;
+    priv->time = 0.0;
+    priv->accTime = 0.0;
+    priv->moveTime = 0.0;
+    priv->stepTime = 0.1;
+}
+
+static void
+d_joint_trajectory_class_init ( DJointTrajectoryClass   *klass )
+{
+    GObjectClass *goc = G_OBJECT_CLASS(klass);
+    goc->dispose = d_joint_trajectory_dispose;
+    goc->finalize = d_joint_trajectory_finalize;
+    g_type_class_add_private(klass, sizeof(DJTPrivate));
+}
+
+static void
+d_joint_trajectory_interface_init ( DITrajectoryInterface    *iface )
+{
+    iface->next = d_joint_trajectory_next;
+}
+
+/* Methods */
+static DVector3*
+d_joint_trajectory_next ( DITrajectory     *self )
+{
+    g_warning("d_joint_trajectory_next is a stub!!!");
+    return d_axes_new();
+}
+
+// ############ OLD CODE ############
 /* Auxiliary functions */
 static gdouble
-getMoveTime ( DTrajectory* self )
+calculateMoveTime ( DVector3    *deltaC,
+                    DVector3    *speed,
+                    gdouble     accTime )
 {
     gdouble values[4] = {
-        abs(d_vector3_get(self->deltaC, 0)),
-        abs(d_vector3_get(self->deltaC, 1)),
-        abs(d_vector3_get(self->deltaC, 2)),
-        self->accelTime
+        abs(d_vector3_get(deltaC, 0) / d_vector3_get(speed, 0)),
+        abs(d_vector3_get(deltaC, 1) / d_vector3_get(speed, 1)),
+        abs(d_vector3_get(deltaC, 2) / d_vector3_get(speed, 2)),
+        2.0 * accTime
     };
     gdouble max = values[0];
     {
@@ -74,98 +311,5 @@ interpolateLSB ( DVector3*  resPoint,
                     + d_vector3_get(deltaA, i) * tfactA);
         }
     }
-}
-
-/* Virtual Methods */
-DVector3*
-d_trajectory_next ( DTrajectory* self )
-{
-    return D_TRAJECTORY_GET_CLASS(self)->next();
-}
-
-static DVector3*
-d_real_default_linear_next ( void )
-{
-    //TODO: interpolate and give next point
-}
-
-static DVector3*
-d_real_default_joint_next ( void )
-{
-    //TODO: interpolate and give next point
-
-}
-
-/* GtypeRegister */
-G_DEFINE_TYPE(DTrajectory, d_trajectory, G_TYPE_OBJECT);
-
-/* Constructors */
-static DTrajectory*
-d_trajectory_new ( DTrajectoryType      type,
-                   DTrajInterpolator    interpolator )
-{
-    DTrajectory* instance = D_TRAJECTORY(g_object_new(D_TYPE_TRAJECTORY, NULL));
-    D_TRAJECTORY_GET_CLASS(instance)->next = interpolator;
-    instance->type = type;
-}
-
-DTrajectory*
-d_trajectory_new_linear ( void )
-{
-    return d_trajectory_new (D_TRAJECTORY_LINEAR, d_real_default_linear_next);
-}
-
-DTrajectory*
-d_trajectory_new_joint ( void )
-{
-    return d_trajectory_new (D_TRAJECTORY_JOINT, d_real_default_joint_next);
-}
-
-/* Destructor */
-static void
-d_trajectory_dispose ( GObject* object )
-{
-    DTrajectory* self = D_TRAJECTORY(object);
-    if (self->currentDestination){
-        g_object_unref(self->currentPosition);
-        self->currentPosition = NULL;
-    }
-    if (self->currentDestination) {
-        g_object_unref(self->currentDestination);
-        self->currentDestination = NULL;
-    }
-    if (self->nextDestination) {
-        g_object_unref(self->nextDestination);
-        self->nextDestination = NULL;
-    }
-    G_OBJECT_CLASS (d_trajectory_parent_class)->dispose(object);
-}
-
-static void
-d_trajectory_finalize ( GObject* object )
-{
-    G_OBJECT_CLASS (d_trajectory_parent_class)->finalize(object);
-}
-
-/* Init class and instence */
-static void
-d_trajectory_class_init ( DTrajectoryClass* klass )
-{
-    GObjectClass* oclass = G_OBJECT_CLASS(klass);
-    oclass->dispose =   d_trajectory_dispose;
-    oclass->finalize =  d_trajectory_finalize;
-    klass->next =       d_real_default_joint_next; //TODO: Check This setting
-}
-
-static void
-d_trajectory_init ( DTrajectory* self)
-{
-    self->type = D_TRAJECTORY_JOINT;
-    self->currentPosition =     d_vector3_new();
-    self->currentDestination =  d_vector3_new();
-    self->nextDestination =     d_vector3_new();
-    self->stepTime =            0.01;
-    self->accelTime =           0.1;
-    self->segTime =             -(self->accelTime);
 }
 
