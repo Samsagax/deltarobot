@@ -1,4 +1,5 @@
 AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) ${gobject_CFLAGS}
+AM_CFLAGS = -std=c99
 
 sources = \
 	dsim.h \
