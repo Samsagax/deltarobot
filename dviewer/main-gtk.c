@@ -31,6 +31,9 @@
 
 #include "dviewer_engine.h"
 
+static DGeometry    *robot;
+static DPos         *pos;
+
 static GLdouble v_rotX = 0.0;
 static GLdouble v_rotY = 0.0;
 static GLdouble v_rotZ = 0.0;
@@ -88,10 +91,10 @@ draw ( GtkWidget        *widget,
 
     GLfloat r = 30.0;
     d_viewer_draw_reference_frame   ( 10.0, 0.5 );
-    glColor3f(1.0, 0.5, 0.0);
-    d_viewer_draw_platform          ( r, 2.0, 5.0 );
+//    glColor3f(1.0, 0.5, 0.0);
+//    d_viewer_draw_platform          ( r, 2.0, 5.0 );
 
-    {
+/*    {
         int i;
         for (i = 0; i < 3; i++) {
             GLfloat phi = 120.0 * (GLfloat) i;
@@ -103,7 +106,8 @@ draw ( GtkWidget        *widget,
             glPopMatrix();
         }
     }
-
+*/
+    d_viewer_draw_robot_at_pos (robot, pos);
     // Finish drawing, restore transformation
     glPopMatrix();
 
@@ -240,7 +244,6 @@ create_main_window(void) {
                                    NULL,
                                    TRUE,
                                    GDK_GL_RGBA_TYPE);
-    g_object_unref(glconfig);
 
     /* Set up drawing area behaviour */
     gtk_widget_add_events ( drawing_area, GDK_VISIBILITY_NOTIFY_MASK );
@@ -322,6 +325,9 @@ main(int argc, char* argv[])
     gtk_init(&argc, &argv);
     gtk_gl_init(&argc, &argv);
 
+    robot = d_geometry_new(40.0, 50.0, 30.0, 10.0);
+    pos   = d_pos_new_full(0.0, 0.0, 50.0);
+
     /* Create the window and show it */
     GtkWidget *mainWindow;
     mainWindow = create_main_window();
@@ -333,5 +339,9 @@ main(int argc, char* argv[])
 
     /* Start program main loop */
     gtk_main();
+
+    g_object_unref(robot);
+    g_object_unref(pos);
+
     return 0;
 }
