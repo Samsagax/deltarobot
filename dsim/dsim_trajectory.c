@@ -55,11 +55,20 @@ static DVector3*    d_joint_trajectory_next         (DITrajectory  *self);
 static gdouble      calculateMoveTime           ( DVector3      *deltaC,
                                                   DVector3      *speed,
                                                   gdouble       accTime );
+static void         interpolateLSB              ( DVector3*  resPoint,
+                                                  DVector3*  deltaA,
+                                                  DVector3*  deltaC,
+                                                  DVector3*  pointB,
+                                                  gdouble    moveTime,
+                                                  gdouble    accelTime,
+                                                  gdouble    segTime );
 
 /* #####   DTRAJECTORYINTERFACE IMPLEMENTATION   ###################### */
 G_DEFINE_INTERFACE(DITrajectory, d_itrajectory, G_TYPE_OBJECT);
 
-static void d_itrajectory_default_init (DITrajectoryInterface *klass) {}
+static void d_itrajectory_default_init (DITrajectoryInterface *klass)
+{
+}
 
 DVector3*
 d_trajectory_next ( DITrajectory   *self )
@@ -222,7 +231,6 @@ d_joint_trajectory_finalize ( GObject   *obj )
 static void
 d_joint_trajectory_init ( DJointTrajectory  *self )
 {
-    g_print("Initializing Joint Trajectory\n");
     DJTPrivate *priv;
     self->priv = priv = D_JOINT_TRAJECTORY_GET_PRIVATE(self);
     /* Initialize private fields */
@@ -234,7 +242,7 @@ d_joint_trajectory_init ( DJointTrajectory  *self )
     priv->time = 0.0;
     priv->accTime = 0.0;
     priv->moveTime = 0.0;
-    priv->stepTime = 0.1;
+    priv->stepTime = 0.0;
 }
 
 static void
@@ -256,8 +264,21 @@ d_joint_trajectory_interface_init ( DITrajectoryInterface    *iface )
 static DVector3*
 d_joint_trajectory_next ( DITrajectory     *self )
 {
+    if (!D_IS_JOINT_TRAJECTORY(self)) {
+        g_error("d_joint_trajectory_next must be called on a DJointTrajectory object");
+    }
+    DJointTrajectory *joint = D_JOINT_TRAJECTORY(self);
+    DJTPrivate *priv = D_JOINT_TRAJECTORY_GET_PRIVATE(joint);
+    priv->time += priv->stepTime;
+    interpolateLSB( D_VECTOR3(priv->axes),
+                    D_VECTOR3(priv->deltaA),
+                    D_VECTOR3(priv->deltaC),
+                    D_VECTOR3(priv->pointB),
+                    priv->moveTime,
+                    priv->accTime,
+                    priv->time );
     g_warning("d_joint_trajectory_next is a stub!!!");
-    return d_axes_new();
+    return d_axes_copy(D_VECTOR3(priv->axes));
 }
 
 // ############ OLD CODE ############
