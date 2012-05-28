@@ -29,7 +29,17 @@
 
 /* #####   VARIABLES  -  LOCAL TO THIS SOURCE FILE   ################## */
 struct _DLinearTrajectoryPrivate {
-    DVector3    *dummy;/* private members of DLinearTrajectory */
+    /* private members of DLinearTrajectory */
+    DPos        *pos;           /* Instant position */
+    DSpeed      *cSpeed;        /* Cartesian Speed */
+    DSpeed      *aSpeed;        /* Axes maximum speed */
+    DPos        *deltaA;        /* Distance to current destination */
+    DPos        *deltaC;        /* Distance from current/next destination */
+    DPos        *pointB;        /* Current destination */
+    gdouble     time;           /* Segment time starts at -accTime */
+    gdouble     accTime;        /* Acceleration Time */
+    gdouble     stepTime;       /* Step time for calculation */
+    gdouble     moveTime;       /* Total movement time */
 };
 
 struct _DJointTrajectoryPrivate {
@@ -86,20 +96,71 @@ G_DEFINE_TYPE_WITH_CODE ( DLinearTrajectory,
 
 /* Create new DLinearTrajectory object */
 DLinearTrajectory*
-d_linear_trajectory_new  (void)
+d_linear_trajectory_new ( DPos      *currentPosition,
+                          DPos      *currentDestination,
+                          DPos      *nextDestination,
+                          DSpeed    *aSpeed,
+                          DSpeed    *cSpeed )
 {
-    DLinearTrajectory* djt;
-    djt = g_object_new ( D_TYPE_LINEAR_TRAJECTORY, NULL );
-    return djt;
+    return d_linear_trajectory_new_full ( currentPosition,
+                                          currentDestination,
+                                          nextDestination,
+                                          aSpeed,
+                                          cSpeed,
+                                          D_IT_DEFAULT_ACC_TIME,
+                                          D_IT_DEFAULT_STEP_TIME );
+}
+
+DLinearTrajectory*
+d_linear_trajectory_new_full ( DPos     *currentPosition,
+                               DPos     *currentDestination,
+                               DPos     *nextDestination,
+                               DSpeed   *aSpeed,
+                               DSpeed   *cSpeed,
+                               gdouble  accTime,
+                               gdouble  stepTime )
+{
+    DLinearTrajectory* dlt;
+    dlt = g_object_new (D_TYPE_LINEAR_TRAJECTORY, NULL);
+    DLTPrivate *priv = D_LINEAR_TRAJECTORY_GET_PRIVATE(dlt);
+    g_warning("d_linear_trajectory_new_full is a stub!");
+    return dlt;
 }
 
 /* Dispose and finalize */
 static void
 d_linear_trajectory_dispose ( GObject    *obj )
 {
+    DLinearTrajectory *self = D_LINEAR_TRAJECTORY(obj);
+    DLTPrivate *priv = D_LINEAR_TRAJECTORY_GET_PRIVATE(self);
+    if (priv->pos) {
+        g_object_unref(priv->pos);
+        priv->pos = NULL;
+    }
+    if (priv->aSpeed) {
+        g_object_unref(priv->aSpeed);
+        priv->aSpeed = NULL;
+    }
+    if (priv->cSpeed) {
+        g_object_unref(priv->cSpeed);
+        priv->cSpeed = NULL;
+    }
+    if (priv->deltaA) {
+        g_object_unref(priv->deltaA);
+        priv->deltaA = NULL;
+    }
+    if (priv->pointB) {
+        g_object_unref(priv->pointB);
+        priv->pointB = NULL;
+    }
+    if (priv->deltaC) {
+        g_object_unref(priv->deltaC);
+        priv->deltaC = NULL;
+    }
     /* Chain up */
     G_OBJECT_CLASS(d_linear_trajectory_parent_class)->dispose(obj);
 }
+
 static void
 d_linear_trajectory_finalize ( GObject   *obj )
 {
@@ -111,7 +172,19 @@ d_linear_trajectory_finalize ( GObject   *obj )
 static void
 d_linear_trajectory_init ( DLinearTrajectory  *self )
 {
-
+    DLTPrivate *priv;
+    self->priv = priv = D_LINEAR_TRAJECTORY_GET_PRIVATE(self);
+    /* Initialize private fields */
+    priv->pos = NULL;
+    priv->aSpeed = NULL;
+    priv->cSpeed = NULL;
+    priv->deltaA = NULL;
+    priv->pointB = NULL;
+    priv->deltaC = NULL;
+    priv->time = 0.0;
+    priv->accTime = 0.0;
+    priv->moveTime = 0.0;
+    priv->stepTime = 0.0;
 }
 
 static void
@@ -120,6 +193,7 @@ d_linear_trajectory_class_init ( DLinearTrajectoryClass   *klass )
     GObjectClass *goc = G_OBJECT_CLASS(klass);
     goc->dispose = d_linear_trajectory_dispose;
     goc->finalize = d_linear_trajectory_finalize;
+    g_type_class_add_private(klass, sizeof(DLTPrivate));
 }
 
 static void

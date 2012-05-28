@@ -102,7 +102,18 @@ struct _DLinearTrajectoryClass {
 GType   d_linear_trajectory_get_type    (void);
 
 /* Methods */
-DLinearTrajectory*  d_linear_trajectory_new     (void);
+DLinearTrajectory*  d_linear_trajectory_new     ( DPos      *currentPosition,
+                                                  DPos      *currentDestination,
+                                                  DPos      *nextDestination,
+                                                  DSpeed    *aSpeed,
+                                                  DSpeed    *cSpeed );
+DLinearTrajectory*  d_linear_trajectory_new_full    ( DPos      *currentPosition,
+                                                      DPos      *currentDestination,
+                                                      DPos      *nextDestination,
+                                                      DSpeed    *aSpeed,
+                                                      DSpeed    *cSpeed,
+                                                      gdouble   accTime,
+                                                      gdouble   stepTime );
 
 
 /* #######################  JOINT TRAJECTORY  ########################## */
