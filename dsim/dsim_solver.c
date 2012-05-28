@@ -92,59 +92,72 @@ d_solver_solve_direct ( DGeometry*  geometry,
 }
 
 void
-d_solver_solve_inverse ( DGeometry  *geometry,
-                         DPos       *pos,
-                         DAxes      *axes,
-                         DExtAxes   *extaxes )
+d_solver_solve_direct_with_ext_axes (DGeometry  *geometry,
+                                     DExtAxes   *extaxes,
+                                     DPos       *pos)
+{
+    g_warning("d_solve_direct_with_ext_axes is a stub");
+}
+
+void
+d_solver_solve_inverse (DGeometry   *geometry,
+                        DPos        *pos,
+                        DAxes       *axes,
+                        DExtAxes    *extaxes/* ,
+                        GError      **error*/)
 {
     gboolean extcalc = extaxes ? TRUE : FALSE;
-    {
-        int i;
-        for (i = 0; i < 3; i++) {
-            /* Locate point Ci */
-            gdouble phi = ((gdouble) i ) * G_PI * 2.0 / 3.0;
-            gdouble ci[] = {
-                d_pos_get(pos, 0) * cos(phi) + d_pos_get(pos, 1) * sin(phi) + geometry->h - geometry->r,
-                d_pos_get(pos, 1) * cos(phi) - d_pos_get(pos, 0) * sin(phi),
-                d_pos_get(pos, 2) };
+    gboolean axescalc = axes ? TRUE : FALSE;
+    if (!extcalc || !axescalc ) {
+        g_warning("d_solver_inverse: Nothing to solve");
+    }
+    for (int i = 0; i < 3; i++) {
+        /* Locate point Ci */
+        gdouble phi = ((gdouble) i ) * G_PI * 2.0 / 3.0;
+        gdouble ci[] = {
+        d_pos_get(pos, 0) * cos(phi) + d_pos_get(pos, 1) * sin(phi) + geometry->h - geometry->r,
+        d_pos_get(pos, 1) * cos(phi) - d_pos_get(pos, 0) * sin(phi),
+        d_pos_get(pos, 2) };
 
-            /* Calculate theta 3 */
-            gdouble cos3 = ci[1] / geometry->b;
+        /* Calculate theta 3 */
+        gdouble cos3 = ci[1] / geometry->b;
 
-            /* Check valid cos3 */
-            if ( abs(cos3) >= 1.0 ) {
-                g_warning("Unreachable point");
-                return;
-            } //TODO: Add check for sen3 == 0
-            gdouble sen3 = sqrt(1.0 - cos3 * cos3);
-            //TODO:Add extended axes calculation
-            if (extcalc) {
-                d_ext_axes_set(extaxes, i, 2, atan2(sen3, cos3));
-            }
+        /* Check valid cos3 */
+        if ( abs(cos3) >= 1.0 ) {
+            g_warning("Unreachable point");
+            return;
+        } //TODO: Add check for sen3 == 0
+        gdouble sen3 = sqrt(1.0 - cos3 * cos3);
+        //TODO:Add extended axes calculation
+        if (extcalc) {
+            d_ext_axes_set(extaxes, i, 2, atan2(sen3, cos3));
+        }
 
-            /* Calculate theta 2 */
-            gdouble cnormsq = ci[0] * ci[0] + ci[1] * ci[1] + ci[2] * ci[2];
-            gdouble cos2 = (cnormsq - geometry->a * geometry->a - geometry->b * geometry->b) / (2.0 * geometry->a * geometry->b * sen3);
-            /* Check for valid cos2 */
-            if ( abs(cos2) >= 1.0 ) {
-                g_warning("Unreachable point");
-                return;
-            }
-            gdouble sen2 = sqrt(1.0 - cos2 * cos2);
-            if ( extcalc ) {
-                d_ext_axes_set(extaxes, i, 1, atan2(sen2, cos2));
-            }
+        /* Calculate theta 2 */
+        gdouble cnormsq = ci[0] * ci[0] + ci[1] * ci[1] + ci[2] * ci[2];
+        gdouble cos2 = (cnormsq - geometry->a * geometry->a - geometry->b * geometry->b) / (2.0 * geometry->a * geometry->b * sen3);
+        /* Check for valid cos2 */
+        if ( abs(cos2) >= 1.0 ) {
+            g_warning("Unreachable point");
+            return;
+        }
+        gdouble sen2 = sqrt(1.0 - cos2 * cos2);
+        if ( extcalc ) {
+            d_ext_axes_set(extaxes, i, 1, atan2(sen2, cos2));
+        }
 
-            /* Calculate theta 1 */
-            gdouble x1 = geometry->a + geometry->b * cos2 * sen3;
-            gdouble x2 = geometry->b * sen2 * sen3;
-            gdouble sen1 = ci[2] * x1 - ci[0] * x2;
-            gdouble cos1 = ci[2] * x2 + ci[0] * x1;
-            if ( extcalc ) {
-                d_ext_axes_set(extaxes, i, 0, atan2(sen1, cos1));
-            }
+        /* Calculate theta 1 */
+        gdouble x1 = geometry->a + geometry->b * cos2 * sen3;
+        gdouble x2 = geometry->b * sen2 * sen3;
+        gdouble sen1 = ci[2] * x1 - ci[0] * x2;
+        gdouble cos1 = ci[2] * x2 + ci[0] * x1;
+        if ( extcalc ) {
+            d_ext_axes_set(extaxes, i, 0, atan2(sen1, cos1));
+        }
+        if (axescalc) {
             d_axes_set(axes, i, atan2(sen1, cos1));
         }
+
     }
 }
 
