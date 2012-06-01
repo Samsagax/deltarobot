@@ -48,18 +48,8 @@ struct _DAxesClass {
 GType   d_axes_get_type (void);
 
 /* Create new instance */
-DAxes*  d_axes_new          (void);
-DAxes*  d_axes_new_full     (gdouble ax1, gdouble ax2, gdouble ax3);
-DAxes*  d_axes_copy         (DVector3 *source);
-
-/* Mathods */
-void    d_axes_to_string    (DAxes *self, GString *string);
-
-/* Virtual methods */
-gdouble d_axes_get          (DAxes *self, gint index);
-void    d_axes_set          (DAxes *self, gint index, gdouble value);
-void    d_axes_add          (DAxes *self, DAxes *a);
-void    d_axes_substract    (DAxes *self, DAxes *a);
+DVector3*   d_axes_new          (void);
+DVector3*   d_axes_new_full     (gdouble ax1, gdouble ax2, gdouble ax3);
 
 /* Type macros Extended ExtAxes */
 #define D_TYPE_EXTAXES             (d_ext_axes_get_type ())
@@ -73,7 +63,7 @@ void    d_axes_substract    (DAxes *self, DAxes *a);
 typedef struct _DExtAxes DExtAxes;
 struct _DExtAxes {
     GObject         parent_instance;
-    DAxes           *axes[];           /* Axes[limb][angle] */
+    DAxes           *axes[3];           /* Axes[limb][angle] */
 };
 
 /* Class Structure of DExtAxes */

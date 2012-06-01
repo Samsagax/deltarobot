@@ -27,33 +27,24 @@
 G_DEFINE_TYPE (DAxes, d_axes, D_TYPE_VECTOR3);
 
 /* Create new DAxes instance */
-DAxes*
+DVector3*
 d_axes_new()
 {
-    return D_AXES(g_object_new(D_TYPE_AXES, NULL));
+    return D_VECTOR3(g_object_new(D_TYPE_AXES, NULL));
 }
 
-DAxes*
+DVector3*
 d_axes_new_full ( gdouble ax1,
                   gdouble ax2,
                   gdouble ax3 )
 {
-    DAxes* a = d_axes_new();
-    d_axes_set(a, 0, ax1);
-    d_axes_set(a, 1, ax2);
-    d_axes_set(a, 2, ax3);
-    return a;
+    DAxes* a = D_AXES(d_axes_new());
+    d_vector3_set(D_VECTOR3(a), 0, ax1);
+    d_vector3_set(D_VECTOR3(a), 1, ax2);
+    d_vector3_set(D_VECTOR3(a), 2, ax3);
+    return D_VECTOR3(a);
 }
 
-DAxes*
-d_axes_copy ( DVector3  *source )
-{
-    DAxes* a = d_axes_new();
-    for (int i = 0; i < 3; i++) {
-        d_axes_set(a, i, d_vector3_get(source, i));
-    }
-    return a;
-}
 /* Dispose and Finalize functions */
 static void
 d_axes_dispose (GObject *gobject)
@@ -71,7 +62,6 @@ d_axes_finalize (GObject *gobject)
 static void
 d_axes_init ( DAxes* self )
 {
-    /* Stub Initialize function */
 }
 
 static void
@@ -81,43 +71,6 @@ d_axes_class_init ( DAxesClass *klass )
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
     gobject_class->dispose = d_axes_dispose;
     gobject_class->finalize = d_axes_finalize;
-}
-
-/* Methods */
-gdouble
-d_axes_get ( DAxes* self,
-             gint   index )
-{
-    return D_VECTOR3_CLASS(d_axes_parent_class)->get(D_VECTOR3(self), index);
-}
-
-void
-d_axes_set ( DAxes*     self,
-             gint       index,
-             gdouble    value )
-{
-    D_VECTOR3_CLASS(d_axes_parent_class)->set(D_VECTOR3(self), index, value);
-}
-
-void
-d_axes_add ( DAxes* self,
-             DAxes* a )
-{
-    D_VECTOR3_CLASS(d_axes_parent_class)->add(D_VECTOR3(self), D_VECTOR3(a));
-}
-
-void
-d_axes_substract ( DAxes* self,
-                   DAxes *a)
-{
-    D_VECTOR3_CLASS(d_axes_parent_class)->substract(D_VECTOR3(self), D_VECTOR3(a));
-}
-
-void
-d_axes_to_string ( DAxes    *self,
-                   GString  *string )
-{
-    d_vector3_to_string(D_VECTOR3(self), string);
 }
 
 /* ################ Extended DExtAxes ###################### */
@@ -165,7 +118,7 @@ d_ext_axes_init ( DExtAxes* self )
     {
         int i;
         for (i = 0; i < 3; i++) {
-            self->axes[i] = d_axes_new();
+            self->axes[i] = D_AXES(d_axes_new());
         }
     }
 }
@@ -173,7 +126,6 @@ d_ext_axes_init ( DExtAxes* self )
 static void
 d_ext_axes_class_init ( DExtAxesClass *klass )
 {
-    /* Stub */
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
     gobject_class->dispose = d_ext_axes_dispose;
     gobject_class->finalize = d_ext_axes_finalize;
@@ -186,7 +138,7 @@ d_ext_axes_set ( DExtAxes   *self,
                  gint       j,
                  gdouble    value )
 {
-    d_axes_set(self->axes[i], j, value);
+    d_vector3_set(D_VECTOR3(self->axes[i]), j, value);
 }
 
 gdouble
@@ -194,5 +146,5 @@ d_ext_axes_get ( DExtAxes   *self,
                  gint       i,
                  gint       j )
 {
-    return d_axes_get(self->axes[i], j);
+    return d_vector3_get(D_VECTOR3(self->axes[i]), j);
 }
