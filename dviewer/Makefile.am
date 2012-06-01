@@ -5,8 +5,12 @@ AM_CPPFLAGS = -I$(top_builddir) \
 			${gl_CFLAGS} \
 			${glu_CFLAGS} \
 			${gtkglext_CFLAGS}
+sources = main-gtk.c \
+			dviewer_engine.c \
+			dviewer_viewport.c
+
 bin_PROGRAMS = ../test/dviewer-gtk
-___test_dviewer_gtk_SOURCES = main-gtk.c dviewer_engine.c dviewer_viewport.c ../dsim/libdsim.la
+___test_dviewer_gtk_SOURCES = ${sources}
 #___test_dviewer_gtk_LDADD = ${gl_LIBS} 
 #			${glu_LIBS} \
 #			${gtkglext_LIBS} \
