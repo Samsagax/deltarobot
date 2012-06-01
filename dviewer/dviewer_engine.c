@@ -29,8 +29,8 @@
  * Draw ortogonal axis in RGB colors
  */
 void
-d_viewer_draw_reference_frame ( GLfloat     axisLength,
-                                GLfloat     axisRadius )
+d_viewer_draw_reference_frame (GLfloat     axisLength,
+                               GLfloat     axisRadius)
 {
     glPushMatrix();
     GLUquadricObj *pObj;
@@ -306,17 +306,20 @@ d_viewer_draw_arm ( GLfloat a,
  * Draw the entire robot at a given DPos value
  */
 void
-d_viewer_draw_robot_at_pos  ( DGeometry *geometry,
-                              DPos      *pos )
+d_viewer_draw_robot_at_pos (DGeometry   *geometry,
+                            DVector3    *pos)
 {
+    g_return_if_fail(D_IS_POS(pos));
+    g_return_if_fail(D_IS_GEOMETRY(geometry));
+
     // First Make sure the position is reachable
-    DAxes       *axes       = d_axes_new();
+    DVector3    *axes       = d_axes_new();
     DExtAxes    *extaxes    = d_ext_axes_new();
     // TODO: Use GError for error handling!!!
-    d_solver_solve_inverse  ( geometry,
-                              pos,
-                              axes,
-                              extaxes );
+    d_solver_solve_inverse (geometry,
+                            pos,
+                            axes,
+                            extaxes);
     GLfloat jdiam = 3.0;
     GLfloat thick = 3.0;
 
@@ -348,9 +351,9 @@ d_viewer_draw_robot_at_pos  ( DGeometry *geometry,
 
     // Moving platform
     glColor3f(0.0, 1.0, 0.4);
-    glTranslatef( d_pos_get(pos, 0),
-                  d_pos_get(pos, 1),
-                  d_pos_get(pos, 2));
+    glTranslatef( d_vector3_get(pos, 0),
+                  d_vector3_get(pos, 1),
+                  d_vector3_get(pos, 2));
     d_viewer_draw_platform(geometry->h, thick, jdiam);
 
     // Restore current transformation
