@@ -48,17 +48,8 @@ struct _DPosClass {
 GType       d_pos_get_type  (void);
 
 /* Create new instance */
-DPos*       d_pos_new       (void);
-DPos*       d_pos_new_full  (gdouble x, gdouble y, gdouble z);
-
-/* Methods */
-void    d_pos_to_string     (DPos *self, GString *string);
-
-/* Virtual methods */
-gdouble d_pos_get           (DPos *self, gint index);
-void    d_pos_set           (DPos *self, gint index, gdouble value);
-void    d_pos_substract     (DPos *self, DPos *a);
-void    d_pos_add           (DPos *self, DPos *a);
+DVector3*   d_pos_new       (void);
+DVector3*   d_pos_new_full  (gdouble x, gdouble y, gdouble z);
 
 #endif   /* ----- #ifndef DSIM_POS_INC  ----- */
 
