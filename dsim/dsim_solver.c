@@ -29,20 +29,21 @@
 
 /* Static Methods */
 void
-d_solver_solve_direct ( DGeometry*  geometry,
-                        DAxes*      axes,
-                        DPos*       pos )
+d_solver_solve_direct (DGeometry   *geometry,
+                       DVector3    *axes,
+                       DVector3    *pos)
 {
     //TODO: Checkear que los centros no sean colineales
     //TODO: Use GError for non-reachable positions
+
     gdouble pb[3][3];
     {
         int i;
         for(i = 0; i < 3; i++) {
             gdouble phi = ((gdouble)i) * G_PI * 2.0 / 3.0;
-            gdouble bx = geometry->r + geometry->a * cos(d_axes_get(axes, i)) - geometry->h;
+            gdouble bx = geometry->r + geometry->a * cos(d_vector3_get(axes, i)) - geometry->h;
             gdouble by = 0.0;
-            gdouble bz = geometry->a * sin(d_axes_get(axes,i));
+            gdouble bz = geometry->a * sin(d_vector3_get(axes,i));
 
             pb[i][0] = bx * cos(phi) - by * sin(phi);
             pb[i][1] = by * cos(phi) + bx * sin(phi);
@@ -86,9 +87,9 @@ d_solver_solve_direct ( DGeometry*  geometry,
         g_warning("Unreachable point");
         return;
     }
-    d_pos_set(pos, 2, ((-k1 + sqrt(disc))) / (2.0 * k2));
-    d_pos_set(pos, 1, l[3]/l[0] + l[4]/l[0] * d_pos_get(pos, 2));
-    d_pos_set(pos, 0, l[1]/l[0] + l[2]/l[0] * d_pos_get(pos, 2));
+    d_vector3_set(pos, 2, ((-k1 + sqrt(disc))) / (2.0 * k2));
+    d_vector3_set(pos, 1, l[3]/l[0] + l[4]/l[0] * d_vector3_get(pos, 2));
+    d_vector3_set(pos, 0, l[1]/l[0] + l[2]/l[0] * d_vector3_get(pos, 2));
 }
 
 void
@@ -101,23 +102,22 @@ d_solver_solve_direct_with_ext_axes (DGeometry  *geometry,
 
 void
 d_solver_solve_inverse (DGeometry   *geometry,
-                        DPos        *pos,
-                        DAxes       *axes,
+                        DVector3    *pos,
+                        DVector3    *axes,
                         DExtAxes    *extaxes/* ,
                         GError      **error*/)
 {
     gboolean extcalc = extaxes ? TRUE : FALSE;
     gboolean axescalc = axes ? TRUE : FALSE;
-    if (!extcalc || !axescalc ) {
-        g_warning("d_solver_inverse: Nothing to solve");
-    }
+    g_return_if_fail((extcalc || axescalc));
+
     for (int i = 0; i < 3; i++) {
         /* Locate point Ci */
         gdouble phi = ((gdouble) i ) * G_PI * 2.0 / 3.0;
         gdouble ci[] = {
-        d_pos_get(pos, 0) * cos(phi) + d_pos_get(pos, 1) * sin(phi) + geometry->h - geometry->r,
-        d_pos_get(pos, 1) * cos(phi) - d_pos_get(pos, 0) * sin(phi),
-        d_pos_get(pos, 2) };
+        d_vector3_get(pos, 0) * cos(phi) + d_vector3_get(pos, 1) * sin(phi) + geometry->h - geometry->r,
+        d_vector3_get(pos, 1) * cos(phi) - d_vector3_get(pos, 0) * sin(phi),
+        d_vector3_get(pos, 2) };
 
         /* Calculate theta 3 */
         gdouble cos3 = ci[1] / geometry->b;
@@ -155,7 +155,7 @@ d_solver_solve_inverse (DGeometry   *geometry,
             d_ext_axes_set(extaxes, i, 0, atan2(sen1, cos1));
         }
         if (axescalc) {
-            d_axes_set(axes, i, atan2(sen1, cos1));
+            d_vector3_set(axes, i, atan2(sen1, cos1));
         }
 
     }

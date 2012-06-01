@@ -61,7 +61,8 @@ DVector3*   d_vector3_new_full      (gdouble    v1,
                                      gdouble    v3);
 
 /* Methods */
-DVector3*   d_vector3_copy          (DVector3   *source);
+DVector3*   d_vector3_deep_copy     (DVector3   *source,
+                                     DVector3   *dest);
 
 void        d_vector3_to_string     (DVector3   *self,
                                      GString    *string);

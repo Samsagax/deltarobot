@@ -30,8 +30,6 @@
 /* GType register */
 G_DEFINE_TYPE (DVector3, d_vector3, G_TYPE_OBJECT);
 
-
-
 DVector3*
 d_vector3_new (void)
 {
@@ -47,6 +45,12 @@ d_vector3_new_full (gdouble v1,
     d_vector3_set(v, 0, v1);
     d_vector3_set(v, 1, v2);
     d_vector3_set(v, 2, v3);
+}
+
+DVector3*
+d_vector3_deep_copy_new (DVector3   *source)
+{
+
 }
 
 /* Dispose and finalize functions */
@@ -82,6 +86,16 @@ d_vector3_init (DVector3 *self)
     }
 }
 
+DVector3*
+d_vector3_deep_copy (DVector3   *source,
+                     DVector3   *dest)
+{
+    for (int i = 0; i < source->length; i++) {
+        d_vector3_set(dest, i, d_vector3_get(source, i));
+    }
+    return dest;
+}
+
 void
 d_vector3_to_string (DVector3  *self,
                           GString   *string)
@@ -91,16 +105,6 @@ d_vector3_to_string (DVector3  *self,
                      self->data[0],
                      self->data[1],
                      self->data[2] );
-}
-
-DVector3*
-d_vector3_copy (DVector3   *source)
-{
-    DVector3 *v = d_vector3_new();
-    for(int i = 0; i < v->length; i++) {
-        d_vector3_set(v, i, d_vector3_get(source, i));
-    }
-    return v;
 }
 
 gdouble
@@ -124,27 +128,26 @@ d_vector3_set (DVector3    *self,
 
 DVector3*
 d_vector3_substract (DVector3  *a,
-                          DVector3  *b)
+                     DVector3  *b)
 {
     g_return_val_if_fail(D_IS_VECTOR3(a), NULL);
     g_return_val_if_fail(D_IS_VECTOR3(b), NULL);
-    DVector3* v = d_vector3_new();
-    for(int i = 0; i < v->length; i++) {
-        v->data[i] = a->data[i] - b->data[i];
+    for(int i = 0; i < a->length; i++) {
+        a->data[i] = a->data[i] - b->data[i];
     }
-    return v;
+    return a;
 }
 
 DVector3*
-d_vector3_add (DVector3 *a, DVector3 *b)
+d_vector3_add (DVector3     *a,
+               DVector3     *b)
 {
     g_return_val_if_fail(D_IS_VECTOR3(a), NULL);
     g_return_val_if_fail(D_IS_VECTOR3(b), NULL);
-    DVector3* v = d_vector3_new();
-    for(int i = 0; i < v->length; i++) {
-        v->data[i] = a->data[i] + b->data[i];
+    for(int i = 0; i < a->length; i++) {
+        a->data[i] = a->data[i] + b->data[i];
     }
-    return v;
+    return a;
 }
 
 gdouble

@@ -52,7 +52,8 @@ struct _DSpeedClass {
 GType       d_speed_get_type    (void);
 
 /* Create new instance */
-DVector3*   d_speed_new         (gdouble s1, gdouble s2, gdouble s3);
+DVector3*   d_speed_new         (void);
+DVector3*   d_speed_new_full    (gdouble s1, gdouble s2, gdouble s3);
 
 #endif   /* ----- #ifndef DSIM_SPEED_INC  ----- */
 

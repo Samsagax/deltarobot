@@ -28,9 +28,9 @@ main (int argc, char* argv[]) {
 
     GString     *string;
     DGeometry   *geometry;
-    DAxes       *from;
-    DAxes       *to;
-    DSpeed      *speed;
+    DVector3    *ax_from;
+    DVector3    *ax_to;
+    DVector3    *speed;
 
     string = g_string_new(NULL);
     geometry = d_geometry_new(
@@ -39,19 +39,22 @@ main (int argc, char* argv[]) {
                 30.0,               /* Fixed Platform */
                 20.0                /* Moving Platform */
                 );
-    from = d_axes_new_full(0.0, 0.0, 0.0);
-    to = d_axes_new_full(0.0, 0.0, 3.0);
-    speed = d_speed_new(90.0, 90.0, 90.0);
+    ax_from = d_axes_new_full(0.0, 0.0, 0.0);
+    ax_to = d_axes_new_full(0.0, 0.0, 3.0);
+    speed = d_speed_new_full(90.0, 90.0, 90.0);
 
-    d_axes_to_string(from, string);
+    d_vector3_to_string(ax_from, string);
     g_print("FROM : %s\n", string->str);
-    d_axes_to_string(to, string);
+    d_vector3_to_string(ax_to, string);
     g_print("TO:    %s\n", string->str);
-    d_speed_to_string(speed, string);
+    d_vector3_to_string(speed, string);
     g_print("SPEED: %s\n", string->str);
 
-    DJointTrajectory *movej = d_joint_trajectory_new(from, from, to, speed);
-    for (int i = 0; i < 100; i++) {
+    DJointTrajectory *movej = d_joint_trajectory_new(D_AXES(ax_from),
+                                                     D_AXES(ax_from),
+                                                     D_AXES(ax_to),
+                                                     D_SPEED(speed));
+    for (int i = 0; i < 10; i++) {
         DAxes* current = D_AXES(d_trajectory_next(D_ITRAJECTORY(movej)));
         d_vector3_to_string(D_VECTOR3(current), string);
         g_print("AT:    %s\n", string->str);
@@ -61,8 +64,8 @@ main (int argc, char* argv[]) {
     g_object_unref(movej);
     g_object_unref(speed);
     g_object_unref(geometry);
-    g_object_unref(from);
-    g_object_unref(to);
+    g_object_unref(ax_from);
+    g_object_unref(ax_to);
     g_string_free(string, TRUE);
     return 0;
 }

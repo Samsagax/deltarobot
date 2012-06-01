@@ -59,14 +59,14 @@ DSolver*    d_solver_get_instance   (void);
 
 /* Methods */
 /* Static methods */
-void d_solver_solve_direct          (DGeometry* geometry,
-                                     DAxes*     axes,
-                                     DPos*      pos);
+void d_solver_solve_direct          (DGeometry  *geometry,
+                                     DVector3   *axes,
+                                     DVector3   *pos);
 
-void d_solver_solve_inverse         (DGeometry *geometry,
-                                     DPos      *pos,
-                                     DAxes     *axes,
-                                     DExtAxes  *extaxes);
+void d_solver_solve_inverse         (DGeometry  *geometry,
+                                     DVector3   *pos,
+                                     DVector3   *axes,
+                                     DExtAxes   *extaxes);
 
 
 #endif   /* ----- #ifndef DSIM_SOLVER_INC  ----- */
