@@ -62,18 +62,25 @@ static gboolean d_viewport_timeout_animate  (GtkWidget          *widget);
 /* Define type */
 G_DEFINE_TYPE(DViewport, d_viewport, GTK_TYPE_DRAWING_AREA)
 
-/* Private structure */
-struct _DViewportPriv {
-    DGeometry   *geometry;
-};
-
 static void
 d_viewport_init (DViewport  *self)
 {
     g_warning("d_viewport_init is a stub");
-    self->priv = D_VIEWPORT_GET_PRIVATE(self);
-    self->priv->geometry = NULL;
+
+    self->geometry = NULL;
+    self->robot_pos = d_pos_new();
+    self->button = 0;
+    self->max_fps = 60;
+    self->timer = 0;
     self->glconfig = d_viewport_configure_gl(TRUE);
+    self->near_clip = 1.0;
+    self->far_clip = 400.0;
+    self->view_angle = 45.0;
+    self->view_x_angle = 0.0;
+    self->view_y_angle = 0.0;
+    self->view_z_angle = 0.0;
+    self->zoom = 1.0;
+
     gtk_widget_set_gl_capability ( GTK_WIDGET(self),
                                    self->glconfig,
                                    NULL,
@@ -101,8 +108,6 @@ d_viewport_class_init (DViewportClass   *klass)
     gtkWidgetClass->button_press_event = d_viewport_button_press;
     gtkWidgetClass->button_release_event = d_viewport_button_release;
     gtkWidgetClass->motion_notify_event = d_viewport_motion_notify;
-
-    g_type_class_add_private(klass, sizeof(DViewportPriv));
 }
 
 GtkWidget*
@@ -112,8 +117,8 @@ d_viewport_new (DGeometry *geometry)
     g_return_val_if_fail (D_IS_GEOMETRY(geometry), NULL);
 
     DViewport *viewport = g_object_new(D_TYPE_VIEWPORT, NULL);
-    if (viewport->priv->geometry == NULL) {
-        viewport->priv->geometry = g_object_ref(geometry);
+    if (viewport->geometry == NULL) {
+        viewport->geometry = g_object_ref(geometry);
     }
 
     return GTK_WIDGET(viewport);
@@ -123,9 +128,13 @@ static void
 d_viewport_dispose(GObject *obj)
 {
     DViewport *self = D_VIEWPORT(obj);
-    if (self->priv->geometry) {
-        g_object_unref(self->priv->geometry);
-        self->priv->geometry = NULL;
+    if (self->geometry) {
+        g_object_unref(self->geometry);
+        self->geometry = NULL;
+    }
+    if (self->robot_pos) {
+        g_object_unref(self->robot_pos);
+        self->robot_pos = NULL;
     }
 
     G_OBJECT_GET_CLASS(d_viewport_parent_class)->dispose(obj);
@@ -174,7 +183,11 @@ d_viewport_realize (GtkWidget   *widget)
     g_return_if_fail(widget != NULL);
     g_return_if_fail(D_IS_VIEWPORT(widget));
 
-    vport = D_VIEWPORT(widget);
+    gtk_widget_add_events(widget,
+                          GDK_POINTER_MOTION_MASK       |
+                          GDK_POINTER_MOTION_HINT_MASK  |
+                          GDK_BUTTON_PRESS_MASK         |
+                          GDK_BUTTON_RELEASE_MASK);
     GTK_WIDGET_CLASS(d_viewport_parent_class)->realize(widget);
 
     if (!gtk_widget_is_gl_capable(widget)) {
@@ -374,7 +387,6 @@ static gboolean
 d_viewport_button_press (GtkWidget      *widget,
                          GdkEventButton *event)
 {
-    g_return_val_if_fail (widget != NULL, FALSE);
     g_return_val_if_fail (D_IS_VIEWPORT(widget), FALSE);
     g_return_val_if_fail (event != NULL, FALSE);
 
@@ -434,7 +446,7 @@ d_viewport_configure_gl (gboolean verbose)
 }
 
 static gboolean
-d_viewport_timeout_animate(GtkWidget    *widget)
+d_viewport_timeout_animate (GtkWidget    *widget)
 {
     GtkAllocation allocation;
     GdkWindow *window;

@@ -40,15 +40,16 @@
 #define D_VIEWPORT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), D_TYPE_VIEWPORT, DViewportClass))
 #define D_IS_VIEWPORT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), D_TYPE_VIEWPORT))
 #define D_VIEWPORT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), D_TYPE_VIEWPORT, DViewportClass))
-#define D_VIEWPORT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE ((obj), D_TYPE_VIEWPORT, DViewportPriv))
 
 typedef struct _DViewport DViewport;
-typedef struct _DViewportPriv DViewportPriv;
 typedef struct _DViewportClass DViewportClass;
 
 struct _DViewport {
     GtkDrawingArea  parent;
 
+    /* Robot Geometry */
+    DGeometry       *geometry;
+    DPos            *robot_pos;
     /* Mouse button pressed or 0 */
     guint8          button;
 
@@ -75,9 +76,6 @@ struct _DViewport {
 
     /* Zooming */
     gdouble         zoom;
-
-    /* private */
-    DViewportPriv   *priv;
 };
 
 struct _DViewportClass {
