@@ -23,22 +23,8 @@
 /* GType register */
 G_DEFINE_TYPE (DSpeed, d_speed, D_TYPE_VECTOR3);
 
-/* Methods */
-void
-d_speed_to_string ( DSpeed *self, GString *string )
-{
-    d_vector3_to_string(D_VECTOR3(self), string);
-}
-
-/* Virtual Methods */
-gdouble
-d_speed_get (DSpeed* self, gint i)
-{
-    return D_VECTOR3_CLASS(d_speed_parent_class)->get(D_VECTOR3(self), i);
-}
-
 /* Create new DSpeed instance */
-DSpeed*
+DVector3*
 d_speed_new ( gdouble s1,
               gdouble s2,
               gdouble s3 )
@@ -47,7 +33,7 @@ d_speed_new ( gdouble s1,
     a->parent_instance.data[0] = s1;
     a->parent_instance.data[1] = s2;
     a->parent_instance.data[2] = s3;
-    return a;
+    return D_VECTOR3(a);
 }
 
 /* Dipose and finalize functions */
@@ -69,9 +55,6 @@ d_speed_finalize (GObject *gobject)
 static void
 d_speed_init (DSpeed* self)
 {
-    self->parent_instance.data[0] = 0.0;
-    self->parent_instance.data[1] = 0.0;
-    self->parent_instance.data[2] = 0.0;
 }
 
 static void

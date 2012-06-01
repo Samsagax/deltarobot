@@ -52,13 +52,7 @@ struct _DSpeedClass {
 GType       d_speed_get_type    (void);
 
 /* Create new instance */
-DSpeed*     d_speed_new         (gdouble s1, gdouble s2, gdouble s3);
-
-/* Methods */
-void        d_speed_to_string   (DSpeed *self, GString *string);
-
-/* Virtual methods */
-gdouble     d_speed_get         (DSpeed *self, gint index);
+DVector3*   d_speed_new         (gdouble s1, gdouble s2, gdouble s3);
 
 #endif   /* ----- #ifndef DSIM_SPEED_INC  ----- */
 
