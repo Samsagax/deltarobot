@@ -25,68 +25,28 @@
 #include "dsim_vector.h"
 #include <stdio.h>
 
+/* Forward declarations */
+
 /* GType register */
 G_DEFINE_TYPE (DVector3, d_vector3, G_TYPE_OBJECT);
 
-/* Virtual methods */
-gdouble
-d_vector3_get (DVector3 *self, gint index)
-{
-    //TODO: Make it lenght-safe
-    return self->data[index];
-}
 
-void
-d_vector3_set (DVector3 *self, gint index, gdouble value)
-{
-    self->data[index] = value;
-}
 
-void
-d_vector3_substract (DVector3 *self, DVector3 *a)
-{
-    int i;
-    for(i = 0; i < self->length; i++) {
-        self->data[i] = self->data[i] - a->data[i];
-    }
-}
-
-void
-d_vector3_add (DVector3 *self, DVector3 *a)
-{
-    int i;
-    for(i = 0; i < self->length; i++) {
-        self->data[i] = self->data[i] - a->data[i];
-    }
-}
-
-void
-d_vector3_to_string ( DVector3  *self,
-                      GString   *string )
-{
-
-    g_string_printf( string,
-                     "[ %f ; %f ; %f ]",
-                     self->data[0],
-                     self->data[1],
-                     self->data[2] );
-}
-
-/* Create new DVector3 instance */
 DVector3*
-d_vector3_new()
+d_vector3_new (void)
 {
     return D_VECTOR3(g_object_new(D_TYPE_VECTOR3, NULL));
 }
 
 DVector3*
-d_vector3_copy ( DVector3   *source )
+d_vector3_new_full (gdouble v1,
+                    gdouble v2,
+                    gdouble v3)
 {
-    DVector3* cpy = d_vector3_new();
-    for (int i = 0; i < 3; i++) {
-        d_vector3_set(cpy, i, d_vector3_get(source, i));
-    }
-    return cpy;
+    DVector3 *v = d_vector3_new();
+    d_vector3_set(v, 0, v1);
+    d_vector3_set(v, 1, v2);
+    d_vector3_set(v, 2, v3);
 }
 
 /* Dispose and finalize functions */
@@ -100,12 +60,6 @@ d_vector3_dispose (GObject *gobject)
 static void
 d_vector3_finalize (GObject *gobject)
 {
-    DVector3 *self = D_VECTOR3(gobject);
-    /* Free allocated resources */
-    if (self->data) {
-        g_free(self->data);
-        self->data = NULL;
-    }
     /* Chain up */
     G_OBJECT_CLASS(d_vector3_parent_class)->finalize(gobject);
 }
@@ -117,17 +71,106 @@ d_vector3_class_init(DVector3Class* klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
     gobject_class->dispose = d_vector3_dispose;
     gobject_class->finalize = d_vector3_finalize;
-    klass->add = d_vector3_add;
-    klass->substract = d_vector3_substract;
-    klass->set = d_vector3_set;
-    klass->get = d_vector3_get;
 }
 
 static void
 d_vector3_init (DVector3 *self)
 {
     self->length = 3;
-    if (!(self->data)) {
-        self->data = g_malloc0((self->length)*sizeof(gdouble));
+    for(int i = 0; i < self->length; i++) {
+        self->data[i] = 0.0;
     }
+}
+
+void
+d_vector3_to_string (DVector3  *self,
+                          GString   *string)
+{
+    g_string_printf( string,
+                     "[ %f ; %f ; %f ]",
+                     self->data[0],
+                     self->data[1],
+                     self->data[2] );
+}
+
+DVector3*
+d_vector3_copy (DVector3   *source)
+{
+    DVector3 *v = d_vector3_new();
+    for(int i = 0; i < v->length; i++) {
+        d_vector3_set(v, i, d_vector3_get(source, i));
+    }
+    return v;
+}
+
+gdouble
+d_vector3_get (DVector3    *self,
+                    gint        index)
+{
+    g_return_val_if_fail(D_IS_VECTOR3(self), 0);
+    g_return_val_if_fail(index < self->length, 0);
+    return self->data[index];
+}
+
+void
+d_vector3_set (DVector3    *self,
+                    gint        index,
+                    gdouble     value)
+{
+    g_return_if_fail(D_IS_VECTOR3(self));
+    g_return_if_fail(index < 3);
+    self->data[index] = value;
+}
+
+DVector3*
+d_vector3_substract (DVector3  *a,
+                          DVector3  *b)
+{
+    g_return_val_if_fail(D_IS_VECTOR3(a), NULL);
+    g_return_val_if_fail(D_IS_VECTOR3(b), NULL);
+    DVector3* v = d_vector3_new();
+    for(int i = 0; i < v->length; i++) {
+        v->data[i] = a->data[i] - b->data[i];
+    }
+    return v;
+}
+
+DVector3*
+d_vector3_add (DVector3 *a, DVector3 *b)
+{
+    g_return_val_if_fail(D_IS_VECTOR3(a), NULL);
+    g_return_val_if_fail(D_IS_VECTOR3(b), NULL);
+    DVector3* v = d_vector3_new();
+    for(int i = 0; i < v->length; i++) {
+        v->data[i] = a->data[i] + b->data[i];
+    }
+    return v;
+}
+
+gdouble
+d_vector3_dot_product (DVector3 *a,
+                       DVector3 *b)
+{
+    gdouble r = 0;
+    for (int i = 0; i < a->length; i++) {
+        r += a->data[i] * b->data[i];
+    }
+    return r;
+}
+
+DVector3*
+d_vector3_cross_product (DVector3   *a,
+                         DVector3   *b)
+{
+    DVector3 *r = d_vector3_new();
+    d_vector3_set(r, 0,
+                  d_vector3_get(a, 1) * d_vector3_get(b, 2) +
+                  d_vector3_get(a, 2) * d_vector3_get(b, 1));
+    d_vector3_set(r, 1,
+                  d_vector3_get(a, 0) * d_vector3_get(b, 2) -
+                  d_vector3_get(a, 2) * d_vector3_get(b, 0));
+    d_vector3_set(r, 2,
+                  d_vector3_get(a, 0) * d_vector3_get(b, 1) +
+                  d_vector3_get(a, 1) * d_vector3_get(b, 0));
+    return r;
 }

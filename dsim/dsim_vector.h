@@ -39,38 +39,50 @@
 typedef struct _DVector3 DVector3;
 struct _DVector3 {
     GObject         parent_instance;
-    /* private */
+
     gint            length;
-    gdouble         *data;
+    gdouble         data[3];
 };
 
 /* Class Structure of DVector3 */
 typedef struct _DVector3Class DVector3Class;
 struct _DVector3Class {
     GObjectClass    parent_class;
-
-    /* Virtual Methods */
-    void            (*set)          (DVector3 *self, gint i, gdouble value);
-    gdouble         (*get)          (DVector3 *self, gint i);
-    void            (*add)          (DVector3 *self, DVector3 *a);
-    void            (*substract)    (DVector3 *self, DVector3 *a);
 };
 
 /* Returns GType associated with this object type */
-GType       d_vector3_get_type  (void);
+GType       d_vector3_get_type      (void);
 
 /* Create new instance */
-DVector3*   d_vector3_new       (void);
-DVector3*   d_vector3_copy      (DVector3   *source);
+DVector3*   d_vector3_new           (void);
+
+DVector3*   d_vector3_new_full      (gdouble    v1,
+                                     gdouble    v2,
+                                     gdouble    v3);
 
 /* Methods */
-void    d_vector3_to_string     ( DVector3  *self,
-                                  GString   *string);
+DVector3*   d_vector3_copy          (DVector3   *source);
 
-/* Virtual methods */
-gdouble d_vector3_get           (DVector3 *self, gint index);
-void    d_vector3_set           (DVector3 *self, gint index, gdouble value);
-void    d_vector3_substract     (DVector3 *self, DVector3 *a);
-void    d_vector3_add           (DVector3 *self, DVector3 *a);
+void        d_vector3_to_string     (DVector3   *self,
+                                     GString    *string);
+
+gdouble     d_vector3_get           (DVector3   *self,
+                                     gint       index);
+
+void        d_vector3_set           (DVector3   *self,
+                                     gint       index,
+                                     gdouble    value);
+
+DVector3*   d_vector3_substract     (DVector3   *a,
+                                     DVector3   *b);
+
+DVector3*   d_vector3_add           (DVector3   *a,
+                                     DVector3   *b);
+
+gdouble     d_vector3_dot_product   (DVector3   *a,
+                                     DVector3   *b);
+
+DVector3*   d_vector3_cross_product (DVector3   *a,
+                                     DVector3   *b);
 
 #endif   /* ----- #ifndef DSIM_VECTOR_INC  ----- */
