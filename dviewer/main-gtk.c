@@ -167,6 +167,13 @@ show_about  ( GtkMenuItem   *item,
                               NULL );
 }
 
+static void
+quit (GtkWidget *widget,
+      gpointer  data)
+{
+    gtk_main_quit();
+}
+
 static GtkWidget*
 create_main_window(void) {
     GtkWidget       *window;
@@ -216,14 +223,13 @@ create_main_window(void) {
 
     /* Set window behaviour */
     gtk_container_set_reallocate_redraws (GTK_CONTAINER(window), TRUE);
-    g_signal_connect_swapped    ( G_OBJECT(window),
-                                  "key_press_event",
-                                  G_CALLBACK(key_handler),
-                                  viewport );
-    g_signal_connect            ( G_OBJECT(window),
-                                  "destroy",
-                                  G_CALLBACK(gtk_main_quit),
-                                  NULL );
+    g_signal_connect_swapped (G_OBJECT(window),
+                              "key_press_event",
+                              G_CALLBACK(key_handler),
+                              viewport );
+    g_signal_connect (G_OBJECT(window),
+                      "destroy",
+                      G_CALLBACK(quit), NULL);
 
     /* Set layout */
     vbox = gtk_vbox_new(FALSE, 0);

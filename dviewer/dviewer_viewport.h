@@ -33,6 +33,7 @@
 #include <GL/glu.h>
 
 #include <dsim/dsim.h>
+#include "dviewer_engine.h"
 
 #define D_TYPE_VIEWPORT             (d_viewport_get_type())
 #define D_VIEWPORT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), D_TYPE_VIEWPORT, DViewport))
@@ -50,11 +51,12 @@ struct _DViewport {
     /* Robot Geometry */
     DGeometry       *geometry;
     DPos            *robot_pos;
+
     /* Mouse button pressed or 0 */
     guint8          button;
 
     /* Max FPS count */
-    guint           max_fps;
+    guint           max_fps;            /* Not currently used */
 
     /* ID of timer or 0 if none */
     guint32         timer;
@@ -62,17 +64,26 @@ struct _DViewport {
     /* OpenGL context */
     GdkGLConfig     *glconfig;
 
+    /* Define a sphere containing the geometry */
+    DVector3        *scene_center;
+    gdouble         scene_radius;
+
+    /* Define position for a light */
+    DVector3        *light_position;
+
     /* Far and near clip distance */
     gdouble         near_clip;
     gdouble         far_clip;
 
     /* View angle or 0 for ortogonal view */
-    gdouble         view_angle;
+    gdouble         eye_angle;
 
-    /* X, Y and Z view rotation angles in degrees */
-    gdouble         view_x_angle;
-    gdouble         view_y_angle;
-    gdouble         view_z_angle;
+    /* Euler view rotation angles in degrees */
+    DVector3        *view_angles;
+
+    /* Trackball for 3D rotation of camera */
+    gdouble         track_angle;
+    DVector3        *track_axis;
 
     /* Zooming */
     gdouble         zoom;
@@ -91,12 +102,9 @@ void        d_viewport_set_pos                  (DViewport  *self,
                                                  DPos       *pos);
 void        d_viewport_set_axes                 (DViewport  *self,
                                                  DAxes      *axes);
-void        d_viewport_set_view_angles          (gdouble    x,
-                                                 gdouble    y,
-                                                 gdouble    z);
-void        d_viewport_increment_view_angles    (gdouble    x,
-                                                 gdouble    y,
-                                                 gdouble    z);
+void        d_viewport_set_view_angles          (gdouble    phi,
+                                                 gdouble    psi,
+                                                 gdouble    theta);
 void        d_viewport_set_far_clip             (gdouble    far_clip);
 void        d_viewport_set_near_clip            (gdouble    near_clip);
 

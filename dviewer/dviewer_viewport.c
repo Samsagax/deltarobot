@@ -33,8 +33,7 @@
 static gdouble animation_rotation = 0.0;
 
 /* Forward declarations */
-static void     d_viewport_dispose          (GObject            *obj);
-static void     d_viewport_finalize         (GObject            *obj);
+static void     d_viewport_destroy          (GtkObject          *obj);
 static void     d_viewport_size_request     (GtkWidget          *widget,
                                              GtkRequisition     *requisition);
 static void     d_viewport_size_allocate    (GtkWidget          *widget,
@@ -68,17 +67,14 @@ d_viewport_init (DViewport  *self)
     g_warning("d_viewport_init is a stub");
 
     self->geometry = NULL;
-    self->robot_pos = d_pos_new();
+    self->robot_pos = NULL;
     self->button = 0;
     self->max_fps = 60;
     self->timer = 0;
-    self->glconfig = d_viewport_configure_gl(TRUE);
+    self->glconfig = d_viewport_configure_gl(FALSE);
     self->near_clip = 1.0;
     self->far_clip = 400.0;
-    self->view_angle = 45.0;
-    self->view_x_angle = 0.0;
-    self->view_y_angle = 0.0;
-    self->view_z_angle = 0.0;
+    self->eye_angle = 45.0;
     self->zoom = 1.0;
 
     gtk_widget_set_gl_capability ( GTK_WIDGET(self),
@@ -86,19 +82,18 @@ d_viewport_init (DViewport  *self)
                                    NULL,
                                    TRUE,
                                    GDK_GL_RGBA_TYPE);
-    g_timeout_add (TIMEOUT_INTERVAL,
-                   (GSourceFunc) d_viewport_timeout_animate,
-                   GTK_WIDGET(self));
+//    g_timeout_add (TIMEOUT_INTERVAL,
+//                   (GSourceFunc) d_viewport_timeout_animate,
+//                   GTK_WIDGET(self));
 }
 
 static void
 d_viewport_class_init (DViewportClass   *klass)
 {
-    GObjectClass *gObjClass = G_OBJECT_CLASS(klass);
+    GtkObjectClass *gObjClass = GTK_OBJECT_CLASS(klass);
     GtkWidgetClass *gtkWidgetClass = GTK_WIDGET_CLASS(klass);
 
-    gObjClass->finalize = d_viewport_finalize;
-    gObjClass->dispose = d_viewport_dispose;
+    gObjClass->destroy = d_viewport_destroy;
 
     gtkWidgetClass->realize = d_viewport_realize;
     gtkWidgetClass->configure_event = d_viewport_configure;
@@ -125,7 +120,7 @@ d_viewport_new (DGeometry *geometry)
 }
 
 static void
-d_viewport_dispose(GObject *obj)
+d_viewport_destroy(GtkObject    *obj)
 {
     DViewport *self = D_VIEWPORT(obj);
     if (self->geometry) {
@@ -137,13 +132,7 @@ d_viewport_dispose(GObject *obj)
         self->robot_pos = NULL;
     }
 
-    G_OBJECT_GET_CLASS(d_viewport_parent_class)->dispose(obj);
-}
-
-static void
-d_viewport_finalize(GObject *obj)
-{
-    G_OBJECT_GET_CLASS(d_viewport_parent_class)->finalize(obj);
+    GTK_OBJECT_CLASS(d_viewport_parent_class)->destroy(obj);
 }
 
 static void
@@ -245,7 +234,7 @@ d_viewport_configure (GtkWidget           *widget,
     glViewport (0, 0, w, h);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(45.0, aspect, 1.0, 200.0);
+    gluPerspective(self->eye_angle, aspect, self->near_clip, self->far_clip);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
@@ -267,6 +256,8 @@ d_viewport_expose (GtkWidget        *widget,
         return FALSE;
     }
 
+    DViewport *self = D_VIEWPORT(widget);
+
     GdkGLContext *glcontext = gtk_widget_get_gl_context(widget);
     GdkGLDrawable *gldrawable = gtk_widget_get_gl_drawable(widget);
 
@@ -281,8 +272,9 @@ d_viewport_expose (GtkWidget        *widget,
     glMatrixMode (GL_MODELVIEW);
     glLoadIdentity();
 
-    d_viewer_draw_reference_frame(10.0, 50.0);
-    glTranslatef(0.0f, 0.0f, -20.0f);
+    glTranslatef(0.0f, 30.0f, -150.0f);
+    glRotatef(90.0, 1.0, 0.0, 0.0);
+
 
 	GLfloat ambientLight[] = {0.3f, 0.3f, 0.3f, 1.0f};
 	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambientLight);
@@ -291,7 +283,11 @@ d_viewport_expose (GtkWidget        *widget,
 	GLfloat lightPos[] = {-2 * BOX_SIZE, BOX_SIZE, 4 * BOX_SIZE, 1.0f};
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor);
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
-
+    DVector3 *pos = d_pos_new_full(0.0, 0.0, 50.0);
+    d_viewer_draw_robot_at_pos(self->geometry, pos);
+    g_object_unref(pos);
+    d_viewer_draw_reference_frame(30.0, 1.0);
+/*
 	glRotatef(-animation_rotation, 1.0f, 1.0f, 0.0f);
 
 	glBegin(GL_QUADS);
@@ -345,7 +341,7 @@ d_viewport_expose (GtkWidget        *widget,
 	glVertex3f(BOX_SIZE / 2, -BOX_SIZE / 2, -BOX_SIZE / 2);
 
 	glEnd();
-
+*/
     /* Swap bufers */
     if(gdk_gl_drawable_is_double_buffered(gldrawable)) {
         gdk_gl_drawable_swap_buffers(gldrawable);
@@ -391,6 +387,9 @@ d_viewport_button_press (GtkWidget      *widget,
     g_return_val_if_fail (event != NULL, FALSE);
 
     g_warning("d_viewport_button_press is a stub");
+
+    if(event->button)
+
     return FALSE;
 }
 
@@ -463,4 +462,14 @@ d_viewport_timeout_animate (GtkWidget    *widget)
     gdk_window_process_updates (window, FALSE);
 
     return TRUE;
+}
+
+static void
+d_viewport_rotate (GtkWidget    *widget,
+                   gdouble      x,
+                   gdouble      y)
+{
+    g_return_if_fail(D_IS_VIEWPORT(widget));
+
+    DViewport *self = D_VIEWPORT(widget);
 }
