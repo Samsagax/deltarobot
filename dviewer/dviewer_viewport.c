@@ -28,8 +28,9 @@
 #define SCROLL_DELAY_TIME 300
 
 #define TIMEOUT_INTERVAL 25
-#define BOX_SIZE 7.0
+#define BOX_SIZE 70.0
 
+/* Local variables */
 static gdouble animation_rotation = 0.0;
 
 /* Forward declarations */
@@ -55,6 +56,10 @@ static gboolean d_viewport_button_release   (GtkWidget          *widget,
                                              GdkEventButton     *event);
 static gboolean d_viewport_motion_notify    (GtkWidget          *widget,
                                              GdkEventMotion     *event);
+static void     d_viewport_trackball_rotation
+                                            (DViewport          *self,
+                                             gint               x,
+                                             gint               y);
 static GdkGLConfig* d_viewport_configure_gl (gboolean           verbose);
 static gboolean d_viewport_timeout_animate  (GtkWidget          *widget);
 
@@ -196,7 +201,7 @@ d_viewport_realize (GtkWidget   *widget)
     glEnable(GL_NORMALIZE);
     glEnable(GL_COLOR_MATERIAL);
 //    glFrontFace(GL_CCW);
-//    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
     glClearColor(0.0, 0.0, 0.0, 1.0);
 
     gdk_gl_drawable_gl_end(gldrawable);
@@ -280,68 +285,14 @@ d_viewport_expose (GtkWidget        *widget,
 	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambientLight);
 
 	GLfloat lightColor[] = {0.7f, 0.7f, 0.7f, 1.0f};
-	GLfloat lightPos[] = {-2 * BOX_SIZE, BOX_SIZE, 4 * BOX_SIZE, 1.0f};
+	GLfloat lightPos[] = {-2 * BOX_SIZE, BOX_SIZE, 2 * BOX_SIZE, 2.0f};
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor);
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
     DVector3 *pos = d_pos_new_full(0.0, 0.0, 50.0);
     d_viewer_draw_robot_at_pos(self->geometry, pos);
     g_object_unref(pos);
     d_viewer_draw_reference_frame(30.0, 1.0);
-/*
-	glRotatef(-animation_rotation, 1.0f, 1.0f, 0.0f);
 
-	glBegin(GL_QUADS);
-
-	//Top face
-	glColor3f(1.0f, 1.0f, 0.0f);
-	glNormal3f(0.0, 1.0f, 0.0f);
-	glVertex3f(-BOX_SIZE / 2, BOX_SIZE / 2, -BOX_SIZE / 2);
-	glVertex3f(-BOX_SIZE / 2, BOX_SIZE / 2, BOX_SIZE / 2);
-	glVertex3f(BOX_SIZE / 2, BOX_SIZE / 2, BOX_SIZE / 2);
-	glVertex3f(BOX_SIZE / 2, BOX_SIZE / 2, -BOX_SIZE / 2);
-
-	//Bottom face
-	glColor3f(1.0f, 0.0f, 1.0f);
-	glNormal3f(0.0, -1.0f, 0.0f);
-	glVertex3f(-BOX_SIZE / 2, -BOX_SIZE / 2, -BOX_SIZE / 2);
-	glVertex3f(BOX_SIZE / 2, -BOX_SIZE / 2, -BOX_SIZE / 2);
-	glVertex3f(BOX_SIZE / 2, -BOX_SIZE / 2, BOX_SIZE / 2);
-	glVertex3f(-BOX_SIZE / 2, -BOX_SIZE / 2, BOX_SIZE / 2);
-
-	//Left face
-	glNormal3f(-1.0, 0.0f, 0.0f);
-	glColor3f(0.0f, 1.0f, 1.0f);
-	glVertex3f(-BOX_SIZE / 2, -BOX_SIZE / 2, -BOX_SIZE / 2);
-	glVertex3f(-BOX_SIZE / 2, -BOX_SIZE / 2, BOX_SIZE / 2);
-	glColor3f(0.0f, 0.0f, 1.0f);
-	glVertex3f(-BOX_SIZE / 2, BOX_SIZE / 2, BOX_SIZE / 2);
-	glVertex3f(-BOX_SIZE / 2, BOX_SIZE / 2, -BOX_SIZE / 2);
-
-	//Right face
-	glNormal3f(1.0, 0.0f, 0.0f);
-	glColor3f(1.0f, 0.0f, 0.0f);
-	glVertex3f(BOX_SIZE / 2, -BOX_SIZE / 2, -BOX_SIZE / 2);
-	glVertex3f(BOX_SIZE / 2, BOX_SIZE / 2, -BOX_SIZE / 2);
-	glColor3f(0.0f, 1.0f, 0.0f);
-	glVertex3f(BOX_SIZE / 2, BOX_SIZE / 2, BOX_SIZE / 2);
-	glVertex3f(BOX_SIZE / 2, -BOX_SIZE / 2, BOX_SIZE / 2);
-
-    //Front face
-	glNormal3f(0.0, 0.0f, 1.0f);
-	glVertex3f(-BOX_SIZE / 2, -BOX_SIZE / 2, BOX_SIZE / 2);
-	glVertex3f(BOX_SIZE / 2, -BOX_SIZE / 2, BOX_SIZE / 2);
-	glVertex3f(BOX_SIZE / 2, BOX_SIZE / 2, BOX_SIZE / 2);
-	glVertex3f(-BOX_SIZE / 2, BOX_SIZE / 2, BOX_SIZE / 2);
-
-	//Back face
-	glNormal3f(0.0, 0.0f, -1.0f);
-	glVertex3f(-BOX_SIZE / 2, -BOX_SIZE / 2, -BOX_SIZE / 2);
-	glVertex3f(-BOX_SIZE / 2, BOX_SIZE / 2, -BOX_SIZE / 2);
-	glVertex3f(BOX_SIZE / 2, BOX_SIZE / 2, -BOX_SIZE / 2);
-	glVertex3f(BOX_SIZE / 2, -BOX_SIZE / 2, -BOX_SIZE / 2);
-
-	glEnd();
-*/
     /* Swap bufers */
     if(gdk_gl_drawable_is_double_buffered(gldrawable)) {
         gdk_gl_drawable_swap_buffers(gldrawable);
@@ -383,12 +334,17 @@ static gboolean
 d_viewport_button_press (GtkWidget      *widget,
                          GdkEventButton *event)
 {
+    g_warning("d_viewport_button_press is a stub");
+
     g_return_val_if_fail (D_IS_VIEWPORT(widget), FALSE);
     g_return_val_if_fail (event != NULL, FALSE);
 
-    g_warning("d_viewport_button_press is a stub");
-
-    if(event->button)
+    DViewport *self = D_VIEWPORT(widget);
+    if (!self->button) {
+        gtk_grab_add(widget);
+        self->button = event->button;
+        d_viewport_trackball_rotation(self, event->x, event->y);
+    }
 
     return FALSE;
 }
@@ -397,11 +353,21 @@ static gboolean
 d_viewport_button_release (GtkWidget        *widget,
                            GdkEventButton   *event)
 {
-    g_return_val_if_fail (widget != NULL, FALSE);
+    g_warning("d_viewport_button_release is a stub");
+
     g_return_val_if_fail (D_IS_VIEWPORT(widget), FALSE);
     g_return_val_if_fail (event != NULL, FALSE);
 
-    g_warning("d_viewport_button_release is a stub");
+    DViewport *self = D_VIEWPORT(widget);
+    if(self->button == event->button) {
+        gtk_grab_remove(widget);
+        self->button = 0;
+
+        GtkAllocation allocation;
+        gtk_widget_get_allocation (widget, &allocation);
+        gdk_window_invalidate_rect (gtk_widget_get_window(widget), &allocation, FALSE);
+    }
+
     return FALSE;
 }
 
@@ -409,13 +375,39 @@ static gboolean
 d_viewport_motion_notify (GtkWidget         *widget,
                           GdkEventMotion    *event)
 {
-    g_return_val_if_fail (widget != NULL, FALSE);
+//    g_warning("d_viewport_motion_notify is a stub");
+
     g_return_val_if_fail (D_IS_VIEWPORT(widget), FALSE);
     g_return_val_if_fail (event != NULL, FALSE);
 
-    g_warning("d_viewport_motion_notify is a stub");
+    DViewport *self = D_VIEWPORT(widget);
+
+    gint x, y;
+    GdkModifierType state;
+
+    if (event->is_hint) {
+        gdk_window_get_pointer(event->window, &x, &y, &state);
+    } else {
+        x = event->x;
+        y = event->y;
+        state = event->state;
+    }
+    if (state & GDK_BUTTON1_MASK) {
+        d_viewport_trackball_rotation(self, x, y);
+    }
     return FALSE;
 }
+
+static void
+d_viewport_trackball_rotation (DViewport    *self,
+                               gint         x,
+                               gint         y)
+{
+    g_warning("d_viewport_trackball_rotation is a stub");
+
+    g_print("Input  coordinates: %i, %i\n", x, y);
+}
+
 static GdkGLConfig*
 d_viewport_configure_gl (gboolean verbose)
 {
