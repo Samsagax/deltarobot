@@ -86,4 +86,11 @@ gdouble     d_vector3_dot_product   (DVector3   *a,
 DVector3*   d_vector3_cross_product (DVector3   *a,
                                      DVector3   *b);
 
+DVector3*   d_vector3_scalar_mult   (DVector3   *self,
+                                     gdouble    a);
+
+gdouble     d_vector3_norm          (DVector3   *self);
+
+void        d_vector3_normalize     (DVector3   *self);
+
 #endif   /* ----- #ifndef DSIM_VECTOR_INC  ----- */

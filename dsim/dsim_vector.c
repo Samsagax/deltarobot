@@ -23,7 +23,7 @@
  */
 
 #include "dsim_vector.h"
-#include <stdio.h>
+#include <math.h>
 
 /* Forward declarations */
 
@@ -176,4 +176,31 @@ d_vector3_cross_product (DVector3   *a,
                   d_vector3_get(a, 0) * d_vector3_get(b, 1) +
                   d_vector3_get(a, 1) * d_vector3_get(b, 0));
     return r;
+}
+
+DVector3*
+d_vector3_scalar_mult (DVector3 *self,
+                       gdouble  a)
+{
+    for (int i = 0; i < self->length; i++) {
+        d_vector3_set(self, i, d_vector3_get(self, i));
+    }
+}
+
+gdouble
+d_vector3_norm (DVector3    *self)
+{
+    gdouble norm = 0;
+    for(int i = 0; i < self->length; i++) {
+        norm += pow(d_vector3_get(self,i), 2.0);
+    }
+    norm = sqrt(norm);
+    return norm;
+}
+
+void
+d_vector3_normalize (DVector3   *self)
+{
+    gdouble norm = d_vector3_norm(self);
+    d_vector3_scalar_mult(self, 1.0 / norm);
 }
