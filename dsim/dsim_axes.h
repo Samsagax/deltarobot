@@ -49,7 +49,10 @@ GType   d_axes_get_type (void);
 
 /* Create new instance */
 DVector3*   d_axes_new          (void);
-DVector3*   d_axes_new_full     (gdouble ax1, gdouble ax2, gdouble ax3);
+
+DVector3*   d_axes_new_full     (gdouble ax1,
+                                 gdouble ax2,
+                                 gdouble ax3);
 
 /* Type macros Extended ExtAxes */
 #define D_TYPE_EXTAXES             (d_ext_axes_get_type ())
@@ -77,12 +80,14 @@ GType       d_ext_axes_get_type     (void);
 
 /* Create new instance */
 DExtAxes*   d_ext_axes_new          (void);
-void        d_ext_axes_set          ( DExtAxes *self,
-                                      gint      i,
-                                      gint      j,
-                                      gdouble   value);
-gdouble     d_ext_axes_get          ( DExtAxes *self,
-                                      gint      i,
-                                      gint      j );
+
+void        d_ext_axes_set          (DExtAxes *self,
+                                     gint      i,
+                                     gint      j,
+                                     gdouble   value);
+
+gdouble     d_ext_axes_get          (DExtAxes *self,
+                                     gint      i,
+                                     gint      j);
 
 #endif   /* ----- #ifndef DSIM_EXTAXES_INC  ----- */
