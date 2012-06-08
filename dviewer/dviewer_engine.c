@@ -306,20 +306,9 @@ d_viewer_draw_arm ( GLfloat a,
  * Draw the entire robot at a given DPos value
  */
 void
-d_viewer_draw_robot_at_pos (DGeometry   *geometry,
-                            DVector3    *pos)
+d_viewer_draw_robot_with_ext_axes (DGeometry    *geometry,
+                                   DExtAxes     *extaxes)
 {
-    g_return_if_fail(D_IS_POS(pos));
-    g_return_if_fail(D_IS_GEOMETRY(geometry));
-
-    // First Make sure the position is reachable
-    DVector3    *axes       = d_axes_new();
-    DExtAxes    *extaxes    = d_ext_axes_new();
-    // TODO: Use GError for error handling!!!
-    d_solver_solve_inverse (geometry,
-                            pos,
-                            axes,
-                            extaxes);
     GLfloat jdiam = 3.0;
     GLfloat thick = 3.0;
 
@@ -351,15 +340,35 @@ d_viewer_draw_robot_at_pos (DGeometry   *geometry,
 
     // Moving platform
     glColor3f(0.0, 1.0, 0.4);
-    glTranslatef( d_vector3_get(pos, 0),
-                  d_vector3_get(pos, 1),
-                  d_vector3_get(pos, 2));
+    DVector3 *p = d_pos_new();
+    d_solver_solve_direct_with_ext_axes(geometry, extaxes, p);
+    glTranslatef( d_vector3_get(p, 0),
+                  d_vector3_get(p, 1),
+                  d_vector3_get(p, 2));
     d_viewer_draw_platform(geometry->h, thick, jdiam);
+    g_object_unref(p);
 
     // Restore current transformation
     glPopMatrix();
 
+}
+
+void
+d_viewer_draw_robot_at_pos (DGeometry   *geometry,
+                            DVector3    *pos)
+{
+    g_return_if_fail(D_IS_POS(pos));
+    g_return_if_fail(D_IS_GEOMETRY(geometry));
+
+    // First Make sure the position is reachable
+    DExtAxes    *extaxes    = d_ext_axes_new();
+    // TODO: Use GError for error handling!!!
+
+    d_solver_solve_inverse (geometry,
+                            pos,
+                            NULL,
+                            extaxes);
+    d_viewer_draw_robot_with_ext_axes (geometry, extaxes);
     // Release used memory
     g_object_unref(extaxes);
-    g_object_unref(axes);
 }

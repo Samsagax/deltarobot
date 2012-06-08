@@ -54,6 +54,9 @@ void    d_viewer_draw_arm               (GLfloat   a,
                                          GLfloat   theta3,
                                          GLfloat   jointDiameter);
 
+void    d_viewer_draw_robot_with_ext_axes (DGeometry    *geometry,
+                                           DExtAxes     *extaxes);
+
 void    d_viewer_draw_robot_at_pos      (DGeometry *geometry,
                                          DVector3  *pos );
 
