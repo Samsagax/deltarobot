@@ -181,7 +181,7 @@ create_main_window(void) {
     GtkWidget       *viewport;
 
     /* Set up drawing area */
-    viewport = d_viewport_new(robot);
+    viewport = d_viewport_new_full(robot, pos);
 
     /*
      * Create Menus
