@@ -31,14 +31,41 @@
 #define BOX_SIZE 70.0
 
 /* Local variables */
+enum
+{
+    PROP_0,
+    PROP_EXTAXES,
+    N_PROPERTIES
+};
+
+enum
+{
+    POS_CHANGED,
+    LAST_SIGNAL
+};
+
 static gdouble animation_rotation = 0.0;
+static GParamSpec *viewport_properties[N_PROPERTIES] = { NULL, };
 
 /* Forward declarations */
+static void     d_viewport_set_property     (GObject            *obj,
+                                             guint              prop_id,
+                                             const GValue       *value,
+                                             GParamSpec         *pspec);
+
+static void     d_viewport_get_property     (GObject            *obj,
+                                             guint              prop_id,
+                                             GValue             *value,
+                                             GParamSpec         *pspec);
+
 static void     d_viewport_destroy          (GtkObject          *obj);
+
 static void     d_viewport_size_request     (GtkWidget          *widget,
                                              GtkRequisition     *requisition);
+
 static void     d_viewport_size_allocate    (GtkWidget          *widget,
                                              GtkAllocation      *allocation);
+
 static void     d_viewport_realize          (GtkWidget          *widget);
 static gboolean d_viewport_configure        (GtkWidget          *widget,
                                              GdkEventConfigure  *event);
@@ -72,7 +99,7 @@ d_viewport_init (DViewport  *self)
     g_warning("d_viewport_init is a stub");
 
     self->geometry = NULL;
-    self->robot_pos = NULL;
+    self->extaxes = NULL;
     self->button = 0;
     self->max_fps = 60;
     self->timer = 0;
@@ -87,72 +114,83 @@ d_viewport_init (DViewport  *self)
                                    NULL,
                                    TRUE,
                                    GDK_GL_RGBA_TYPE);
-//    g_timeout_add (TIMEOUT_INTERVAL,
-//                   (GSourceFunc) d_viewport_timeout_animate,
-//                   GTK_WIDGET(self));
 }
 
 static void
 d_viewport_class_init (DViewportClass   *klass)
 {
-    GtkObjectClass *gObjClass = GTK_OBJECT_CLASS(klass);
-    GtkWidgetClass *gtkWidgetClass = GTK_WIDGET_CLASS(klass);
+    GObjectClass *objectclass = G_OBJECT_CLASS(klass);
+    GtkObjectClass *gtkobjectclass = GTK_OBJECT_CLASS(klass);
+    GtkWidgetClass *widgetlass = GTK_WIDGET_CLASS(klass);
 
-    gObjClass->destroy = d_viewport_destroy;
+    objectclass->set_property = d_viewport_set_property;
+    objectclass->get_property = d_viewport_get_property;
 
-    gtkWidgetClass->realize = d_viewport_realize;
-    gtkWidgetClass->configure_event = d_viewport_configure;
-    gtkWidgetClass->expose_event = d_viewport_expose;
-    gtkWidgetClass->size_request = d_viewport_size_request;
-    gtkWidgetClass->size_allocate = d_viewport_size_allocate;
-    gtkWidgetClass->button_press_event = d_viewport_button_press;
-    gtkWidgetClass->button_release_event = d_viewport_button_release;
-    gtkWidgetClass->motion_notify_event = d_viewport_motion_notify;
+    gtkobjectclass->destroy = d_viewport_destroy;
+
+    widgetlass->realize = d_viewport_realize;
+    widgetlass->configure_event = d_viewport_configure;
+    widgetlass->expose_event = d_viewport_expose;
+    widgetlass->size_request = d_viewport_size_request;
+    widgetlass->size_allocate = d_viewport_size_allocate;
+    widgetlass->button_press_event = d_viewport_button_press;
+    widgetlass->button_release_event = d_viewport_button_release;
+    widgetlass->motion_notify_event = d_viewport_motion_notify;
+
+    viewport_properties[PROP_EXTAXES] =
+        g_param_spec_object ("extaxes",
+                             "ExtAxes",
+                             "The Viewport Extended Axes object to draw the manipulator",
+                             D_TYPE_EXTAXES,
+                             G_PARAM_READWRITE);
+
+    g_object_class_install_properties (objectclass,
+                                       N_PROPERTIES,
+                                       viewport_properties);
 }
 
-GtkWidget*
-d_viewport_new (DGeometry *geometry)
+
+static void
+d_viewport_get_property (GObject    *obj,
+                         guint      prop_id,
+                         GValue     *value,
+                         GParamSpec *pspec)
 {
-    g_return_val_if_fail (D_IS_GEOMETRY(geometry), NULL);
+    DViewport *viewport = D_VIEWPORT(obj);
 
-    return d_viewport_new_full (geometry,
-                                D_POS(d_pos_new_full(0.0, 0.0,
-                                                     (geometry->a + geometry->b) / 2.0)));
-}
-
-GtkWidget*
-d_viewport_new_full (DGeometry  *geometry,
-                     DPos       *robot_pos)
-{
-    g_return_val_if_fail (D_IS_GEOMETRY(geometry), NULL);
-    g_return_val_if_fail (D_IS_POS(robot_pos), NULL);
-
-    DViewport *viewport = g_object_new(D_TYPE_VIEWPORT, NULL);
-    if (viewport->geometry == NULL) {
-        viewport->geometry = g_object_ref(geometry);
+    switch(prop_id) {
+        case PROP_EXTAXES:
+            g_value_set_object(value, viewport->extaxes);
+        default:
+            G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
+            break;
     }
-    if (viewport->robot_pos == NULL) {
-        viewport->robot_pos = g_object_ref(robot_pos);
-    }
-
-    return GTK_WIDGET(viewport);
 }
 
 static void
-d_viewport_destroy(GtkObject    *obj)
+d_viewport_set_property (GObject        *obj,
+                         guint          prop_id,
+                         const GValue   *value,
+                         GParamSpec     *pspec)
 {
     DViewport *self = D_VIEWPORT(obj);
-    if (self->geometry) {
-        g_object_unref(self->geometry);
-        self->geometry = NULL;
-    }
-    if (self->robot_pos) {
-        g_object_unref(self->robot_pos);
-        self->robot_pos = NULL;
-    }
 
-    GTK_OBJECT_CLASS(d_viewport_parent_class)->destroy(obj);
+    switch (prop_id) {
+            DExtAxes *extaxes;
+
+        case PROP_EXTAXES:
+            extaxes = D_EXTAXES(g_value_get_object(value));
+            if (!extaxes) {
+                extaxes = d_ext_axes_new();
+            }
+            d_viewport_set_ext_axes(self, extaxes);
+            break;
+        default:
+            G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
+            break;
+    }
 }
+
 
 static void
 d_viewport_size_request (GtkWidget      *widget,
@@ -302,7 +340,7 @@ d_viewport_expose (GtkWidget        *widget,
 	GLfloat lightPos[] = {-2 * BOX_SIZE, BOX_SIZE, 2 * BOX_SIZE, 2.0f};
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor);
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
-    d_viewer_draw_robot_at_pos(self->geometry, self->robot_pos);
+    d_viewer_draw_robot_with_ext_axes(self->geometry, self->extaxes);
     d_viewer_draw_reference_frame(30.0, 1.0);
 
     /* Swap bufers */
@@ -476,4 +514,104 @@ d_viewport_rotate (GtkWidget    *widget,
     g_return_if_fail(D_IS_VIEWPORT(widget));
 
     DViewport *self = D_VIEWPORT(widget);
+}
+
+
+void
+d_viewport_set_far_clip (DViewport  *self,
+                         gdouble    far_clip)
+{
+    g_return_if_fail(D_IS_VIEWPORT(self));
+
+    self->far_clip = far_clip;
+    /* Notify property change */
+}
+
+/*----------------------------------------------------------------------------
+ *  Public API
+ *--------------------------------------------------------------------------*/
+GtkWidget*
+d_viewport_new (DGeometry *geometry)
+{
+    g_return_val_if_fail (D_IS_GEOMETRY(geometry), NULL);
+
+    return d_viewport_new_full (geometry,
+                                D_POS(d_pos_new_full(0.0, 0.0,
+                                                     (geometry->a + geometry->b) / 2.0)));
+}
+
+GtkWidget*
+d_viewport_new_full (DGeometry  *geometry,
+                     DPos       *robot_pos)
+{
+    g_return_val_if_fail (D_IS_GEOMETRY(geometry), NULL);
+    g_return_val_if_fail (D_IS_POS(robot_pos), NULL);
+
+    DViewport *viewport;
+
+    viewport = g_object_new(D_TYPE_VIEWPORT, NULL);
+    if (viewport->geometry == NULL) {
+        viewport->geometry = g_object_ref(geometry);
+    }
+    d_viewport_set_pos(viewport, robot_pos);
+
+    return GTK_WIDGET(viewport);
+}
+
+static void
+d_viewport_destroy(GtkObject    *obj)
+{
+    DViewport *self = D_VIEWPORT(obj);
+    if (self->geometry) {
+        g_object_unref(self->geometry);
+        self->geometry = NULL;
+    }
+    if (self->robot_pos) {
+        g_object_unref(self->robot_pos);
+        self->robot_pos = NULL;
+    }
+
+    GTK_OBJECT_CLASS(d_viewport_parent_class)->destroy(obj);
+}
+void
+d_viewport_set_ext_axes (DViewport  *self,
+                         DExtAxes   *extaxes)
+{
+    g_return_if_fail(D_IS_VIEWPORT(self));
+    g_return_if_fail(D_IS_EXTAXES(extaxes));
+
+    if (self->extaxes != extaxes) {
+        g_object_unref(self->extaxes);
+        self->extaxes = g_object_ref(extaxes);
+    }
+
+    /* Queve Redraw */
+    GtkWidget *widget = GTK_WIDGET(self);
+    gdk_window_invalidate_rect(widget->window, &widget->allocation, FALSE);
+
+    /* Notify change */
+    g_object_notify(G_OBJECT(self), "extaxes");
+}
+
+void
+d_viewport_set_pos (DViewport   *self,
+                    DPos        *pos)
+{
+    g_return_if_fail (D_IS_VIEWPORT(self));
+    g_return_if_fail (D_IS_POS(pos));
+
+    DExtAxes *extaxes;
+    extaxes = d_ext_axes_new();
+    d_solver_solve_inverse(self->geometry,
+                           D_VECTOR3(pos),
+                           NULL,
+                           extaxes);
+
+    d_viewport_set_ext_axes (self, extaxes);
+}
+
+DPos*
+d_viewport_get_pos (DViewport   *self)
+{
+    return self->robot_pos;
 }

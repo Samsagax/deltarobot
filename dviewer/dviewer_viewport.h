@@ -50,6 +50,7 @@ struct _DViewport {
 
     /* Robot Geometry */
     DGeometry       *geometry;
+    DExtAxes        *extaxes;
     DPos            *robot_pos;
 
     /* Mouse button pressed or 0 */
