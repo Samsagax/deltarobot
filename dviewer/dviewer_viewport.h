@@ -95,9 +95,8 @@ struct _DViewportClass {
 
 GType       d_viewport_get_type                 (void);
 GtkWidget*  d_viewport_new                      (DGeometry  *geometry);
-GtkWidget*  d_viewport_new_in_position          (DGeometry  *geometry,
-                                                 DPos       *pos);
-
+GtkWidget*  d_viewport_new_full                 (DGeometry  *geometry,
+                                                 DPos       *robot_pos);
 void        d_viewport_set_pos                  (DViewport  *self,
                                                  DPos       *pos);
 void        d_viewport_set_axes                 (DViewport  *self,
@@ -109,5 +108,4 @@ void        d_viewport_set_far_clip             (gdouble    far_clip);
 void        d_viewport_set_near_clip            (gdouble    near_clip);
 
 #endif   /* ----- #ifndef DVIEWER_VIEWPORT_INC  ----- */
-
 

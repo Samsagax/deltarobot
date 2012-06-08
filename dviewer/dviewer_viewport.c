@@ -113,12 +113,26 @@ d_viewport_class_init (DViewportClass   *klass)
 GtkWidget*
 d_viewport_new (DGeometry *geometry)
 {
-    g_return_val_if_fail (geometry != NULL, NULL);
     g_return_val_if_fail (D_IS_GEOMETRY(geometry), NULL);
+
+    return d_viewport_new_full (geometry,
+                                D_POS(d_pos_new_full(0.0, 0.0,
+                                                     (geometry->a + geometry->b) / 2.0)));
+}
+
+GtkWidget*
+d_viewport_new_full (DGeometry  *geometry,
+                     DPos       *robot_pos)
+{
+    g_return_val_if_fail (D_IS_GEOMETRY(geometry), NULL);
+    g_return_val_if_fail (D_IS_POS(robot_pos), NULL);
 
     DViewport *viewport = g_object_new(D_TYPE_VIEWPORT, NULL);
     if (viewport->geometry == NULL) {
         viewport->geometry = g_object_ref(geometry);
+    }
+    if (viewport->robot_pos == NULL) {
+        viewport->robot_pos = g_object_ref(robot_pos);
     }
 
     return GTK_WIDGET(viewport);
@@ -288,9 +302,7 @@ d_viewport_expose (GtkWidget        *widget,
 	GLfloat lightPos[] = {-2 * BOX_SIZE, BOX_SIZE, 2 * BOX_SIZE, 2.0f};
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor);
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
-    DVector3 *pos = d_pos_new_full(0.0, 0.0, 50.0);
-    d_viewer_draw_robot_at_pos(self->geometry, pos);
-    g_object_unref(pos);
+    d_viewer_draw_robot_at_pos(self->geometry, self->robot_pos);
     d_viewer_draw_reference_frame(30.0, 1.0);
 
     /* Swap bufers */
