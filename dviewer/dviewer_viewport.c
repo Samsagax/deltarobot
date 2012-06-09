@@ -642,6 +642,7 @@ d_viewport_new_with_pos (DGeometry  *geometry,
 
     viewport = g_object_new(D_TYPE_VIEWPORT, NULL);
 
+    d_viewport_set_geometry(viewport, geometry);
     d_viewport_set_pos(viewport, pos);
 
     return GTK_WIDGET(viewport);
