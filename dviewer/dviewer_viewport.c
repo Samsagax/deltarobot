@@ -604,6 +604,7 @@ d_viewport_configure_gl (gboolean verbose)
     return glconfig;
 }
 
+/*
 static void
 d_viewport_rotate (GtkWidget    *widget,
                    gdouble      x,
@@ -613,7 +614,7 @@ d_viewport_rotate (GtkWidget    *widget,
 
     DViewport *self = D_VIEWPORT(widget);
 }
-
+*/
 
 /*----------------------------------------------------------------------------
  *  Public API
@@ -624,27 +625,58 @@ d_viewport_new (DGeometry *geometry)
 {
     g_return_val_if_fail (D_IS_GEOMETRY(geometry), NULL);
 
-    return d_viewport_new_full (geometry,
-                                D_POS(d_pos_new_full(0.0, 0.0,
-                                                     (geometry->a + geometry->b) / 2.0)));
+    return d_viewport_new_with_pos (geometry,
+            D_POS(d_pos_new_full(0.0,
+                                 0.0,
+                                 (geometry->a + geometry->b) / 2.0)));
 }
 
 GtkWidget*
-d_viewport_new_full (DGeometry  *geometry,
-                     DPos       *robot_pos)
+d_viewport_new_with_pos (DGeometry  *geometry,
+                         DPos       *pos)
 {
-    g_return_val_if_fail (D_IS_GEOMETRY(geometry), NULL);
-    g_return_val_if_fail (D_IS_POS(robot_pos), NULL);
+    g_return_val_if_fail(D_IS_GEOMETRY(geometry), NULL);
+    g_return_val_if_fail(D_IS_POS(pos), NULL);
 
     DViewport *viewport;
 
     viewport = g_object_new(D_TYPE_VIEWPORT, NULL);
-    if (viewport->geometry == NULL) {
-        viewport->geometry = g_object_ref(geometry);
-    }
-    d_viewport_set_pos(viewport, robot_pos);
+
+    d_viewport_set_pos(viewport, pos);
 
     return GTK_WIDGET(viewport);
+}
+
+GtkWidget*
+d_viewport_new_full (DGeometry  *geometry,
+                     DExtAxes   *extaxes,
+                     gdouble    near_clip,
+                     gdouble    far_clip,
+                     gdouble    eye_angle)
+{
+    g_return_val_if_fail (D_IS_GEOMETRY(geometry), NULL);
+    g_return_val_if_fail (D_IS_EXTAXES(extaxes), NULL);
+
+    DViewport *viewport;
+
+    viewport = g_object_new(D_TYPE_VIEWPORT, NULL);
+
+    d_viewport_set_geometry(viewport, geometry);
+    d_viewport_set_ext_axes(viewport, extaxes);
+    d_viewport_set_near_clip(viewport, near_clip);
+    d_viewport_set_far_clip(viewport, far_clip);
+    d_viewport_set_eye_angle(viewport, eye_angle);
+
+    return GTK_WIDGET(viewport);
+}
+
+void
+d_viewport_configure_view (DViewport    *self,
+                           gdouble      near_clip,
+                           gdouble      far_clip,
+                           gdouble      eye_angle)
+{
+    g_warning("d_viewport_configure_view is a stub");
 }
 
 void

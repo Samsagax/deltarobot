@@ -124,7 +124,7 @@ void        d_viewport_set_near_clip            (DViewport  *self,
 void        d_viewport_set_eye_angle            (DViewport  *self,
                                                  gdouble    eye_angle);
 
-void        d_viewport_configure                (DViewport  *self,
+void        d_viewport_configure_view           (DViewport  *self,
                                                  gdouble    near_clip,
                                                  gdouble    far_clip,
                                                  gdouble    eye_angle);
