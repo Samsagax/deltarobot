@@ -23,30 +23,54 @@
  */
 #include <stdlib.h>
 #include <gdk/gdkkeysyms.h>
-#include "dviewer_engine.h"
+//#include "dviewer_engine.h"
 #include "dviewer_viewport.h"
 
+/* Global variables */
+static GtkWidget    *main_window;
 static DGeometry    *robot;
 static DPos         *pos;
 
+/* Forward declarations */
+static GtkWidget*   create_menu_bar (GtkWidget *window);
+static void         create_main_window (void);
+static gboolean     key_handler (GtkWidget *widget, GdkEventKey *event, gpointer data);
+static void         increment_pos (DPos *pos, gdouble dx, gdouble dy, gdouble dz);
+
 
 static gboolean
-key_handler ( GtkWidget     *widget,
-              GdkEventKey   *event,
-              gpointer       data )
+key_handler (GtkWidget      *widget,
+             GdkEventKey    *event,
+             gpointer       data)
 {
+    DViewport *viewport;
+
+    viewport = D_VIEWPORT(widget);
+
     switch (event->keyval) {
         case GDK_KEY_Page_Up:
+            increment_pos(pos, 0.0, 0.0, 1.0);
+            d_viewport_set_pos(viewport, pos);
             break;
         case GDK_KEY_Page_Down:
+            increment_pos(pos, 0.0, 0.0, -1.0);
+            d_viewport_set_pos(viewport, pos);
             break;
         case GDK_KEY_Up:
+            increment_pos(pos, 0.0, 1.0, 0.0);
+            d_viewport_set_pos(viewport, pos);
             break;
         case GDK_KEY_Down:
+            increment_pos(pos, 0.0, -1.0, 0.0);
+            d_viewport_set_pos(viewport, pos);
             break;
         case GDK_KEY_Left:
+            increment_pos(pos, 1.0, 0.0, 0.0);
+            d_viewport_set_pos(viewport, pos);
             break;
         case GDK_KEY_Right:
+            increment_pos(pos, -1.0, 0.0, 0.0);
+            d_viewport_set_pos(viewport, pos);
             break;
         case GDK_KEY_Escape:
             gtk_main_quit();
@@ -55,15 +79,28 @@ key_handler ( GtkWidget     *widget,
             return FALSE;
     }
 
-    gdk_window_invalidate_rect(widget->window, &widget->allocation, FALSE);
     return TRUE;
 }
 
 static void
-show_about  ( GtkMenuItem   *item,
-              gpointer      data )
+increment_pos (DPos     *pos,
+               gdouble  dx,
+               gdouble  dy,
+               gdouble  dz)
 {
-    gtk_show_about_dialog   ( data,
+    DVector3 *dp;
+
+    dp = d_pos_new_full (dx, dy, dz);
+
+    d_vector3_add(D_VECTOR3(pos), dp);
+
+    g_object_unref(dp);
+}
+
+static void
+show_about (void)
+{
+    gtk_show_about_dialog   ( GTK_WINDOW(main_window),
                               "title", "About DSim Viewer",
                               "program-name", "DSim Viewer",
                               "version", "0.1",
@@ -71,97 +108,102 @@ show_about  ( GtkMenuItem   *item,
                               NULL );
 }
 
+/*
+ * Create main window
+ */
 static void
-quit (GtkWidget *widget,
-      gpointer  data)
+create_main_window (void)
 {
-    gtk_main_quit();
-}
-
-static GtkWidget*
-create_main_window(void) {
-    GtkWidget       *window;
-    GtkWidget       *vbox;
+    GtkWidget       *main_vbox;
     GtkWidget       *viewport;
+    GtkWidget       *menu_bar;
 
-    /* Set up drawing area */
-    viewport = d_viewport_new_full(robot, pos);
+    /*
+     * Create the window
+     */
+    main_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title (GTK_WINDOW(main_window), "DSim GL Viewer");
+    gtk_window_set_icon_name(GTK_WINDOW(main_window), "applications-system");
+
+    /*
+     * Set up drawing area
+    */
+    viewport = d_viewport_new_with_pos(robot, pos);
 
     /*
      * Create Menus
      */
-    GtkWidget       *menu_bar;
-    GtkWidget       *menu_item_file, *menu_item_help;
-    GtkWidget       *menu_file, *menu_help;
+    menu_bar = create_menu_bar(main_window);
 
-    menu_bar = gtk_menu_bar_new();
-
-    menu_item_file  = gtk_menu_item_new_with_label("File");
-    menu_file       = gtk_menu_new();
-
-    menu_item_help  = gtk_menu_item_new_with_label("Help");
-    menu_help       = gtk_menu_new();
-
-    GtkWidget   *menu_item_quit = gtk_image_menu_item_new_from_stock(GTK_STOCK_QUIT, NULL);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu_file), menu_item_quit);
-    g_signal_connect        ( G_OBJECT(menu_item_quit),
-                              "activate",
-                              G_CALLBACK(gtk_main_quit),
-                              NULL );
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item_file), menu_file);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), menu_item_file);
-
-    GtkWidget   *menu_item_about = gtk_image_menu_item_new_from_stock(GTK_STOCK_ABOUT, NULL);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu_help), menu_item_about);
-    g_signal_connect        ( G_OBJECT(menu_item_about),
-                              "activate",
-                              G_CALLBACK(show_about),
-                              window );
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item_help), menu_help);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu_bar), menu_item_help);
-
-    /* Create the window */
-    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title (GTK_WINDOW(window), "DSim GL Viewer");
-    gtk_window_set_icon_name(GTK_WINDOW(window), "applications-system");
-
-    /* Set window behaviour */
-    gtk_container_set_reallocate_redraws (GTK_CONTAINER(window), TRUE);
-    g_signal_connect_swapped (G_OBJECT(window),
+    /*
+     * Set window behaviour
+     */
+    gtk_container_set_reallocate_redraws (GTK_CONTAINER(main_window), TRUE);
+    g_signal_connect_swapped (G_OBJECT(main_window),
                               "key_press_event",
                               G_CALLBACK(key_handler),
                               viewport );
-    g_signal_connect (G_OBJECT(window),
+    g_signal_connect (G_OBJECT(main_window),
                       "destroy",
-                      G_CALLBACK(quit), NULL);
+                      G_CALLBACK(gtk_main_quit),
+                      NULL);
+
 
     /* Set layout */
-    vbox = gtk_vbox_new(FALSE, 0);
-    gtk_box_pack_start  (GTK_BOX(vbox), menu_bar, FALSE, FALSE, 0);
-    gtk_box_pack_start  (GTK_BOX(vbox), viewport, TRUE, TRUE, 0);
-    gtk_container_add   (GTK_CONTAINER(window), vbox);
-
-    return window;
+    main_vbox = gtk_vbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(main_vbox), menu_bar, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(main_vbox), viewport, TRUE, TRUE, 0);
+    gtk_container_add(GTK_CONTAINER(main_window), main_vbox);
 }
 
+/*
+ * Create menu bar
+ */
+static GtkWidget*
+create_menu_bar (GtkWidget  *window)
+{
+    static GtkItemFactoryEntry menu_items[] = {
+        { "/_File",         NULL,           NULL,           0,  "<Branch>" },
+        { "/File/_Quit",    "<control>Q",   gtk_main_quit,  0,  "<StockItem>",  GTK_STOCK_QUIT },
+        { "/_Help",         NULL,           NULL,           0,  "<Branch>" },
+        { "/Help/_About",  NULL,           show_about,     0,  "<StockItem>",  GTK_STOCK_ABOUT },
+    };
+
+    static gint nmenu_items = sizeof(menu_items) / sizeof(menu_items[0]);
+
+    GtkItemFactory *item_factory;
+    GtkAccelGroup *accel_group;
+
+    accel_group = gtk_accel_group_new();
+
+    item_factory = gtk_item_factory_new (GTK_TYPE_MENU_BAR, "<Main>", accel_group);
+
+    gtk_item_factory_create_items (item_factory, nmenu_items, menu_items, NULL);
+    gtk_window_add_accel_group(GTK_WINDOW(window), accel_group);
+
+    return gtk_item_factory_get_widget(item_factory, "<Main>");
+}
+
+/*
+ * Main function
+ */
 int
 main(int argc, char* argv[])
 {
-    /* Initialize GTK+ and GtkGLExt system */
+    /*
+     * Initialize GTK+ and GtkGLExt system
+     */
     gtk_init(&argc, &argv);
     gtk_gl_init(&argc, &argv);
 
-    robot = d_geometry_new(40.0, 50.0, 30.0, 10.0);
+    robot = d_geometry_new(30.0, 50.0, 30.0, 10.0);
     pos   = d_pos_new_full(0.0, 0.0, 50.0);
 
-    /* Create the window and show it */
-    GtkWidget *mainWindow;
-    mainWindow = create_main_window();
-    if (mainWindow == NULL) {
-        g_print("*** Cannot create main window.\n");
-        exit(1);
-    }
-    gtk_widget_show_all(mainWindow);
+    /*
+     * Create the window and show it
+     */
+    create_main_window();
+    gtk_widget_show_all(main_window);
 
     /* Start program main loop */
     gtk_main();
