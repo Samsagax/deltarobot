@@ -663,9 +663,10 @@ d_viewport_new_full (DGeometry  *geometry,
 
     d_viewport_set_geometry(viewport, geometry);
     d_viewport_set_ext_axes(viewport, extaxes);
-    d_viewport_set_near_clip(viewport, near_clip);
-    d_viewport_set_far_clip(viewport, far_clip);
-    d_viewport_set_eye_angle(viewport, eye_angle);
+    d_viewport_configure_view(viewport,
+                              near_clip,
+                              far_clip,
+                              eye_angle);
 
     return GTK_WIDGET(viewport);
 }
@@ -677,6 +678,10 @@ d_viewport_configure_view (DViewport    *self,
                            gdouble      eye_angle)
 {
     g_warning("d_viewport_configure_view is a stub");
+
+    d_viewport_set_near_clip(self, near_clip);
+    d_viewport_set_far_clip(self, far_clip);
+    d_viewport_set_eye_angle(self, eye_angle);
 }
 
 void
