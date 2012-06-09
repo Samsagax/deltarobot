@@ -139,7 +139,7 @@ d_viewport_class_init (DViewportClass   *klass)
     viewport_properties[PROP_EXTAXES] =
         g_param_spec_object ("extaxes",
                              "ExtAxes",
-                             "The Viewport Extended Axes object to draw the manipulator",
+                             "The Viewport's Extended Axes object to draw the manipulator",
                              D_TYPE_EXTAXES,
                              G_PARAM_READWRITE);
 
@@ -545,9 +545,9 @@ d_viewport_destroy(GtkObject    *obj)
         g_object_unref(self->geometry);
         self->geometry = NULL;
     }
-    if (self->robot_pos) {
-        g_object_unref(self->robot_pos);
-        self->robot_pos = NULL;
+    if (self->extaxes) {
+        g_object_unref(self->extaxes);
+        self->extaxes = NULL;
     }
 
     GTK_OBJECT_CLASS(d_viewport_parent_class)->destroy(obj);
@@ -560,14 +560,17 @@ d_viewport_set_ext_axes (DViewport  *self,
     g_return_if_fail(D_IS_EXTAXES(extaxes));
 
     if (self->extaxes != extaxes) {
-        g_object_unref(self->extaxes);
+        if (self->extaxes) {
+            g_object_unref(self->extaxes);
+        }
         self->extaxes = g_object_ref(extaxes);
+
+        /* Queve Redraw */
+        GtkWidget *widget = GTK_WIDGET(self);
+        if (gtk_widget_get_realized(widget)) {
+            gdk_window_invalidate_rect(widget->window, &widget->allocation, FALSE);
+        }
     }
-
-    /* Queve Redraw */
-    GtkWidget *widget = GTK_WIDGET(self);
-    gdk_window_invalidate_rect(widget->window, &widget->allocation, FALSE);
-
     /* Notify change */
     g_object_notify(G_OBJECT(self), "extaxes");
 }
@@ -587,6 +590,7 @@ d_viewport_set_pos (DViewport   *self,
                            extaxes);
 
     d_viewport_set_ext_axes (self, extaxes);
+    g_object_unref(extaxes);
 }
 
 DPos*
