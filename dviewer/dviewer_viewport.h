@@ -51,26 +51,26 @@ struct _DViewport {
     /* Robot Geometry */
     DGeometry       *geometry;
     DExtAxes        *extaxes;
-    DPos            *robot_pos;
+    //DPos            *robot_pos;
 
     /* Mouse button pressed or 0 */
     guint8          button;
 
     /* Max FPS count */
-    guint           max_fps;            /* Not currently used */
+    //guint           max_fps;            /* Not currently used */
 
     /* ID of timer or 0 if none */
-    guint32         timer;
+    //guint32         timer;
 
     /* OpenGL context */
     GdkGLConfig     *glconfig;
 
     /* Define a sphere containing the geometry */
-    DVector3        *scene_center;
-    gdouble         scene_radius;
+    //DVector3        *scene_center;
+    //gdouble         scene_radius;
 
     /* Define position for a light */
-    DVector3        *light_position;
+    //DVector3        *light_position;
 
     /* Far and near clip distance */
     gdouble         near_clip;
@@ -80,33 +80,54 @@ struct _DViewport {
     gdouble         eye_angle;
 
     /* Euler view rotation angles in degrees */
-    DVector3        *view_angles;
+    //DVector3        *view_angles;
 
     /* Trackball for 3D rotation of camera */
-    gdouble         track_angle;
-    DVector3        *track_axis;
+    //gdouble         track_angle;
+    //DVector3        *track_axis;
 
     /* Zooming */
-    gdouble         zoom;
+    //gdouble         zoom;
 };
 
 struct _DViewportClass {
     GtkDrawingAreaClass parent_class;
 };
 
+/* Methods */
+
 GType       d_viewport_get_type                 (void);
+
 GtkWidget*  d_viewport_new                      (DGeometry  *geometry);
+
+GtkWidget*  d_viewport_new_with_pos             (DGeometry  *geometry,
+                                                 DPos       *pos);
+
 GtkWidget*  d_viewport_new_full                 (DGeometry  *geometry,
-                                                 DPos       *robot_pos);
+                                                 DExtAxes   *extaxes,
+                                                 gdouble    near_clip,
+                                                 gdouble    far_clip,
+                                                 gdouble    eye_angle);
+
 void        d_viewport_set_pos                  (DViewport  *self,
                                                  DPos       *pos);
-void        d_viewport_set_axes                 (DViewport  *self,
-                                                 DAxes      *axes);
-void        d_viewport_set_view_angles          (gdouble    phi,
-                                                 gdouble    psi,
-                                                 gdouble    theta);
-void        d_viewport_set_far_clip             (gdouble    far_clip);
-void        d_viewport_set_near_clip            (gdouble    near_clip);
+
+void        d_viewport_set_ext_axes             (DViewport  *self,
+                                                 DExtAxes   *extaxes);
+
+void        d_viewport_set_far_clip             (DViewport  *self,
+                                                 gdouble    far_clip);
+
+void        d_viewport_set_near_clip            (DViewport  *self,
+                                                 gdouble    near_clip);
+
+void        d_viewport_set_eye_angle            (DViewport  *self,
+                                                 gdouble    eye_angle);
+
+void        d_viewport_configure                (DViewport  *self,
+                                                 gdouble    near_clip,
+                                                 gdouble    far_clip,
+                                                 gdouble    eye_angle);
 
 #endif   /* ----- #ifndef DVIEWER_VIEWPORT_INC  ----- */
 

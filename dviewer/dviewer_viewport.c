@@ -34,7 +34,11 @@
 enum
 {
     PROP_0,
+    PROP_GEOMETRY,
     PROP_EXTAXES,
+    PROP_NEAR_CLIP,
+    PROP_FAR_CLIP,
+    PROP_EYE_ANGLE,
     N_PROPERTIES
 };
 
@@ -57,6 +61,9 @@ static void     d_viewport_get_property     (GObject            *obj,
                                              GValue             *value,
                                              GParamSpec         *pspec);
 
+static void     d_viewport_set_geometry     (DViewport          *self,
+                                             DGeometry          *geometry);
+
 static void     d_viewport_destroy          (GtkObject          *obj);
 
 static void     d_viewport_size_request     (GtkWidget          *widget,
@@ -66,32 +73,48 @@ static void     d_viewport_size_allocate    (GtkWidget          *widget,
                                              GtkAllocation      *allocation);
 
 static void     d_viewport_realize          (GtkWidget          *widget);
+
 static gboolean d_viewport_configure        (GtkWidget          *widget,
                                              GdkEventConfigure  *event);
+
 static gboolean d_viewport_expose           (GtkWidget          *widget,
                                              GdkEventExpose     *event);
+
 static gboolean d_viewport_map              (GtkWidget          *widget,
                                              GdkEvent           *event);
+
 static gboolean d_viewport_unmap            (GtkWidget          *widget,
                                              GdkEvent           *event);
+
 static gboolean d_viewport_visibility_notify (GtkWidget         *widget,
                                              GdkEventVisibility *event);
+
 static gboolean d_viewport_button_press     (GtkWidget          *widget,
                                              GdkEventButton     *event);
+
 static gboolean d_viewport_button_release   (GtkWidget          *widget,
                                              GdkEventButton     *event);
+
 static gboolean d_viewport_motion_notify    (GtkWidget          *widget,
                                              GdkEventMotion     *event);
+
 static void     d_viewport_trackball_rotation
                                             (DViewport          *self,
                                              gint               x,
                                              gint               y);
+
 static GdkGLConfig* d_viewport_configure_gl (gboolean           verbose);
+
 static gboolean d_viewport_timeout_animate  (GtkWidget          *widget);
 
-/* Define type */
+/*
+ * Define type
+ */
 G_DEFINE_TYPE(DViewport, d_viewport, GTK_TYPE_DRAWING_AREA)
 
+/*
+ * Widget behaviour
+ */
 static void
 d_viewport_init (DViewport  *self)
 {
@@ -100,13 +123,13 @@ d_viewport_init (DViewport  *self)
     self->geometry = NULL;
     self->extaxes = NULL;
     self->button = 0;
-    self->max_fps = 60;
-    self->timer = 0;
+    //self->max_fps = 60;
+    //self->timer = 0;
     self->glconfig = d_viewport_configure_gl(FALSE);
     self->near_clip = 1.0;
     self->far_clip = 400.0;
     self->eye_angle = 45.0;
-    self->zoom = 1.0;
+    //self->zoom = 1.0;
 
     gtk_widget_set_gl_capability ( GTK_WIDGET(self),
                                    self->glconfig,
@@ -131,10 +154,16 @@ d_viewport_class_init (DViewportClass   *klass)
     widgetlass->configure_event = d_viewport_configure;
     widgetlass->expose_event = d_viewport_expose;
     widgetlass->size_request = d_viewport_size_request;
-    widgetlass->size_allocate = d_viewport_size_allocate;
     widgetlass->button_press_event = d_viewport_button_press;
     widgetlass->button_release_event = d_viewport_button_release;
     widgetlass->motion_notify_event = d_viewport_motion_notify;
+
+    viewport_properties[PROP_GEOMETRY] =
+        g_param_spec_object ("geometry",
+                             "Geometry",
+                             "The Viewport's DGeometry object to draw the manipulator",
+                             D_TYPE_GEOMETRY,
+                             G_PARAM_READWRITE);
 
     viewport_properties[PROP_EXTAXES] =
         g_param_spec_object ("extaxes",
@@ -143,11 +172,53 @@ d_viewport_class_init (DViewportClass   *klass)
                              D_TYPE_EXTAXES,
                              G_PARAM_READWRITE);
 
+    viewport_properties[PROP_NEAR_CLIP] =
+        g_param_spec_double ("near-clip",
+                             "Near Clip",
+                             "The Viewport's near clip distance for the 3D drawing area",
+                             -G_MAXDOUBLE,
+                             G_MAXDOUBLE,
+                             0.0,
+                             G_PARAM_READWRITE);
+
+    viewport_properties[PROP_FAR_CLIP] =
+        g_param_spec_double ("far-clip",
+                             "Far Clip",
+                             "The Viewport's far clip distance for the 3D drawing area",
+                             -G_MAXDOUBLE,
+                             G_MAXDOUBLE,
+                             400.0,
+                             G_PARAM_READWRITE);
+
+    viewport_properties[PROP_EYE_ANGLE] =
+        g_param_spec_double ("eye-angle",
+                             "Eye Angle",
+                             "The Viewport's eye angle for the 3D drawing perspective",
+                             0.0,
+                             180.0,
+                             30.0,
+                             G_PARAM_READWRITE);
+
     g_object_class_install_properties (objectclass,
                                        N_PROPERTIES,
                                        viewport_properties);
 }
 
+static void
+d_viewport_destroy(GtkObject    *obj)
+{
+    DViewport *self = D_VIEWPORT(obj);
+    if (self->geometry) {
+        g_object_unref(self->geometry);
+        self->geometry = NULL;
+    }
+    if (self->extaxes) {
+        g_object_unref(self->extaxes);
+        self->extaxes = NULL;
+    }
+
+    GTK_OBJECT_CLASS(d_viewport_parent_class)->destroy(obj);
+}
 
 static void
 d_viewport_get_property (GObject    *obj,
@@ -158,8 +229,21 @@ d_viewport_get_property (GObject    *obj,
     DViewport *viewport = D_VIEWPORT(obj);
 
     switch(prop_id) {
+        case PROP_GEOMETRY:
+            g_value_set_object(value, viewport->geometry);
+            break;
         case PROP_EXTAXES:
             g_value_set_object(value, viewport->extaxes);
+            break;
+        case PROP_NEAR_CLIP:
+            g_value_set_double(value, viewport->near_clip);
+            break;
+        case PROP_FAR_CLIP:
+            g_value_set_double(value, viewport->far_clip);
+            break;
+        case PROP_EYE_ANGLE:
+            g_value_set_double(value, viewport->eye_angle);
+            break;
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
             break;
@@ -175,7 +259,8 @@ d_viewport_set_property (GObject        *obj,
     DViewport *self = D_VIEWPORT(obj);
 
     switch (prop_id) {
-            DExtAxes *extaxes;
+        DGeometry *geometry;
+        DExtAxes *extaxes;
 
         case PROP_EXTAXES:
             extaxes = D_EXTAXES(g_value_get_object(value));
@@ -184,12 +269,48 @@ d_viewport_set_property (GObject        *obj,
             }
             d_viewport_set_ext_axes(self, extaxes);
             break;
+        case PROP_GEOMETRY:
+            geometry = D_GEOMETRY(g_value_get_object(value));
+            if (!geometry) {
+                g_warning("Invalid GObject type for 'geometry' property in DViewport.");
+            }
+            d_viewport_set_geometry(self, geometry);
+            break;
+        case PROP_NEAR_CLIP:
+            d_viewport_set_near_clip(self, g_value_get_double(value));
+            break;
+        case PROP_FAR_CLIP:
+            d_viewport_set_far_clip(self, g_value_get_double(value));
+            break;
+        case PROP_EYE_ANGLE:
+            d_viewport_set_eye_angle(self, g_value_get_double(value));
+            break;
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
             break;
     }
 }
 
+static void
+d_viewport_set_geometry (DViewport  *self,
+                         DGeometry  *geometry)
+{
+    if (self->geometry != geometry) {
+        if(self->geometry) {
+            g_object_unref(self->geometry);
+        }
+        self->geometry = g_object_ref(geometry);
+
+        /* Queve Redraw */
+        GtkWidget *widget = GTK_WIDGET(self);
+        if (gtk_widget_get_realized(widget)) {
+            gdk_window_invalidate_rect(widget->window,
+                                       &widget->allocation,
+                                       FALSE);
+        }
+    }
+    g_object_notify(G_OBJECT(self), "geometry");
+}
 
 static void
 d_viewport_size_request (GtkWidget      *widget,
@@ -496,19 +617,10 @@ d_viewport_rotate (GtkWidget    *widget,
 }
 
 
-void
-d_viewport_set_far_clip (DViewport  *self,
-                         gdouble    far_clip)
-{
-    g_return_if_fail(D_IS_VIEWPORT(self));
-
-    self->far_clip = far_clip;
-    /* Notify property change */
-}
-
 /*----------------------------------------------------------------------------
  *  Public API
  *--------------------------------------------------------------------------*/
+
 GtkWidget*
 d_viewport_new (DGeometry *geometry)
 {
@@ -537,21 +649,6 @@ d_viewport_new_full (DGeometry  *geometry,
     return GTK_WIDGET(viewport);
 }
 
-static void
-d_viewport_destroy(GtkObject    *obj)
-{
-    DViewport *self = D_VIEWPORT(obj);
-    if (self->geometry) {
-        g_object_unref(self->geometry);
-        self->geometry = NULL;
-    }
-    if (self->extaxes) {
-        g_object_unref(self->extaxes);
-        self->extaxes = NULL;
-    }
-
-    GTK_OBJECT_CLASS(d_viewport_parent_class)->destroy(obj);
-}
 void
 d_viewport_set_ext_axes (DViewport  *self,
                          DExtAxes   *extaxes)
@@ -593,8 +690,33 @@ d_viewport_set_pos (DViewport   *self,
     g_object_unref(extaxes);
 }
 
-DPos*
-d_viewport_get_pos (DViewport   *self)
+void
+d_viewport_set_far_clip (DViewport  *self,
+                         gdouble    far_clip)
 {
-    return self->robot_pos;
+    g_return_if_fail(D_IS_VIEWPORT(self));
+
+    self->far_clip = far_clip;
+    g_object_notify(G_OBJECT(self), "far-clip");
 }
+
+void
+d_viewport_set_near_clip (DViewport *self,
+                          gdouble   near_clip)
+{
+    g_return_if_fail(D_IS_VIEWPORT(self));
+
+    self->near_clip = near_clip;
+    g_object_notify(G_OBJECT(self), "near-clip");
+}
+
+void
+d_viewport_set_eye_angle (DViewport *self,
+                          gdouble   eye_angle)
+{
+    g_return_if_fail(D_IS_VIEWPORT(self));
+
+    self->eye_angle = eye_angle;
+    g_object_notify(G_OBJECT(self), "eye-angle");
+}
+
