@@ -216,6 +216,10 @@ d_viewport_destroy(GtkObject    *obj)
         g_object_unref(self->extaxes);
         self->extaxes = NULL;
     }
+    if (self->glconfig) {
+        g_object_unref(self->glconfig);
+        self->glconfig = NULL;
+    }
 
     GTK_OBJECT_CLASS(d_viewport_parent_class)->destroy(obj);
 }
