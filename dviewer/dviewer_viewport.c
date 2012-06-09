@@ -412,8 +412,6 @@ d_viewport_configure (GtkWidget           *widget,
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluPerspective(self->eye_angle, aspect, self->near_clip, self->far_clip);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
 
     gdk_gl_drawable_gl_end (gldrawable);
     /* OpenGL END */
