@@ -604,18 +604,6 @@ d_viewport_configure_gl (gboolean verbose)
     return glconfig;
 }
 
-/*
-static void
-d_viewport_rotate (GtkWidget    *widget,
-                   gdouble      x,
-                   gdouble      y)
-{
-    g_return_if_fail(D_IS_VIEWPORT(widget));
-
-    DViewport *self = D_VIEWPORT(widget);
-}
-*/
-
 /*----------------------------------------------------------------------------
  *  Public API
  *--------------------------------------------------------------------------*/
