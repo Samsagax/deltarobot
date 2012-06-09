@@ -44,7 +44,7 @@ enum
 
 enum
 {
-    POS_CHANGED,
+    EXTAXES_CHANGED,
     LAST_SIGNAL
 };
 
