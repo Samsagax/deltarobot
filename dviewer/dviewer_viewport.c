@@ -44,7 +44,6 @@ enum
     LAST_SIGNAL
 };
 
-static gdouble animation_rotation = 0.0;
 static GParamSpec *viewport_properties[N_PROPERTIES] = { NULL, };
 
 /* Forward declarations */
@@ -484,26 +483,6 @@ d_viewport_configure_gl (gboolean verbose)
 	    }
     }
     return glconfig;
-}
-
-static gboolean
-d_viewport_timeout_animate (GtkWidget    *widget)
-{
-    GtkAllocation allocation;
-    GdkWindow *window;
-
-    window = gtk_widget_get_window(widget);
-    gtk_widget_get_allocation (widget, &allocation);
-
-    animation_rotation += 1.0;
-    if (animation_rotation > 360) {
-        animation_rotation -= 360;
-    }
-
-    gdk_window_invalidate_rect (window, &allocation, FALSE);
-    gdk_window_process_updates (window, FALSE);
-
-    return TRUE;
 }
 
 static void
