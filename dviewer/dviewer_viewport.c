@@ -547,8 +547,6 @@ static gboolean
 d_viewport_motion_notify (GtkWidget         *widget,
                           GdkEventMotion    *event)
 {
-//    g_warning("d_viewport_motion_notify is a stub");
-
     g_return_val_if_fail (D_IS_VIEWPORT(widget), FALSE);
     g_return_val_if_fail (event != NULL, FALSE);
 
