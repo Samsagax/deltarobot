@@ -32,6 +32,8 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
+#include <math.h>
+
 #include <dsim/dsim.h>
 #include "dviewer_engine.h"
 
@@ -66,8 +68,10 @@ struct _DViewport {
     GdkGLConfig     *glconfig;
 
     /* Define a sphere containing the geometry */
-    //DVector3        *scene_center;
-    //gdouble         scene_radius;
+    DVector3        *scene_center;
+    gdouble         scene_distance;
+    gdouble         colat_angle;
+    gdouble         azimuth_angle;
 
     /* Define position for a light */
     //DVector3        *light_position;
@@ -105,6 +109,10 @@ GtkWidget*  d_viewport_new_with_pos             (DGeometry  *geometry,
 
 GtkWidget*  d_viewport_new_full                 (DGeometry  *geometry,
                                                  DExtAxes   *extaxes,
+                                                 DVector3   *scene_center,
+                                                 gdouble    scene_distance,
+                                                 gdouble    colat_angle,
+                                                 gdouble    azimuth_angle,
                                                  gdouble    near_clip,
                                                  gdouble    far_clip,
                                                  gdouble    eye_angle);
@@ -114,6 +122,18 @@ void        d_viewport_set_pos                  (DViewport  *self,
 
 void        d_viewport_set_ext_axes             (DViewport  *self,
                                                  DExtAxes   *extaxes);
+
+void        d_viewport_set_scene_center         (DViewport  *self,
+                                                 DVector3   *scene_center);
+
+void        d_viewport_set_scene_distance       (DViewport  *self,
+                                                 gdouble    scene_distance);
+
+void        d_viewport_set_colat_angle          (DViewport  *self,
+                                                 gdouble    colat_angle);
+
+void        d_viewport_set_azimuth_angle        (DViewport  *self,
+                                                 gdouble    azimuth_angle);
 
 void        d_viewport_set_far_clip             (DViewport  *self,
                                                  gdouble    far_clip);
@@ -125,6 +145,10 @@ void        d_viewport_set_eye_angle            (DViewport  *self,
                                                  gdouble    eye_angle);
 
 void        d_viewport_configure_view           (DViewport  *self,
+                                                 DVector3   *scene_center,
+                                                 gdouble    scene_distance,
+                                                 gdouble    colat_angle,
+                                                 gdouble    azimuth_angle,
                                                  gdouble    near_clip,
                                                  gdouble    far_clip,
                                                  gdouble    eye_angle);

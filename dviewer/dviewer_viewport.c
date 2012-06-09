@@ -126,9 +126,13 @@ d_viewport_init (DViewport  *self)
     //self->max_fps = 60;
     //self->timer = 0;
     self->glconfig = d_viewport_configure_gl(FALSE);
+    self->scene_center = d_vector3_new();
+    self->scene_distance = 450.0;
+    self->colat_angle = 45.0;
+    self->azimuth_angle = 45.0;
     self->near_clip = 1.0;
     self->far_clip = 400.0;
-    self->eye_angle = 45.0;
+    self->eye_angle = 25.0;
     //self->zoom = 1.0;
 
     gtk_widget_set_gl_capability ( GTK_WIDGET(self),
@@ -205,7 +209,7 @@ d_viewport_class_init (DViewportClass   *klass)
 }
 
 static void
-d_viewport_destroy(GtkObject    *obj)
+d_viewport_destroy (GtkObject   *obj)
 {
     DViewport *self = D_VIEWPORT(obj);
     if (self->geometry) {
@@ -215,6 +219,10 @@ d_viewport_destroy(GtkObject    *obj)
     if (self->extaxes) {
         g_object_unref(self->extaxes);
         self->extaxes = NULL;
+    }
+    if (self->scene_center) {
+        g_object_unref(self->scene_center);
+        self->scene_center = NULL;
     }
     if (self->glconfig) {
         g_object_unref(self->glconfig);
@@ -388,7 +396,6 @@ static gboolean
 d_viewport_configure (GtkWidget           *widget,
                       GdkEventConfigure   *event)
 {
-    /* Add return_val_if_fail guards */
     DViewport *self = D_VIEWPORT(widget);
 
     GtkAllocation allocation;
@@ -451,9 +458,13 @@ d_viewport_expose (GtkWidget        *widget,
     glMatrixMode (GL_MODELVIEW);
     glLoadIdentity();
 
-    glTranslatef(0.0f, 30.0f, -150.0f);
-    glRotatef(90.0, 1.0, 0.0, 0.0);
-
+    gluLookAt(self->scene_distance * sin(self->colat_angle) * cos(self->azimuth_angle),
+              self->scene_distance * sin(self->colat_angle) * cos(self->azimuth_angle),
+              self->scene_distance * sin(self->colat_angle) * cos(self->azimuth_angle),
+              d_vector3_get(self->scene_center, 0),
+              d_vector3_get(self->scene_center, 1),
+              d_vector3_get(self->scene_center, 2),
+              0.0, 0.0, 1.0);
 
 	GLfloat ambientLight[] = {0.3f, 0.3f, 0.3f, 1.0f};
 	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambientLight);
@@ -462,8 +473,12 @@ d_viewport_expose (GtkWidget        *widget,
 	GLfloat lightPos[] = {-2 * BOX_SIZE, BOX_SIZE, 2 * BOX_SIZE, 2.0f};
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor);
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+
+    /*
+     * Draw actors
+     */
+    d_viewer_draw_reference_frame(30.0, 0.5);
     d_viewer_draw_robot_with_ext_axes(self->geometry, self->extaxes);
-    d_viewer_draw_reference_frame(30.0, 1.0);
 
     /* Swap bufers */
     if(gdk_gl_drawable_is_double_buffered(gldrawable)) {
@@ -641,6 +656,10 @@ d_viewport_new_with_pos (DGeometry  *geometry,
 GtkWidget*
 d_viewport_new_full (DGeometry  *geometry,
                      DExtAxes   *extaxes,
+                     DVector3   *scene_center,
+                     gdouble    scene_distance,
+                     gdouble    colat_angle,
+                     gdouble    azimuth_angle,
                      gdouble    near_clip,
                      gdouble    far_clip,
                      gdouble    eye_angle)
@@ -655,6 +674,10 @@ d_viewport_new_full (DGeometry  *geometry,
     d_viewport_set_geometry(viewport, geometry);
     d_viewport_set_ext_axes(viewport, extaxes);
     d_viewport_configure_view(viewport,
+                              scene_center,
+                              scene_distance,
+                              colat_angle,
+                              azimuth_angle,
                               near_clip,
                               far_clip,
                               eye_angle);
@@ -664,15 +687,27 @@ d_viewport_new_full (DGeometry  *geometry,
 
 void
 d_viewport_configure_view (DViewport    *self,
+                           DVector3     *scene_center,
+                           gdouble      scene_distance,
+                           gdouble      colat_angle,
+                           gdouble      azimuth_angle,
                            gdouble      near_clip,
                            gdouble      far_clip,
                            gdouble      eye_angle)
 {
     g_warning("d_viewport_configure_view is a stub");
 
+    g_object_freeze_notify(G_OBJECT(self));
+
+    d_viewport_set_scene_center(self, scene_center);
+    d_viewport_set_scene_distance(self, scene_distance);
+    d_viewport_set_azimuth_angle(self, azimuth_angle);
+    d_viewport_set_colat_angle(self, colat_angle);
     d_viewport_set_near_clip(self, near_clip);
     d_viewport_set_far_clip(self, far_clip);
     d_viewport_set_eye_angle(self, eye_angle);
+
+    g_object_thaw_notify(G_OBJECT(self));
 }
 
 void
@@ -714,6 +749,55 @@ d_viewport_set_pos (DViewport   *self,
 
     d_viewport_set_ext_axes (self, extaxes);
     g_object_unref(extaxes);
+}
+
+void
+d_viewport_set_scene_center (DViewport  *self,
+                             DVector3   *scene_center)
+{
+    g_return_if_fail(D_IS_VIEWPORT(self));
+    g_return_if_fail(D_IS_VECTOR3(scene_center));
+
+    if (self->scene_center != scene_center) {
+        if (self->scene_center) {
+            g_object_unref(self->scene_center);
+        }
+        self->scene_center = g_object_ref(scene_center);
+
+        /* Queve Redraw */
+        GtkWidget *widget = GTK_WIDGET(self);
+        if (gtk_widget_get_realized(widget)) {
+            gdk_window_invalidate_rect(widget->window, &widget->allocation, FALSE);
+        }
+    }
+    /* Notify change */
+}
+
+void
+d_viewport_set_scene_distance (DViewport    *self,
+                               gdouble      scene_distance)
+{
+    g_return_if_fail(D_IS_VIEWPORT(self));
+
+    self->scene_distance = scene_distance;
+}
+
+void
+d_viewport_set_colat_angle (DViewport   *self,
+                            gdouble     colat_angle)
+{
+    g_return_if_fail(D_IS_VIEWPORT(self));
+
+    self->colat_angle = colat_angle;
+}
+
+void
+d_viewport_set_azimuth_angle (DViewport *self,
+                              gdouble   azimuth_angle)
+{
+    g_return_if_fail(D_IS_VIEWPORT(self));
+
+    self->azimuth_angle = azimuth_angle;
 }
 
 void
