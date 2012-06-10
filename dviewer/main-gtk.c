@@ -21,9 +21,9 @@
 /*
  * main-gtk.c :
  */
+
 #include <stdlib.h>
 #include <gdk/gdkkeysyms.h>
-//#include "dviewer_engine.h"
 #include "dviewer_viewport.h"
 
 /* Global variables */
@@ -37,7 +37,9 @@ static void         create_main_window (void);
 static gboolean     key_handler (GtkWidget *widget, GdkEventKey *event, gpointer data);
 static void         increment_pos (DPos *pos, gdouble dx, gdouble dy, gdouble dz);
 
-
+/*
+ * Handle key pressed on main window
+ */
 static gboolean
 key_handler (GtkWidget      *widget,
              GdkEventKey    *event,
@@ -48,32 +50,29 @@ key_handler (GtkWidget      *widget,
     viewport = D_VIEWPORT(widget);
 
     switch (event->keyval) {
-        case GDK_KEY_Page_Up:
+        case GDK_KEY_w:
             increment_pos(pos, 0.0, 0.0, 1.0);
             d_viewport_set_pos(viewport, pos);
             break;
-        case GDK_KEY_Page_Down:
+        case GDK_KEY_s:
             increment_pos(pos, 0.0, 0.0, -1.0);
             d_viewport_set_pos(viewport, pos);
             break;
-        case GDK_KEY_Up:
-            increment_pos(pos, 0.0, 1.0, 0.0);
-            d_viewport_set_pos(viewport, pos);
-            break;
-        case GDK_KEY_Down:
-            increment_pos(pos, 0.0, -1.0, 0.0);
-            d_viewport_set_pos(viewport, pos);
-            break;
-        case GDK_KEY_Left:
+        case GDK_KEY_a:
             increment_pos(pos, 1.0, 0.0, 0.0);
             d_viewport_set_pos(viewport, pos);
             break;
-        case GDK_KEY_Right:
-            increment_pos(pos, -1.0, 0.0, 0.0);
+        case GDK_KEY_d:
+            increment_pos(pos, 0.0, 1.0, 0.0);
             d_viewport_set_pos(viewport, pos);
             break;
-        case GDK_KEY_Escape:
-            gtk_main_quit();
+        case GDK_KEY_q:
+            increment_pos(pos, 0.0, -1.0, 0.0);
+            d_viewport_set_pos(viewport, pos);
+            break;
+        case GDK_KEY_e:
+            increment_pos(pos, -1.0, 0.0, 0.0);
+            d_viewport_set_pos(viewport, pos);
             break;
         default:
             return FALSE;
@@ -164,9 +163,9 @@ create_menu_bar (GtkWidget  *window)
 {
     static GtkItemFactoryEntry menu_items[] = {
         { "/_File",         NULL,           NULL,           0,  "<Branch>" },
-        { "/File/_Quit",    "<control>Q",   gtk_main_quit,  0,  "<StockItem>",  GTK_STOCK_QUIT },
+        { "/File/_Quit",    "<control>X",   gtk_main_quit,  0,  "<StockItem>",  GTK_STOCK_QUIT },
         { "/_Help",         NULL,           NULL,           0,  "<Branch>" },
-        { "/Help/_About",  NULL,           show_about,     0,  "<StockItem>",  GTK_STOCK_ABOUT },
+        { "/Help/_About",   NULL,           show_about,     0,  "<StockItem>",  GTK_STOCK_ABOUT },
     };
 
     static gint nmenu_items = sizeof(menu_items) / sizeof(menu_items[0]);
