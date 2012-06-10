@@ -74,6 +74,30 @@ key_handler (GtkWidget      *widget,
             increment_pos(pos, -1.0, 0.0, 0.0);
             d_viewport_set_pos(viewport, pos);
             break;
+        case GDK_KEY_Page_Up:
+            d_viewport_set_scene_distance(viewport,
+                    d_viewport_get_scene_distance(viewport) - 1.0);
+            break;
+        case GDK_KEY_Page_Down:
+            d_viewport_set_scene_distance(viewport,
+                    d_viewport_get_scene_distance(viewport) + 1.0);
+            break;
+        case GDK_KEY_Up:
+            d_viewport_set_polar_angle(viewport,
+                    d_viewport_get_polar_angle(viewport) - G_PI / 180.0);
+            break;
+        case GDK_KEY_Down:
+            d_viewport_set_polar_angle(viewport,
+                    d_viewport_get_polar_angle(viewport) + G_PI / 180.0);
+            break;
+        case GDK_KEY_Left:
+            d_viewport_set_azimuth_angle(viewport,
+                    d_viewport_get_azimuth_angle(viewport) + G_PI / 180.0);
+            break;
+        case GDK_KEY_Right:
+            d_viewport_set_azimuth_angle(viewport,
+                    d_viewport_get_azimuth_angle(viewport) - G_PI / 180.0);
+            break;
         default:
             return FALSE;
     }
