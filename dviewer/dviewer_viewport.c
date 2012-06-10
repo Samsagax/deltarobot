@@ -127,7 +127,7 @@ d_viewport_init (DViewport  *self)
     //self->timer = 0;
     self->glconfig = d_viewport_configure_gl(FALSE);
     self->scene_center = d_vector3_new();
-    self->scene_distance = 350.0;
+    self->scene_distance = 300.0;
     self->polar_angle = G_PI / 4.0;
     self->azimuth_angle = G_PI / 4.0;
     self->near_clip = 1.0;
@@ -187,7 +187,7 @@ d_viewport_class_init (DViewportClass   *klass)
         g_param_spec_double ("scene-distance",
                              "Scene Center",
                              "The Viewport's distance from the center of the scene",
-                             -G_MAXDOUBLE,
+                             0.0,
                              G_MAXDOUBLE,
                              0.0,
                              G_PARAM_READWRITE);
@@ -196,17 +196,17 @@ d_viewport_class_init (DViewportClass   *klass)
         g_param_spec_double ("polar-angle",
                              "Polar angle",
                              "The Viewport's polar angle (theta)",
-                             -G_MAXDOUBLE,
-                             G_MAXDOUBLE,
+                             0.0,
                              G_PI,
+                             G_PI / 2.0,
                              G_PARAM_READWRITE);
 
     viewport_properties[PROP_AZIMUTH_ANGLE] =
         g_param_spec_double ("azimuth-angle",
                              "Azimuth angle",
                              "The Viewport's azimuth angle (phi)",
-                             -G_MAXDOUBLE,
-                             G_MAXDOUBLE,
+                             0.0,
+                             2.0 * G_PI,
                              G_PI,
                              G_PARAM_READWRITE);
 
@@ -522,20 +522,22 @@ d_viewport_expose (GtkWidget        *widget,
     glLoadIdentity();
 
     gluLookAt(self->scene_distance * sin(self->polar_angle) * cos(self->azimuth_angle),
-              self->scene_distance * sin(self->polar_angle) * cos(self->azimuth_angle),
-              self->scene_distance * sin(self->polar_angle) * cos(self->azimuth_angle),
+              self->scene_distance * sin(self->polar_angle) * sin(self->azimuth_angle),
+              self->scene_distance * cos(self->polar_angle),
               d_vector3_get(self->scene_center, 0),
               d_vector3_get(self->scene_center, 1),
               d_vector3_get(self->scene_center, 2),
-              0.0, 0.0, 1.0);
+              -cos(self->polar_angle) * cos(self->azimuth_angle),
+              -cos(self->polar_angle) * sin(self->azimuth_angle),
+              sin(self->polar_angle));
 
 	GLfloat ambientLight[] = {0.5f, 0.5f, 0.5f, 1.0f};
 	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambientLight);
 
 	GLfloat lightColor[] = {0.7f, 0.7f, 0.7f, 1.0f};
 	GLfloat lightPos[] = {
-        self->scene_distance * sin(self->polar_angle) * cos(self->azimuth_angle + G_PI / 2.0),
-        self->scene_distance * sin(self->polar_angle) * sin(self->azimuth_angle + G_PI / 2.0),
+        self->scene_distance * sin(self->polar_angle) * cos(self->azimuth_angle + G_PI),
+        self->scene_distance * sin(self->polar_angle) * sin(self->azimuth_angle + G_PI),
         self->scene_distance * cos(self->polar_angle) };
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor);
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
