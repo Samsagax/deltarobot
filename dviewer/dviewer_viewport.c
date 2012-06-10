@@ -25,10 +25,6 @@
 #include "dviewer_viewport.h"
 
 #define DEFAULT_SIZE 400
-#define SCROLL_DELAY_TIME 300
-
-#define TIMEOUT_INTERVAL 25
-#define BOX_SIZE 70.0
 
 /* Local variables */
 enum
@@ -522,7 +518,6 @@ d_viewport_expose (GtkWidget        *widget,
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
     glMatrixMode (GL_MODELVIEW);
     glLoadIdentity();
 
@@ -534,19 +529,24 @@ d_viewport_expose (GtkWidget        *widget,
               d_vector3_get(self->scene_center, 2),
               0.0, 0.0, 1.0);
 
-	GLfloat ambientLight[] = {0.3f, 0.3f, 0.3f, 1.0f};
+	GLfloat ambientLight[] = {0.5f, 0.5f, 0.5f, 1.0f};
 	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambientLight);
 
 	GLfloat lightColor[] = {0.7f, 0.7f, 0.7f, 1.0f};
-	GLfloat lightPos[] = {-2 * BOX_SIZE, BOX_SIZE, 2 * BOX_SIZE, 2.0f};
+	GLfloat lightPos[] = {
+        self->scene_distance * sin(self->polar_angle) * cos(self->azimuth_angle + G_PI / 2.0),
+        self->scene_distance * sin(self->polar_angle) * sin(self->azimuth_angle + G_PI / 2.0),
+        self->scene_distance * cos(self->polar_angle) };
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor);
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 
     /*
      * Draw actors
      */
+    glPushMatrix();
     d_viewer_draw_reference_frame(30.0, 0.5);
     d_viewer_draw_robot_with_ext_axes(self->geometry, self->extaxes);
+    glPopMatrix();
 
     /* Swap bufers */
     if(gdk_gl_drawable_is_double_buffered(gldrawable)) {
