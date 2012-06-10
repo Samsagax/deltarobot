@@ -791,18 +791,14 @@ d_viewport_set_ext_axes (DViewport  *self,
         }
         self->extaxes = g_object_ref(extaxes);
 
-        /* Queve Redraw */
-        GtkWidget *widget = GTK_WIDGET(self);
-        if (gtk_widget_get_realized(widget)) {
-            gdk_window_invalidate_rect(widget->window, &widget->allocation, FALSE);
-        }
+        d_viewport_queve_redraw(self);
     }
 
     g_object_notify(G_OBJECT(self), "extaxes");
 }
 
 DExtAxes*
-d_viewport_get_ext_axes (DViewport *self)
+d_viewport_get_ext_axes (const DViewport *self)
 {
     g_return_val_if_fail(D_IS_VIEWPORT(self), NULL);
     return self->extaxes;
@@ -826,6 +822,16 @@ d_viewport_set_pos (DViewport   *self,
     g_object_unref(extaxes);
 }
 
+DVector3*
+d_viewport_get_pos (const DViewport *self)
+{
+    g_return_if_fail (D_IS_VIEWPORT(self));
+
+    DVector3 *pos;
+    d_solver_solve_direct_with_ext_axes(self->geometry, self->extaxes, pos);
+    return pos;
+}
+
 void
 d_viewport_set_scene_center (DViewport  *self,
                              DVector3   *scene_center)
@@ -839,18 +845,14 @@ d_viewport_set_scene_center (DViewport  *self,
         }
         self->scene_center = g_object_ref(scene_center);
 
-        /* Queve Redraw */
-        GtkWidget *widget = GTK_WIDGET(self);
-        if (gtk_widget_get_realized(widget)) {
-            gdk_window_invalidate_rect(widget->window, &widget->allocation, FALSE);
-        }
+        d_viewport_queve_redraw(self);
     }
 
     g_object_notify(G_OBJECT(self), "scene-center");
 }
 
 DVector3*
-d_viewport_get_scene_center (DViewport *self)
+d_viewport_get_scene_center (const DViewport *self)
 {
     g_return_val_if_fail(D_IS_VIEWPORT(self), NULL);
     return self->scene_center;
@@ -862,12 +864,14 @@ d_viewport_set_scene_distance (DViewport    *self,
 {
     g_return_if_fail(D_IS_VIEWPORT(self));
 
-    self->scene_distance = scene_distance;
+    self->scene_distance = CLAMP(scene_distance, 0.0, G_MAXDOUBLE);
+    d_viewport_queve_redraw(self);
+
     g_object_notify(G_OBJECT(self), "scene-distance");
 }
 
 gdouble
-d_viewport_get_scene_distance (DViewport *self)
+d_viewport_get_scene_distance (const DViewport *self)
 {
     g_return_val_if_fail(D_IS_VIEWPORT(self), 0.0);
     return self->scene_distance;
@@ -879,12 +883,14 @@ d_viewport_set_polar_angle (DViewport   *self,
 {
     g_return_if_fail(D_IS_VIEWPORT(self));
 
-    self->polar_angle = polar_angle;
+    self->polar_angle = CLAMP(polar_angle, 0.0, G_PI);
+
+    d_viewport_queve_redraw(self);
     g_object_notify(G_OBJECT(self), "polar-angle");
 }
 
 gdouble
-d_viewport_get_polar_angle (DViewport *self)
+d_viewport_get_polar_angle (const DViewport *self)
 {
     g_return_val_if_fail(D_IS_VIEWPORT(self), 0.0);
     return self->polar_angle;
@@ -896,12 +902,20 @@ d_viewport_set_azimuth_angle (DViewport *self,
 {
     g_return_if_fail(D_IS_VIEWPORT(self));
 
-    self->azimuth_angle = azimuth_angle;
+    if (azimuth_angle >= 2.0 * G_PI) {
+        self->azimuth_angle = azimuth_angle - 2.0 * G_PI;
+    } else if (azimuth_angle < 0.0) {
+        self->azimuth_angle = azimuth_angle + 2.0 * G_PI;
+    } else {
+        self->azimuth_angle = azimuth_angle;
+    }
+
+    d_viewport_queve_redraw(self);
     g_object_notify(G_OBJECT(self), "azimuth-angle");
 }
 
 gdouble
-d_viewport_get_azimuth_angle (DViewport *self)
+d_viewport_get_azimuth_angle (const DViewport *self)
 {
     g_return_val_if_fail(D_IS_VIEWPORT(self), 0.0);
     return self->azimuth_angle;
@@ -914,11 +928,13 @@ d_viewport_set_far_clip (DViewport  *self,
     g_return_if_fail(D_IS_VIEWPORT(self));
 
     self->far_clip = far_clip;
+
+    d_viewport_queve_redraw(self);
     g_object_notify(G_OBJECT(self), "far-clip");
 }
 
 gdouble
-d_viewport_get_far_clip (DViewport *self)
+d_viewport_get_far_clip (const DViewport *self)
 {
     g_return_val_if_fail(D_IS_VIEWPORT(self), 0.0);
     return self->far_clip;
@@ -931,11 +947,13 @@ d_viewport_set_near_clip (DViewport *self,
     g_return_if_fail(D_IS_VIEWPORT(self));
 
     self->near_clip = near_clip;
+
+    d_viewport_queve_redraw(self);
     g_object_notify(G_OBJECT(self), "near-clip");
 }
 
 gdouble
-d_viewport_get_near_clip (DViewport *self)
+d_viewport_get_near_clip (const DViewport *self)
 {
     g_return_val_if_fail(D_IS_VIEWPORT(self), 0.0);
     return self->near_clip;
@@ -947,12 +965,14 @@ d_viewport_set_eye_angle (DViewport *self,
 {
     g_return_if_fail(D_IS_VIEWPORT(self));
 
-    self->eye_angle = eye_angle;
+    self->eye_angle = CLAMP(eye_angle, 0.0, G_PI);
+
+    d_viewport_queve_redraw(self);
     g_object_notify(G_OBJECT(self), "eye-angle");
 }
 
 gdouble
-d_viewport_get_eye_angle (DViewport *self)
+d_viewport_get_eye_angle (const DViewport *self)
 {
     g_return_val_if_fail(D_IS_VIEWPORT(self), 0.0);
     return self->eye_angle;

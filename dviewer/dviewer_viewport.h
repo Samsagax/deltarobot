@@ -117,29 +117,47 @@ GtkWidget*  d_viewport_new_full                 (DGeometry  *geometry,
                                                  gdouble    far_clip,
                                                  gdouble    eye_angle);
 
+DVector3*   d_viewport_get_pos                  (const DViewport    *self);
+
 void        d_viewport_set_pos                  (DViewport  *self,
                                                  DPos       *pos);
+
+DExtAxes*   d_viewport_get_ext_axes             (const DViewport    *self);
 
 void        d_viewport_set_ext_axes             (DViewport  *self,
                                                  DExtAxes   *extaxes);
 
+DVector3*   d_viewport_get_scene_center         (const DViewport    *self);
+
 void        d_viewport_set_scene_center         (DViewport  *self,
                                                  DVector3   *scene_center);
+
+gdouble     d_viewport_get_scene_distance       (const DViewport    *self);
 
 void        d_viewport_set_scene_distance       (DViewport  *self,
                                                  gdouble    scene_distance);
 
+gdouble     d_viewport_get_polar_angle          (const DViewport    *self);
+
 void        d_viewport_set_polar_angle          (DViewport  *self,
                                                  gdouble    polar_angle);
+
+gdouble     d_viewport_get_azimuth_angle        (const DViewport    *self);
 
 void        d_viewport_set_azimuth_angle        (DViewport  *self,
                                                  gdouble    azimuth_angle);
 
+gdouble     d_viewport_get_far_clip             (const DViewport    *self);
+
 void        d_viewport_set_far_clip             (DViewport  *self,
                                                  gdouble    far_clip);
 
+gdouble     d_viewport_get_near_clip            (const DViewport    *self);
+
 void        d_viewport_set_near_clip            (DViewport  *self,
                                                  gdouble    near_clip);
+
+gdouble     d_viewport_get_eye_angle            (const DViewport    *self);
 
 void        d_viewport_set_eye_angle            (DViewport  *self,
                                                  gdouble    eye_angle);
