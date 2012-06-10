@@ -180,7 +180,7 @@ d_viewport_class_init (DViewportClass   *klass)
         g_param_spec_object ("scene-center",
                              "Scene Center",
                              "The Viewport's scene center",
-                             D_TYPE_EXTAXES,
+                             D_TYPE_VECTOR3,
                              G_PARAM_READWRITE);
 
     viewport_properties[PROP_SCENE_DISTANCE] =
@@ -337,8 +337,8 @@ d_viewport_set_property (GObject        *obj,
             break;
         case PROP_SCENE_CENTER:
             scene_center = D_VECTOR3(g_value_get_object(value));
-            if (!extaxes) {
-                extaxes = d_vector3_new();
+            if (!scene_center) {
+                scene_center = d_vector3_new_full(0.0, 0.0, 0.0);
             }
             d_viewport_set_scene_center(self, scene_center);
             break;
