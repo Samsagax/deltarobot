@@ -33,7 +33,7 @@ G_DEFINE_TYPE (DVector3, d_vector3, G_TYPE_OBJECT);
 DVector3*
 d_vector3_new (void)
 {
-    return D_VECTOR3(g_object_new(D_TYPE_VECTOR3, NULL));
+    return g_object_new(D_TYPE_VECTOR3, NULL);
 }
 
 DVector3*
@@ -45,6 +45,7 @@ d_vector3_new_full (gdouble v1,
     d_vector3_set(v, 0, v1);
     d_vector3_set(v, 1, v2);
     d_vector3_set(v, 2, v3);
+    return v;
 }
 
 DVector3*
