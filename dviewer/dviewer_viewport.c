@@ -853,6 +853,22 @@ d_viewport_set_scene_center (DViewport  *self,
     g_object_notify(G_OBJECT(self), "scene-center");
 }
 
+void
+d_viewport_set_scene_center_xyz (DViewport  *self,
+                                 gdouble    x,
+                                 gdouble    y,
+                                 gdouble    z)
+{
+    g_return_if_fail(D_IS_VIEWPORT(self));
+
+    DVector3 *center;
+
+    center = d_vector3_new_full(x, y, z);
+    d_viewport_set_scene_center (self, center);
+
+    g_object_unref(center);
+}
+
 DVector3*
 d_viewport_get_scene_center (const DViewport *self)
 {

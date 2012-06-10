@@ -132,6 +132,11 @@ DVector3*   d_viewport_get_scene_center         (const DViewport    *self);
 void        d_viewport_set_scene_center         (DViewport  *self,
                                                  DVector3   *scene_center);
 
+void        d_viewport_set_scene_center_xyz     (DViewport  *self,
+                                                 gdouble    x,
+                                                 gdouble    y,
+                                                 gdouble    z);
+
 gdouble     d_viewport_get_scene_distance       (const DViewport    *self);
 
 void        d_viewport_set_scene_distance       (DViewport  *self,
