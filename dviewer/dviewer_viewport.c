@@ -957,3 +957,14 @@ d_viewport_get_eye_angle (DViewport *self)
     g_return_val_if_fail(D_IS_VIEWPORT(self), 0.0);
     return self->eye_angle;
 }
+
+void
+d_viewport_queve_redraw (DViewport  *self)
+{
+    g_return_if_fail(D_IS_VIEWPORT(self));
+
+    GtkWidget *widget = GTK_WIDGET(self);
+    if (gtk_widget_get_realized(widget)) {
+        gdk_window_invalidate_rect(widget->window, &widget->allocation, FALSE);
+    }
+}

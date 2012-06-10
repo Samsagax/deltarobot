@@ -153,5 +153,7 @@ void        d_viewport_configure_view           (DViewport  *self,
                                                  gdouble    far_clip,
                                                  gdouble    eye_angle);
 
+void        d_viewport_queve_redraw             (DViewport  *self);
+
 #endif   /* ----- #ifndef DVIEWER_VIEWPORT_INC  ----- */
 
