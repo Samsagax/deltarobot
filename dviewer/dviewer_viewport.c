@@ -521,9 +521,9 @@ d_viewport_expose (GtkWidget        *widget,
     glMatrixMode (GL_MODELVIEW);
     glLoadIdentity();
 
-    gluLookAt(self->scene_distance * sin(self->polar_angle) * cos(self->azimuth_angle),
-              self->scene_distance * sin(self->polar_angle) * sin(self->azimuth_angle),
-              self->scene_distance * cos(self->polar_angle),
+    gluLookAt(d_vector3_get(self->scene_center, 0) + self->scene_distance * sin(self->polar_angle) * cos(self->azimuth_angle),
+              d_vector3_get(self->scene_center, 1) + self->scene_distance * sin(self->polar_angle) * sin(self->azimuth_angle),
+              d_vector3_get(self->scene_center, 2) + self->scene_distance * cos(self->polar_angle),
               d_vector3_get(self->scene_center, 0),
               d_vector3_get(self->scene_center, 1),
               d_vector3_get(self->scene_center, 2),
