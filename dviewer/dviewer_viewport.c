@@ -118,15 +118,13 @@ G_DEFINE_TYPE(DViewport, d_viewport, GTK_TYPE_DRAWING_AREA)
 static void
 d_viewport_init (DViewport  *self)
 {
-    g_warning("d_viewport_init is a stub");
-
     self->geometry = NULL;
     self->extaxes = NULL;
     self->button = 0;
     //self->max_fps = 60;
     //self->timer = 0;
     self->glconfig = d_viewport_configure_gl(FALSE);
-    self->scene_center = d_vector3_new();
+    self->scene_center = d_vector3_new_full(0.0, 0.0, 0.0);
     self->scene_distance = 300.0;
     self->polar_angle = G_PI / 4.0;
     self->azimuth_angle = G_PI / 4.0;
@@ -765,8 +763,6 @@ d_viewport_configure_view (DViewport    *self,
                            gdouble      far_clip,
                            gdouble      eye_angle)
 {
-    g_warning("d_viewport_configure_view is a stub");
-
     g_object_freeze_notify(G_OBJECT(self));
 
     d_viewport_set_scene_center(self, scene_center);
