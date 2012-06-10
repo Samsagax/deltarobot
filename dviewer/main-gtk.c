@@ -152,6 +152,7 @@ create_main_window (void)
      * Set up drawing area
     */
     viewport = d_viewport_new_with_pos(robot, pos);
+    d_viewport_set_scene_center_xyz(viewport, 0.0, 0.0, 30.0);
 
     /*
      * Create Menus
