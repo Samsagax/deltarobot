@@ -70,7 +70,7 @@ struct _DViewport {
     /* Define a sphere containing the geometry */
     DVector3        *scene_center;
     gdouble         scene_distance;
-    gdouble         colat_angle;
+    gdouble         polar_angle;
     gdouble         azimuth_angle;
 
     /* Define position for a light */
@@ -111,7 +111,7 @@ GtkWidget*  d_viewport_new_full                 (DGeometry  *geometry,
                                                  DExtAxes   *extaxes,
                                                  DVector3   *scene_center,
                                                  gdouble    scene_distance,
-                                                 gdouble    colat_angle,
+                                                 gdouble    polar_angle,
                                                  gdouble    azimuth_angle,
                                                  gdouble    near_clip,
                                                  gdouble    far_clip,
@@ -129,8 +129,8 @@ void        d_viewport_set_scene_center         (DViewport  *self,
 void        d_viewport_set_scene_distance       (DViewport  *self,
                                                  gdouble    scene_distance);
 
-void        d_viewport_set_colat_angle          (DViewport  *self,
-                                                 gdouble    colat_angle);
+void        d_viewport_set_polar_angle          (DViewport  *self,
+                                                 gdouble    polar_angle);
 
 void        d_viewport_set_azimuth_angle        (DViewport  *self,
                                                  gdouble    azimuth_angle);
@@ -147,7 +147,7 @@ void        d_viewport_set_eye_angle            (DViewport  *self,
 void        d_viewport_configure_view           (DViewport  *self,
                                                  DVector3   *scene_center,
                                                  gdouble    scene_distance,
-                                                 gdouble    colat_angle,
+                                                 gdouble    polar_angle,
                                                  gdouble    azimuth_angle,
                                                  gdouble    near_clip,
                                                  gdouble    far_clip,

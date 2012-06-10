@@ -36,6 +36,10 @@ enum
     PROP_0,
     PROP_GEOMETRY,
     PROP_EXTAXES,
+    PROP_SCENE_CENTER,
+    PROP_SCENE_DISTANCE,
+    PROP_POLAR_ANGLE,
+    PROP_AZIMUTH_ANGLE,
     PROP_NEAR_CLIP,
     PROP_FAR_CLIP,
     PROP_EYE_ANGLE,
@@ -127,9 +131,9 @@ d_viewport_init (DViewport  *self)
     //self->timer = 0;
     self->glconfig = d_viewport_configure_gl(FALSE);
     self->scene_center = d_vector3_new();
-    self->scene_distance = 450.0;
-    self->colat_angle = 45.0;
-    self->azimuth_angle = 45.0;
+    self->scene_distance = 350.0;
+    self->polar_angle = G_PI / 4.0;
+    self->azimuth_angle = G_PI / 4.0;
     self->near_clip = 1.0;
     self->far_clip = 400.0;
     self->eye_angle = 25.0;
@@ -176,6 +180,40 @@ d_viewport_class_init (DViewportClass   *klass)
                              D_TYPE_EXTAXES,
                              G_PARAM_READWRITE);
 
+    viewport_properties[PROP_SCENE_CENTER] =
+        g_param_spec_object ("scene-center",
+                             "Scene Center",
+                             "The Viewport's scene center",
+                             D_TYPE_EXTAXES,
+                             G_PARAM_READWRITE);
+
+    viewport_properties[PROP_SCENE_DISTANCE] =
+        g_param_spec_double ("scene-distance",
+                             "Scene Center",
+                             "The Viewport's distance from the center of the scene",
+                             -G_MAXDOUBLE,
+                             G_MAXDOUBLE,
+                             0.0,
+                             G_PARAM_READWRITE);
+
+    viewport_properties[PROP_POLAR_ANGLE] =
+        g_param_spec_double ("polar-angle",
+                             "Polar angle",
+                             "The Viewport's polar angle (theta)",
+                             -G_MAXDOUBLE,
+                             G_MAXDOUBLE,
+                             G_PI,
+                             G_PARAM_READWRITE);
+
+    viewport_properties[PROP_AZIMUTH_ANGLE] =
+        g_param_spec_double ("azimuth-angle",
+                             "Azimuth angle",
+                             "The Viewport's azimuth angle (phi)",
+                             -G_MAXDOUBLE,
+                             G_MAXDOUBLE,
+                             G_PI,
+                             G_PARAM_READWRITE);
+
     viewport_properties[PROP_NEAR_CLIP] =
         g_param_spec_double ("near-clip",
                              "Near Clip",
@@ -200,7 +238,7 @@ d_viewport_class_init (DViewportClass   *klass)
                              "The Viewport's eye angle for the 3D drawing perspective",
                              0.0,
                              180.0,
-                             30.0,
+                             25.0,
                              G_PARAM_READWRITE);
 
     g_object_class_install_properties (objectclass,
@@ -247,6 +285,18 @@ d_viewport_get_property (GObject    *obj,
         case PROP_EXTAXES:
             g_value_set_object(value, viewport->extaxes);
             break;
+        case PROP_SCENE_CENTER:
+            g_value_set_object(value, viewport->scene_center);
+            break;
+        case PROP_SCENE_DISTANCE:
+            g_value_set_double(value, viewport->scene_distance);
+            break;
+        case PROP_POLAR_ANGLE:
+            g_value_set_double(value, viewport->polar_angle);
+            break;
+        case PROP_AZIMUTH_ANGLE:
+            g_value_set_double(value, viewport->azimuth_angle);
+            break;
         case PROP_NEAR_CLIP:
             g_value_set_double(value, viewport->near_clip);
             break;
@@ -273,6 +323,7 @@ d_viewport_set_property (GObject        *obj,
     switch (prop_id) {
         DGeometry *geometry;
         DExtAxes *extaxes;
+        DVector3 *scene_center;
 
         case PROP_EXTAXES:
             extaxes = D_EXTAXES(g_value_get_object(value));
@@ -287,6 +338,22 @@ d_viewport_set_property (GObject        *obj,
                 g_warning("Invalid GObject type for 'geometry' property in DViewport.");
             }
             d_viewport_set_geometry(self, geometry);
+            break;
+        case PROP_SCENE_CENTER:
+            scene_center = D_VECTOR3(g_value_get_object(value));
+            if (!extaxes) {
+                extaxes = d_vector3_new();
+            }
+            d_viewport_set_scene_center(self, scene_center);
+            break;
+        case PROP_SCENE_DISTANCE:
+            d_viewport_set_scene_distance(self, g_value_get_double(value));
+            break;
+        case PROP_POLAR_ANGLE:
+            d_viewport_set_polar_angle(self, g_value_get_double(value));
+            break;
+        case PROP_AZIMUTH_ANGLE:
+            d_viewport_set_azimuth_angle(self, g_value_get_double(value));
             break;
         case PROP_NEAR_CLIP:
             d_viewport_set_near_clip(self, g_value_get_double(value));
@@ -321,6 +388,7 @@ d_viewport_set_geometry (DViewport  *self,
                                        FALSE);
         }
     }
+
     g_object_notify(G_OBJECT(self), "geometry");
 }
 
@@ -458,9 +526,9 @@ d_viewport_expose (GtkWidget        *widget,
     glMatrixMode (GL_MODELVIEW);
     glLoadIdentity();
 
-    gluLookAt(self->scene_distance * sin(self->colat_angle) * cos(self->azimuth_angle),
-              self->scene_distance * sin(self->colat_angle) * cos(self->azimuth_angle),
-              self->scene_distance * sin(self->colat_angle) * cos(self->azimuth_angle),
+    gluLookAt(self->scene_distance * sin(self->polar_angle) * cos(self->azimuth_angle),
+              self->scene_distance * sin(self->polar_angle) * cos(self->azimuth_angle),
+              self->scene_distance * sin(self->polar_angle) * cos(self->azimuth_angle),
               d_vector3_get(self->scene_center, 0),
               d_vector3_get(self->scene_center, 1),
               d_vector3_get(self->scene_center, 2),
@@ -658,7 +726,7 @@ d_viewport_new_full (DGeometry  *geometry,
                      DExtAxes   *extaxes,
                      DVector3   *scene_center,
                      gdouble    scene_distance,
-                     gdouble    colat_angle,
+                     gdouble    polar_angle,
                      gdouble    azimuth_angle,
                      gdouble    near_clip,
                      gdouble    far_clip,
@@ -676,7 +744,7 @@ d_viewport_new_full (DGeometry  *geometry,
     d_viewport_configure_view(viewport,
                               scene_center,
                               scene_distance,
-                              colat_angle,
+                              polar_angle,
                               azimuth_angle,
                               near_clip,
                               far_clip,
@@ -689,7 +757,7 @@ void
 d_viewport_configure_view (DViewport    *self,
                            DVector3     *scene_center,
                            gdouble      scene_distance,
-                           gdouble      colat_angle,
+                           gdouble      polar_angle,
                            gdouble      azimuth_angle,
                            gdouble      near_clip,
                            gdouble      far_clip,
@@ -702,7 +770,7 @@ d_viewport_configure_view (DViewport    *self,
     d_viewport_set_scene_center(self, scene_center);
     d_viewport_set_scene_distance(self, scene_distance);
     d_viewport_set_azimuth_angle(self, azimuth_angle);
-    d_viewport_set_colat_angle(self, colat_angle);
+    d_viewport_set_polar_angle(self, polar_angle);
     d_viewport_set_near_clip(self, near_clip);
     d_viewport_set_far_clip(self, far_clip);
     d_viewport_set_eye_angle(self, eye_angle);
@@ -729,7 +797,7 @@ d_viewport_set_ext_axes (DViewport  *self,
             gdk_window_invalidate_rect(widget->window, &widget->allocation, FALSE);
         }
     }
-    /* Notify change */
+
     g_object_notify(G_OBJECT(self), "extaxes");
 }
 
@@ -770,7 +838,8 @@ d_viewport_set_scene_center (DViewport  *self,
             gdk_window_invalidate_rect(widget->window, &widget->allocation, FALSE);
         }
     }
-    /* Notify change */
+
+    g_object_notify(G_OBJECT(self), "scene-center");
 }
 
 void
@@ -780,15 +849,17 @@ d_viewport_set_scene_distance (DViewport    *self,
     g_return_if_fail(D_IS_VIEWPORT(self));
 
     self->scene_distance = scene_distance;
+    g_object_notify(G_OBJECT(self), "scene-distance");
 }
 
 void
-d_viewport_set_colat_angle (DViewport   *self,
-                            gdouble     colat_angle)
+d_viewport_set_polar_angle (DViewport   *self,
+                            gdouble     polar_angle)
 {
     g_return_if_fail(D_IS_VIEWPORT(self));
 
-    self->colat_angle = colat_angle;
+    self->polar_angle = polar_angle;
+    g_object_notify(G_OBJECT(self), "polar-angle");
 }
 
 void
@@ -798,6 +869,7 @@ d_viewport_set_azimuth_angle (DViewport *self,
     g_return_if_fail(D_IS_VIEWPORT(self));
 
     self->azimuth_angle = azimuth_angle;
+    g_object_notify(G_OBJECT(self), "azimuth-angle");
 }
 
 void
