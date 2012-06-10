@@ -146,10 +146,12 @@ d_viewer_draw_platform ( GLfloat    length,
                 GLfloat phi = ((GLfloat) i ) * 120.0 / 180.0 * M_PI;
                 GLfloat X = x * cos (phi) - y * sin (phi);
                 GLfloat Y = x * sin (phi) + y * cos (phi);
+                glNormal3f(X, Y, 0.0);
                 glVertex3f(X, Y, -z);
                 glVertex3f(X, Y,  z);
                 X = x * cos (phi) + y * sin (phi);
                 Y = x * sin (phi) - y * cos (phi);
+                glNormal3f(X, Y, 0.0);
                 glVertex3f(X, Y,  z);
                 glVertex3f(X, Y, -z);
             }
@@ -164,11 +166,13 @@ d_viewer_draw_platform ( GLfloat    length,
                 GLfloat phi = ((GLfloat) i ) * 120.0 / 180.0 * M_PI;
                 GLfloat X = x * cos (phi) - y * sin (phi);
                 GLfloat Y = x * sin (phi) + y * cos (phi);
+                glNormal3f(X, Y, 0.0);
                 glVertex3f(X, Y,  z);
                 glVertex3f(X, Y, -z);
                 phi = ((GLfloat) i + 1) * 120.0 / 180.0 * M_PI;
                 X = x * cos (phi) + y * sin (phi);
                 Y = x * sin (phi) - y * cos (phi);
+                glNormal3f(X, Y, 0.0);
                 glVertex3f(X, Y, -z);
                 glVertex3f(X, Y,  z);
             }
@@ -185,6 +189,7 @@ d_viewer_draw_platform ( GLfloat    length,
             int i;
             for (i = 0; i < 3; i++) {
                 GLfloat phi = ((GLfloat) i ) * 120.0 / 180.0 * M_PI;
+                glNormal3f(0.0, 0.0, 1.0);
                 GLfloat X = x * cos (phi) + y * sin (phi);
                 GLfloat Y = x * sin (phi) - y * cos (phi);
                 glVertex2f( X, Y );
@@ -203,6 +208,7 @@ d_viewer_draw_platform ( GLfloat    length,
             int i;
             for (i = 0; i < 3; i++) {
                 GLfloat phi = ((GLfloat) i ) * 120.0 / 180.0 * M_PI;
+                glNormal3f(0.0, 0.0, 1.0);
                 GLfloat X = x * cos (phi) + y * sin (phi);
                 GLfloat Y = x * sin (phi) - y * cos (phi);
                 glVertex2f( X, Y );
