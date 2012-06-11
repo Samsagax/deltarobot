@@ -26,6 +26,8 @@
 #ifndef  DVIEWER_ENGINE_INC
 #define  DVIEWER_ENGINE_INC
 
+#include <math.h>
+
 #include <GL/gl.h>
 #include <GL/glu.h>
 

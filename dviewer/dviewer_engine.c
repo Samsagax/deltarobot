@@ -22,7 +22,6 @@
  * dviewer_engine.c :
  */
 
-#include <math.h>
 #include "dviewer_engine.h"
 
 /*
@@ -135,7 +134,7 @@ d_viewer_draw_platform ( GLfloat    length,
     glPushMatrix();
 
     GLfloat x = length - jdiam / 2.0;
-    GLfloat y = jdiam / 2.0 * tan (30.0 / 180.0 * M_PI);
+    GLfloat y = jdiam / 2.0 * tan (30.0 / 180.0 * G_PI);
     GLfloat z = 0.5 * thick;
 
     // Small sides
@@ -143,7 +142,7 @@ d_viewer_draw_platform ( GLfloat    length,
         {
             int i;
             for (i = 0; i < 3; i++) {
-                GLfloat phi = ((GLfloat) i ) * 120.0 / 180.0 * M_PI;
+                GLfloat phi = ((GLfloat) i ) * 120.0 / 180.0 * G_PI;
                 GLfloat X = x * cos (phi) - y * sin (phi);
                 GLfloat Y = x * sin (phi) + y * cos (phi);
                 glNormal3f(X, Y, 0.0);
@@ -163,13 +162,13 @@ d_viewer_draw_platform ( GLfloat    length,
         {
             int i;
             for (i = 0; i < 3; i++) {
-                GLfloat phi = ((GLfloat) i ) * 120.0 / 180.0 * M_PI;
+                GLfloat phi = ((GLfloat) i ) * 120.0 / 180.0 * G_PI;
                 GLfloat X = x * cos (phi) - y * sin (phi);
                 GLfloat Y = x * sin (phi) + y * cos (phi);
                 glNormal3f(X, Y, 0.0);
                 glVertex3f(X, Y,  z);
                 glVertex3f(X, Y, -z);
-                phi = ((GLfloat) i + 1) * 120.0 / 180.0 * M_PI;
+                phi = ((GLfloat) i + 1) * 120.0 / 180.0 * G_PI;
                 X = x * cos (phi) + y * sin (phi);
                 Y = x * sin (phi) - y * cos (phi);
                 glNormal3f(X, Y, 0.0);
@@ -188,7 +187,7 @@ d_viewer_draw_platform ( GLfloat    length,
         {
             int i;
             for (i = 0; i < 3; i++) {
-                GLfloat phi = ((GLfloat) i ) * 120.0 / 180.0 * M_PI;
+                GLfloat phi = ((GLfloat) i ) * 120.0 / 180.0 * G_PI;
                 glNormal3f(0.0, 0.0, 1.0);
                 GLfloat X = x * cos (phi) + y * sin (phi);
                 GLfloat Y = x * sin (phi) - y * cos (phi);
@@ -207,7 +206,7 @@ d_viewer_draw_platform ( GLfloat    length,
         {
             int i;
             for (i = 0; i < 3; i++) {
-                GLfloat phi = ((GLfloat) i ) * 120.0 / 180.0 * M_PI;
+                GLfloat phi = ((GLfloat) i ) * 120.0 / 180.0 * G_PI;
                 glNormal3f(0.0, 0.0, 1.0);
                 GLfloat X = x * cos (phi) + y * sin (phi);
                 GLfloat Y = x * sin (phi) - y * cos (phi);
@@ -276,9 +275,9 @@ d_viewer_draw_arm ( GLfloat a,
     glPushMatrix();
 
     // Will assume orientation on the X axis for theta1
-    GLfloat t1 = theta1 / M_PI * 180.0;
-    GLfloat t2 = theta2 / M_PI * 180.0;
-    GLfloat t3 = theta3 / M_PI * 180.0;
+    GLfloat t1 = theta1 / G_PI * 180.0;
+    GLfloat t2 = theta2 / G_PI * 180.0;
+    GLfloat t3 = theta3 / G_PI * 180.0;
 
     glRotatef(t1 - 90.0 , 0.0, -1.0, 0.0);
     d_viewer_draw_limb(a, jdiam);
