@@ -65,7 +65,7 @@ void d_solver_solve_direct          (DGeometry  *geometry,
 
 void d_solver_solve_direct_with_ext_axes (DGeometry  *geometry,
                                      DExtAxes   *extaxes,
-                                     DPos       *pos);
+                                     DVector3   *pos);
 
 void d_solver_solve_inverse         (DGeometry  *geometry,
                                      DVector3   *pos,

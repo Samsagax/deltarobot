@@ -95,7 +95,7 @@ d_solver_solve_direct (DGeometry   *geometry,
 void
 d_solver_solve_direct_with_ext_axes (DGeometry  *geometry,
                                      DExtAxes   *extaxes,
-                                     DPos       *pos)
+                                     DVector3   *pos)
 {
 //    g_warning("d_solve_direct_with_ext_axes is a stub");
 
@@ -111,7 +111,7 @@ d_solver_solve_direct_with_ext_axes (DGeometry  *geometry,
     //TODO: Assert the three equal position vectors
 
     /* Use three positions that should be the same */
-    DPos *p[3];
+    DVector3 *p[3];
     for (int i = 0; i < 3; i++) {
         gdouble phi = ((gdouble) i) * G_PI * 2.0 / 3.0;
         gdouble ci[] = {
@@ -128,15 +128,15 @@ d_solver_solve_direct_with_ext_axes (DGeometry  *geometry,
             (ci[0] - h + r) * sin(phi) + ci[1] * cos(phi),
             ci[2]
         };
-        p[i] = D_POS(d_pos_new_full(px[0], px[1], px[2]));
+        p[i] = d_pos_new_full(px[0], px[1], px[2]);
 //        g_print("DPOS[%i]: %f, %f, %f\n", i,
 //                d_vector3_get(D_VECTOR3(p[i]), 0),
 //                d_vector3_get(D_VECTOR3(p[i]), 1),
 //                d_vector3_get(D_VECTOR3(p[i]), 2));
     }
-    d_vector3_set(D_VECTOR3(pos), 0, d_vector3_get(D_VECTOR3(p[0]), 0));
-    d_vector3_set(D_VECTOR3(pos), 1, d_vector3_get(D_VECTOR3(p[0]), 1));
-    d_vector3_set(D_VECTOR3(pos), 2, d_vector3_get(D_VECTOR3(p[0]), 2));
+    d_vector3_set(pos, 0, d_vector3_get(p[0], 0));
+    d_vector3_set(pos, 1, d_vector3_get(p[0], 1));
+    d_vector3_set(pos, 2, d_vector3_get(p[0], 2));
     for (int i = 0; i < 3; i++) {
         g_object_unref(p[i]);
     }
