@@ -97,7 +97,7 @@ d_solver_solve_direct_with_ext_axes (DGeometry  *geometry,
                                      DExtAxes   *extaxes,
                                      DVector3   *pos)
 {
-//    g_warning("d_solve_direct_with_ext_axes is a stub");
+    g_warning("d_solve_direct_with_ext_axes is a stub");
 
     g_return_if_fail(D_IS_GEOMETRY(geometry));
     g_return_if_fail(D_IS_EXTAXES(extaxes));
@@ -129,11 +129,8 @@ d_solver_solve_direct_with_ext_axes (DGeometry  *geometry,
             ci[2]
         };
         p[i] = d_pos_new_full(px[0], px[1], px[2]);
-//        g_print("DPOS[%i]: %f, %f, %f\n", i,
-//                d_vector3_get(D_VECTOR3(p[i]), 0),
-//                d_vector3_get(D_VECTOR3(p[i]), 1),
-//                d_vector3_get(D_VECTOR3(p[i]), 2));
     }
+
     d_vector3_set(pos, 0, d_vector3_get(p[0], 0));
     d_vector3_set(pos, 1, d_vector3_get(p[0], 1));
     d_vector3_set(pos, 2, d_vector3_get(p[0], 2));
