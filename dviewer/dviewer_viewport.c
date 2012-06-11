@@ -823,7 +823,7 @@ d_viewport_set_pos (DViewport   *self,
 DVector3*
 d_viewport_get_pos (const DViewport *self)
 {
-    g_return_if_fail (D_IS_VIEWPORT(self));
+    g_return_val_if_fail (D_IS_VIEWPORT(self), NULL);
 
     DVector3 *pos;
     d_solver_solve_direct_with_ext_axes(self->geometry, self->extaxes, pos);
