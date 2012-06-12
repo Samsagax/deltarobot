@@ -29,9 +29,9 @@
 
 /* Static Methods */
 void
-d_solver_solve_direct (DGeometry   *geometry,
-                       DVector3    *axes,
-                       DVector3    *pos)
+d_solver_solve_direct (DGeometry    *geometry,
+                       DVector      *axes,
+                       DVector      *pos)
 {
     //TODO: Checkear que los centros no sean colineales
     //TODO: Use GError for non-reachable positions
@@ -41,9 +41,9 @@ d_solver_solve_direct (DGeometry   *geometry,
         int i;
         for(i = 0; i < 3; i++) {
             gdouble phi = ((gdouble)i) * G_PI * 2.0 / 3.0;
-            gdouble bx = geometry->r + geometry->a * cos(d_vector3_get(axes, i)) - geometry->h;
+            gdouble bx = geometry->r + geometry->a * cos(d_vector_get(axes, i)) - geometry->h;
             gdouble by = 0.0;
-            gdouble bz = geometry->a * sin(d_vector3_get(axes,i));
+            gdouble bz = geometry->a * sin(d_vector_get(axes,i));
 
             pb[i][0] = bx * cos(phi) - by * sin(phi);
             pb[i][1] = by * cos(phi) + bx * sin(phi);
@@ -87,15 +87,15 @@ d_solver_solve_direct (DGeometry   *geometry,
         g_warning("Unreachable point");
         return;
     }
-    d_vector3_set(pos, 2, ((-k1 + sqrt(disc))) / (2.0 * k2));
-    d_vector3_set(pos, 1, l[3]/l[0] + l[4]/l[0] * d_vector3_get(pos, 2));
-    d_vector3_set(pos, 0, l[1]/l[0] + l[2]/l[0] * d_vector3_get(pos, 2));
+    d_vector_set(pos, 2, ((-k1 + sqrt(disc))) / (2.0 * k2));
+    d_vector_set(pos, 1, l[3]/l[0] + l[4]/l[0] * d_vector_get(pos, 2));
+    d_vector_set(pos, 0, l[1]/l[0] + l[2]/l[0] * d_vector_get(pos, 2));
 }
 
 void
 d_solver_solve_direct_with_ext_axes (DGeometry  *geometry,
                                      DExtAxes   *extaxes,
-                                     DVector3   *pos)
+                                     DVector    *pos)
 {
     g_warning("d_solve_direct_with_ext_axes is a stub");
 
@@ -111,7 +111,7 @@ d_solver_solve_direct_with_ext_axes (DGeometry  *geometry,
     //TODO: Assert the three equal position vectors
 
     /* Use three positions that should be the same */
-    DVector3 *p[3];
+    DVector *p[3];
     for (int i = 0; i < 3; i++) {
         gdouble phi = ((gdouble) i) * G_PI * 2.0 / 3.0;
         gdouble ci[] = {
@@ -131,9 +131,9 @@ d_solver_solve_direct_with_ext_axes (DGeometry  *geometry,
         p[i] = d_pos_new_full(px[0], px[1], px[2]);
     }
 
-    d_vector3_set(pos, 0, d_vector3_get(p[0], 0));
-    d_vector3_set(pos, 1, d_vector3_get(p[0], 1));
-    d_vector3_set(pos, 2, d_vector3_get(p[0], 2));
+    d_vector_set(pos, 0, d_vector_get(p[0], 0));
+    d_vector_set(pos, 1, d_vector_get(p[0], 1));
+    d_vector_set(pos, 2, d_vector_get(p[0], 2));
     for (int i = 0; i < 3; i++) {
         g_object_unref(p[i]);
     }
@@ -141,8 +141,8 @@ d_solver_solve_direct_with_ext_axes (DGeometry  *geometry,
 
 void
 d_solver_solve_inverse (DGeometry   *geometry,
-                        DVector3    *pos,
-                        DVector3    *axes,
+                        DVector     *pos,
+                        DVector     *axes,
                         DExtAxes    *extaxes/* ,
                         GError      **error*/)
 {
@@ -154,9 +154,9 @@ d_solver_solve_inverse (DGeometry   *geometry,
         /* Locate point Ci */
         gdouble phi = ((gdouble) i ) * G_PI * 2.0 / 3.0;
         gdouble ci[] = {
-        d_vector3_get(pos, 0) * cos(phi) + d_vector3_get(pos, 1) * sin(phi) + geometry->h - geometry->r,
-        d_vector3_get(pos, 1) * cos(phi) - d_vector3_get(pos, 0) * sin(phi),
-        d_vector3_get(pos, 2) };
+        d_vector_get(pos, 0) * cos(phi) + d_vector_get(pos, 1) * sin(phi) + geometry->h - geometry->r,
+        d_vector_get(pos, 1) * cos(phi) - d_vector_get(pos, 0) * sin(phi),
+        d_vector_get(pos, 2) };
 
         /* Calculate theta 3 */
         gdouble cos3 = ci[1] / geometry->b;
@@ -194,7 +194,7 @@ d_solver_solve_inverse (DGeometry   *geometry,
             d_ext_axes_set(extaxes, i, 0, atan2(sen1, cos1));
         }
         if (axescalc) {
-            d_vector3_set(axes, i, atan2(sen1, cos1));
+            d_vector_set(axes, i, atan2(sen1, cos1));
         }
 
     }

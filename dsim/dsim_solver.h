@@ -58,19 +58,17 @@ GType       d_solver_get_type       (void);
 DSolver*    d_solver_get_instance   (void);
 
 /* Methods */
-/* Static methods */
-void d_solver_solve_direct          (DGeometry  *geometry,
-                                     DVector3   *axes,
-                                     DVector3   *pos);
+void        d_solver_solve_direct       (DGeometry  *geometry,
+                                         DVector    *axes,
+                                         DVector    *pos);
 
-void d_solver_solve_direct_with_ext_axes (DGeometry  *geometry,
-                                     DExtAxes   *extaxes,
-                                     DVector3   *pos);
+void        d_solver_solve_direct_with_ext_axes (DGeometry *geometry,
+                                         DExtAxes   *extaxes,
+                                         DVector    *pos);
 
-void d_solver_solve_inverse         (DGeometry  *geometry,
-                                     DVector3   *pos,
-                                     DVector3   *axes,
-                                     DExtAxes   *extaxes);
-
+void        d_solver_solve_inverse      (DGeometry  *geometry,
+                                         DVector    *pos,
+                                         DVector    *axes,
+                                         DExtAxes   *extaxes);
 
 #endif   /* ----- #ifndef DSIM_SOLVER_INC  ----- */
