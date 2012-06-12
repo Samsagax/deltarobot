@@ -25,38 +25,20 @@
 #include "dsim_vector.h"
 
 /* Forward declarations */
-static void     d_vector_set_gsl_vector (DVector*   self,
-                                         gsl_vector *vector);
+static void     d_vector_class_init     (DVectorClass   *klass);
+
+static void     d_vector_init           (DVector        *self);
+
+static void     d_vector_dispose        (GObject        *obj);
+
+static void     d_vector_finalize       (GObject        *obj);
+
+static void     d_vector_set_gsl_vector (DVector        *self,
+                                         gsl_vector     *vector);
 
 /* GType register */
 G_DEFINE_TYPE (DVector, d_vector, G_TYPE_OBJECT);
 
-DVector*
-d_vector_new (size_t lenght)
-{
-    DVector *v;
-    v = g_object_new(D_TYPE_VECTOR, NULL);
-    gsl_vector *vector = gsl_vector_calloc(lenght);
-    d_vector_set_gsl_vector(v, vector);
-    return v;
-}
-
-/* Dispose and finalize functions */
-static void
-d_vector_dispose (GObject *gobject)
-{
-    /* Chain up */
-    G_OBJECT_CLASS(d_vector_parent_class)->dispose(gobject);
-}
-
-static void
-d_vector_finalize (GObject *gobject)
-{
-    /* Chain up */
-    G_OBJECT_CLASS(d_vector_parent_class)->finalize(gobject);
-}
-
-/* Initializer functions */
 static void
 d_vector_class_init(DVectorClass* klass)
 {
@@ -70,6 +52,48 @@ d_vector_init (DVector *self)
 {
     self->vector = NULL;
 }
+
+static void
+d_vector_dispose (GObject *gobject)
+{
+    DVector *self = D_VECTOR(gobject);
+    if (self->vector) {
+        gsl_vector_free(self->vector);
+        self->vector = NULL;
+    }
+    /* Chain up */
+    G_OBJECT_CLASS(d_vector_parent_class)->dispose(gobject);
+}
+
+static void
+d_vector_finalize (GObject *gobject)
+{
+    /* Chain up */
+    G_OBJECT_CLASS(d_vector_parent_class)->finalize(gobject);
+}
+
+static void
+d_vector_set_gsl_vector (DVector    *self,
+                         gsl_vector *vector)
+{
+    if (self->vector) {
+        gsl_vector_free(self->vector);
+    }
+    self->vector = vector;
+}
+
+/* Public API */
+
+DVector*
+d_vector_new (size_t lenght)
+{
+    DVector *v;
+    v = g_object_new(D_TYPE_VECTOR, NULL);
+    gsl_vector *vector = gsl_vector_calloc(lenght);
+    d_vector_set_gsl_vector(v, vector);
+    return v;
+}
+
 
 DVector*
 d_vector_memcpy (DVector    *dest,
