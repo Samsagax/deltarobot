@@ -21,27 +21,27 @@
 #include "dsim_pos.h"
 
 /* GType register */
-G_DEFINE_TYPE (DPos, d_pos, D_TYPE_VECTOR3);
+G_DEFINE_TYPE (DPos, d_pos, D_TYPE_VECTOR);
 
 /* Create new DPos instance */
-DVector3*
+DVector*
 d_pos_new (void)
 {
     DPos* pos;
     pos = g_object_new(D_TYPE_POS, NULL);
-    return D_VECTOR3(pos);
+    return D_VECTOR(pos);
 }
 
-DVector3*
+DVector*
 d_pos_new_full ( gdouble x,
                  gdouble y,
                  gdouble z )
 {
     DPos* a = d_pos_new();
-    d_vector3_set(D_VECTOR3(a), 0, x);
-    d_vector3_set(D_VECTOR3(a), 1, y);
-    d_vector3_set(D_VECTOR3(a), 2, z);
-    return D_VECTOR3(a);
+    d_vector_set(D_VECTOR(a), 0, x);
+    d_vector_set(D_VECTOR(a), 1, y);
+    d_vector_set(D_VECTOR(a), 2, z);
+    return D_VECTOR(a);
 }
 
 /* Dispose and finalize functions */
@@ -63,6 +63,7 @@ d_pos_finalize (GObject *gobject)
 static void
 d_pos_init (DPos* self)
 {
+    self->parent_instance.vector = gsl_vector_calloc(3);
 }
 
 static void

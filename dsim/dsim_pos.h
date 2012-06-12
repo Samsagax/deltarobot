@@ -35,21 +35,21 @@
 /* Instance Structure of DPos */
 typedef struct _DPos DPos;
 struct _DPos {
-    DVector3        parent_instance;
+    DVector         parent_instance;
 };
 
 /* Class Structure of DPos */
 typedef struct _DPosClass DPosClass;
 struct _DPosClass {
-    DVector3Class   parent_class;
+    DVectorClass    parent_class;
 };
 
 /* Returns GType associated with this object type */
 GType       d_pos_get_type  (void);
 
 /* Create new instance */
-DVector3*   d_pos_new       (void);
-DVector3*   d_pos_new_full  (gdouble x, gdouble y, gdouble z);
+DVector*    d_pos_new       (void);
+DVector*    d_pos_new_full  (gdouble x, gdouble y, gdouble z);
 
 #endif   /* ----- #ifndef DSIM_POS_INC  ----- */
 
