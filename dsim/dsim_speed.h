@@ -18,7 +18,6 @@
  * along with PROJECTNAME. If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef  DSIM_SPEED_INC
 #define  DSIM_SPEED_INC
 
@@ -39,21 +38,22 @@
 /* Instance Structure of DSpeed */
 typedef struct _DSpeed DSpeed;
 struct _DSpeed {
-    DVector3        parent_instance;
+    DVector         parent_instance;
 };
 
 /* Class Structure of DSpeed */
 typedef struct _DSpeedClass DSpeedClass;
 struct _DSpeedClass {
-    DVector3Class   parent_class;
+    DVectorClass    parent_class;
 };
 
-/* Returns GType associated with this object type */
 GType       d_speed_get_type    (void);
 
-/* Create new instance */
-DVector3*   d_speed_new         (void);
-DVector3*   d_speed_new_full    (gdouble s1, gdouble s2, gdouble s3);
+DVector*    d_speed_new         (void);
+
+DVector*    d_speed_new_full    (gdouble    s1,
+                                 gdouble    s2,
+                                 gdouble    s3);
 
 #endif   /* ----- #ifndef DSIM_SPEED_INC  ----- */
 

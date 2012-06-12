@@ -21,25 +21,25 @@
 #include "dsim_speed.h"
 
 /* GType register */
-G_DEFINE_TYPE (DSpeed, d_speed, D_TYPE_VECTOR3);
+G_DEFINE_TYPE (DSpeed, d_speed, D_TYPE_VECTOR);
 
 /* Create new DSpeed instance */
-DVector3*
+DVector*
 d_speed_new (void)
 {
     DSpeed* a = g_object_new (D_TYPE_SPEED, NULL);
-    return D_VECTOR3(a);
+    return D_VECTOR(a);
 }
-DVector3*
+DVector*
 d_speed_new_full (gdouble   s1,
                   gdouble   s2,
                   gdouble   s3)
 {
     DSpeed* a = d_speed_new();
-    a->parent_instance.data[0] = s1;
-    a->parent_instance.data[1] = s2;
-    a->parent_instance.data[2] = s3;
-    return D_VECTOR3(a);
+    d_vector_set(D_VECTOR(a), 0, s1);
+    d_vector_set(D_VECTOR(a), 1, s2);
+    d_vector_set(D_VECTOR(a), 2, s3);
+    return D_VECTOR(a);
 }
 
 /* Dipose and finalize functions */
@@ -61,6 +61,7 @@ d_speed_finalize (GObject *gobject)
 static void
 d_speed_init (DSpeed* self)
 {
+    self->parent_instance.vector = gsl_vector_calloc(3);
 }
 
 static void
