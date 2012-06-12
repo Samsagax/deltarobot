@@ -26,71 +26,66 @@
 #define  DSIM_VECTOR_INC
 
 #include <glib-object.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_blas.h>
 
 /* Type macros */
-#define D_TYPE_VECTOR3             (d_vector3_get_type ())
-#define D_VECTOR3(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), D_TYPE_VECTOR3, DVector3))
-#define D_IS_VECTOR3(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), D_TYPE_VECTOR3))
-#define D_VECTOR3_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), D_TYPE_VECTOR3, DVector3Class))
-#define D_IS_VECTOR3_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), D_TYPE_VECTOR3))
-#define D_VECTOR3_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), D_TYPE_VECTOR3, DVector3Class))
+#define D_TYPE_VECTOR             (d_vector_get_type ())
+#define D_VECTOR(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), D_TYPE_VECTOR, DVector))
+#define D_IS_VECTOR(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), D_TYPE_VECTOR))
+#define D_VECTOR_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), D_TYPE_VECTOR, DVectorClass))
+#define D_IS_VECTOR_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), D_TYPE_VECTOR))
+#define D_VECTOR_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), D_TYPE_VECTOR, DVectorClass))
 
-/* Instance Structure of DVector3 */
-typedef struct _DVector3 DVector3;
-struct _DVector3 {
+//TODO: Use GSL as underlying library
+
+/* Instance Structure of DVector */
+typedef struct _DVector DVector;
+struct _DVector {
     GObject         parent_instance;
 
-    gint            length;
-    gdouble         data[3];
+    gsl_vector      *vector;
 };
 
-/* Class Structure of DVector3 */
-typedef struct _DVector3Class DVector3Class;
-struct _DVector3Class {
+/* Class Structure of DVector */
+typedef struct _DVectorClass DVectorClass;
+struct _DVectorClass {
     GObjectClass    parent_class;
 };
 
 /* Returns GType associated with this object type */
-GType       d_vector3_get_type      (void);
+GType       d_vector_get_type      (void);
 
 /* Create new instance */
-DVector3*   d_vector3_new           (void);
+DVector*    d_vector_new            (size_t     size);
 
-DVector3*   d_vector3_new_full      (gdouble    v1,
-                                     gdouble    v2,
-                                     gdouble    v3);
+DVector*    d_vector_new_gsl        (gsl_vector *vector);
 
 /* Methods */
-DVector3*   d_vector3_deep_copy     (DVector3   *source,
-                                     DVector3   *dest);
+DVector*    d_vector_memcpy         (DVector    *dest,
+                                     DVector    *src);
 
-void        d_vector3_to_string     (DVector3   *self,
-                                     GString    *string);
+gdouble     d_vector_get            (DVector    *self,
+                                     size_t     i);
 
-gdouble     d_vector3_get           (DVector3   *self,
-                                     gint       index);
+void        d_vector_set            (DVector    *self,
+                                     size_t     i,
+                                     gdouble    x);
 
-void        d_vector3_set           (DVector3   *self,
-                                     gint       index,
-                                     gdouble    value);
+DVector*    d_vector_sub            (DVector    *a,
+                                     DVector    *b);
 
-DVector3*   d_vector3_substract     (DVector3   *a,
-                                     DVector3   *b);
+DVector*    d_vector_add            (DVector    *a,
+                                     DVector    *b);
 
-DVector3*   d_vector3_add           (DVector3   *a,
-                                     DVector3   *b);
+gdouble     d_vector_mul            (DVector    *a,
+                                     DVector    *b);
 
-gdouble     d_vector3_dot_product   (DVector3   *a,
-                                     DVector3   *b);
-
-DVector3*   d_vector3_cross_product (DVector3   *a,
-                                     DVector3   *b);
-
-DVector3*   d_vector3_scalar_mult   (DVector3   *self,
+DVector*    d_vector_scalar_mul     (DVector    *self,
                                      gdouble    a);
 
-gdouble     d_vector3_norm          (DVector3   *self);
+gdouble     d_vector_norm           (DVector    *self);
 
-void        d_vector3_normalize     (DVector3   *self);
+void        d_vector_normalize      (DVector    *self);
 
 #endif   /* ----- #ifndef DSIM_VECTOR_INC  ----- */

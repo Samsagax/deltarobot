@@ -23,185 +23,132 @@
  */
 
 #include "dsim_vector.h"
-#include <math.h>
 
 /* Forward declarations */
+static void     d_vector_set_gsl_vector (DVector*   self,
+                                         gsl_vector *vector);
 
 /* GType register */
-G_DEFINE_TYPE (DVector3, d_vector3, G_TYPE_OBJECT);
+G_DEFINE_TYPE (DVector, d_vector, G_TYPE_OBJECT);
 
-DVector3*
-d_vector3_new (void)
+DVector*
+d_vector_new (size_t lenght)
 {
-    return g_object_new(D_TYPE_VECTOR3, NULL);
-}
-
-DVector3*
-d_vector3_new_full (gdouble v1,
-                    gdouble v2,
-                    gdouble v3)
-{
-    DVector3 *v = d_vector3_new();
-    d_vector3_set(v, 0, v1);
-    d_vector3_set(v, 1, v2);
-    d_vector3_set(v, 2, v3);
+    DVector *v;
+    v = g_object_new(D_TYPE_VECTOR, NULL);
+    gsl_vector *vector = gsl_vector_calloc(lenght);
+    d_vector_set_gsl_vector(v, vector);
     return v;
-}
-
-DVector3*
-d_vector3_deep_copy_new (DVector3   *source)
-{
-
 }
 
 /* Dispose and finalize functions */
 static void
-d_vector3_dispose (GObject *gobject)
+d_vector_dispose (GObject *gobject)
 {
     /* Chain up */
-    G_OBJECT_CLASS(d_vector3_parent_class)->dispose(gobject);
+    G_OBJECT_CLASS(d_vector_parent_class)->dispose(gobject);
 }
 
 static void
-d_vector3_finalize (GObject *gobject)
+d_vector_finalize (GObject *gobject)
 {
     /* Chain up */
-    G_OBJECT_CLASS(d_vector3_parent_class)->finalize(gobject);
+    G_OBJECT_CLASS(d_vector_parent_class)->finalize(gobject);
 }
 
 /* Initializer functions */
 static void
-d_vector3_class_init(DVector3Class* klass)
+d_vector_class_init(DVectorClass* klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-    gobject_class->dispose = d_vector3_dispose;
-    gobject_class->finalize = d_vector3_finalize;
+    gobject_class->dispose = d_vector_dispose;
+    gobject_class->finalize = d_vector_finalize;
 }
 
 static void
-d_vector3_init (DVector3 *self)
+d_vector_init (DVector *self)
 {
-    self->length = 3;
-    for(int i = 0; i < self->length; i++) {
-        self->data[i] = 0.0;
-    }
+    self->vector = NULL;
 }
 
-DVector3*
-d_vector3_deep_copy (DVector3   *source,
-                     DVector3   *dest)
+DVector*
+d_vector_memcpy (DVector    *dest,
+                 DVector    *src)
 {
-    for (int i = 0; i < source->length; i++) {
-        d_vector3_set(dest, i, d_vector3_get(source, i));
-    }
+    gsl_vector_memcpy(dest->vector, src->vector);
     return dest;
 }
 
-void
-d_vector3_to_string (DVector3  *self,
-                          GString   *string)
-{
-    g_string_printf( string,
-                     "[ %f ; %f ; %f ]",
-                     self->data[0],
-                     self->data[1],
-                     self->data[2] );
-}
-
 gdouble
-d_vector3_get (DVector3    *self,
-                    gint        index)
+d_vector_get (DVector   *self,
+              size_t    i)
 {
-    g_return_val_if_fail(D_IS_VECTOR3(self), 0);
-    g_return_val_if_fail(index < self->length, 0);
-    return self->data[index];
+    g_return_val_if_fail(D_IS_VECTOR(self), 0);
+    g_return_val_if_fail(i < self->vector->size, 0);
+    return gsl_vector_get(self->vector, i);
 }
 
 void
-d_vector3_set (DVector3    *self,
-                    gint        index,
-                    gdouble     value)
+d_vector_set (DVector   *self,
+              size_t    i,
+              gdouble   x)
 {
-    g_return_if_fail(D_IS_VECTOR3(self));
-    g_return_if_fail(index < 3);
-    self->data[index] = value;
+    g_return_if_fail(D_IS_VECTOR(self));
+    g_return_if_fail(i < self->vector->size);
+    gsl_vector_set(self->vector, i, x);
 }
 
-DVector3*
-d_vector3_substract (DVector3  *a,
-                     DVector3  *b)
+DVector*
+d_vector_sub (DVector   *a,
+              DVector   *b)
 {
-    g_return_val_if_fail(D_IS_VECTOR3(a), NULL);
-    g_return_val_if_fail(D_IS_VECTOR3(b), NULL);
-    for(int i = 0; i < a->length; i++) {
-        a->data[i] = a->data[i] - b->data[i];
-    }
+    g_return_val_if_fail(D_IS_VECTOR(a), NULL);
+    g_return_val_if_fail(D_IS_VECTOR(b), NULL);
+    g_return_val_if_fail(a->vector->size == a->vector->size, NULL);
+
+    gsl_vector_sub(a->vector, b->vector);
+
     return a;
 }
 
-DVector3*
-d_vector3_add (DVector3     *a,
-               DVector3     *b)
+DVector*
+d_vector_add (DVector   *a,
+              DVector   *b)
 {
-    g_return_val_if_fail(D_IS_VECTOR3(a), NULL);
-    g_return_val_if_fail(D_IS_VECTOR3(b), NULL);
-    for(int i = 0; i < a->length; i++) {
-        a->data[i] = a->data[i] + b->data[i];
-    }
+    g_return_val_if_fail(D_IS_VECTOR(a), NULL);
+    g_return_val_if_fail(D_IS_VECTOR(b), NULL);
+    g_return_val_if_fail(a->vector->size == a->vector->size, NULL);
+
+    gsl_vector_sub(a->vector, b->vector);
+
     return a;
 }
 
 gdouble
-d_vector3_dot_product (DVector3 *a,
-                       DVector3 *b)
+d_vector_mul (DVector   *a,
+              DVector   *b)
 {
-    gdouble r = 0;
-    for (int i = 0; i < a->length; i++) {
-        r += a->data[i] * b->data[i];
-    }
+    gdouble r;
+    gsl_blas_ddot(a->vector, b->vector, &r);
     return r;
 }
 
-DVector3*
-d_vector3_cross_product (DVector3   *a,
-                         DVector3   *b)
+DVector*
+d_vector_scalar_mul (DVector    *self,
+                     gdouble    a)
 {
-    DVector3 *r = d_vector3_new();
-    d_vector3_set(r, 0,
-                  d_vector3_get(a, 1) * d_vector3_get(b, 2) +
-                  d_vector3_get(a, 2) * d_vector3_get(b, 1));
-    d_vector3_set(r, 1,
-                  d_vector3_get(a, 0) * d_vector3_get(b, 2) -
-                  d_vector3_get(a, 2) * d_vector3_get(b, 0));
-    d_vector3_set(r, 2,
-                  d_vector3_get(a, 0) * d_vector3_get(b, 1) +
-                  d_vector3_get(a, 1) * d_vector3_get(b, 0));
-    return r;
-}
-
-DVector3*
-d_vector3_scalar_mult (DVector3 *self,
-                       gdouble  a)
-{
-    for (int i = 0; i < self->length; i++) {
-        d_vector3_set(self, i, d_vector3_get(self, i));
-    }
+    gsl_vector_scale(self->vector, a);
+    return self;
 }
 
 gdouble
-d_vector3_norm (DVector3    *self)
+d_vector_norm (DVector    *self)
 {
-    gdouble norm = 0;
-    for(int i = 0; i < self->length; i++) {
-        norm += pow(d_vector3_get(self,i), 2.0);
-    }
-    norm = sqrt(norm);
-    return norm;
+    return gsl_blas_dnrm2(self->vector);
 }
 
 void
-d_vector3_normalize (DVector3   *self)
+d_vector_normalize (DVector   *self)
 {
-    gdouble norm = d_vector3_norm(self);
-    d_vector3_scalar_mult(self, 1.0 / norm);
+    gsl_vector_scale(self->vector, gsl_blas_dnrm2(self->vector));
 }
