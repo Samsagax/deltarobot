@@ -23,6 +23,7 @@
 
 #include <glib-object.h>
 #include <dsim/dsim_vector.h>
+#include <gsl/gsl_matrix.h>
 
 /* Type macros Simple Axes */
 #define D_TYPE_AXES             (d_axes_get_type ())
@@ -35,24 +36,23 @@
 /* Instance Structure of DAxes */
 typedef struct _DAxes DAxes;
 struct _DAxes {
-    DVector3        parent_instance;
+    DVector        parent_instance;
 };
 
 /* Class Structure of DAxes */
 typedef struct _DAxesClass DAxesClass;
 struct _DAxesClass {
-    DVector3Class   parent_class;
+    DVectorClass   parent_class;
 };
 
 /* Returns GType associated with this object type */
-GType   d_axes_get_type (void);
+GType       d_axes_get_type     (void);
 
-/* Create new instance */
-DVector3*   d_axes_new          (void);
+DVector*    d_axes_new          (void);
 
-DVector3*   d_axes_new_full     (gdouble ax1,
+DVector*    d_axes_new_full     (gdouble ax1,
                                  gdouble ax2,
-                                 gdouble ax3);
+                                 gdouble ax);
 
 /* Type macros Extended ExtAxes */
 #define D_TYPE_EXTAXES             (d_ext_axes_get_type ())
@@ -66,7 +66,8 @@ DVector3*   d_axes_new_full     (gdouble ax1,
 typedef struct _DExtAxes DExtAxes;
 struct _DExtAxes {
     GObject         parent_instance;
-    DAxes           *axes[3];           /* Axes[limb][angle] */
+
+    gsl_matrix      *axes;
 };
 
 /* Class Structure of DExtAxes */
@@ -82,12 +83,12 @@ GType       d_ext_axes_get_type     (void);
 DExtAxes*   d_ext_axes_new          (void);
 
 void        d_ext_axes_set          (DExtAxes *self,
-                                     gint      i,
-                                     gint      j,
-                                     gdouble   value);
+                                     size_t    i,
+                                     size_t    j,
+                                     gdouble   x);
 
 gdouble     d_ext_axes_get          (DExtAxes *self,
-                                     gint      i,
-                                     gint      j);
+                                     size_t    i,
+                                     size_t    j);
 
 #endif   /* ----- #ifndef DSIM_EXTAXES_INC  ----- */

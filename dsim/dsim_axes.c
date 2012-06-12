@@ -20,32 +20,20 @@
 
 #include "dsim_axes.h"
 
-
 /* ################ Simple DAxes ###################### */
 
+/* Forward declarations */
+static void     d_axes_class_init   (DAxesClass     *klass);
+
+static void     d_axes_init         (DAxes          *self);
+
+static void     d_axes_dispose      (GObject        *obj);
+
+static void     d_axes_finalize     (GObject        *obj);
+
 /* Register Type */
-G_DEFINE_TYPE (DAxes, d_axes, D_TYPE_VECTOR3);
+G_DEFINE_TYPE (DAxes, d_axes, D_TYPE_VECTOR);
 
-/* Create new DAxes instance */
-DVector3*
-d_axes_new()
-{
-    return D_VECTOR3(g_object_new(D_TYPE_AXES, NULL));
-}
-
-DVector3*
-d_axes_new_full ( gdouble ax1,
-                  gdouble ax2,
-                  gdouble ax3 )
-{
-    DAxes* a = D_AXES(d_axes_new());
-    d_vector3_set(D_VECTOR3(a), 0, ax1);
-    d_vector3_set(D_VECTOR3(a), 1, ax2);
-    d_vector3_set(D_VECTOR3(a), 2, ax3);
-    return D_VECTOR3(a);
-}
-
-/* Dispose and Finalize functions */
 static void
 d_axes_dispose (GObject *gobject)
 {
@@ -60,8 +48,9 @@ d_axes_finalize (GObject *gobject)
 
 /* Init functions */
 static void
-d_axes_init ( DAxes* self )
+d_axes_init (DAxes  *self)
 {
+    self->parent_instance.vector = gsl_vector_calloc(3);
 }
 
 static void
@@ -73,32 +62,50 @@ d_axes_class_init ( DAxesClass *klass )
     gobject_class->finalize = d_axes_finalize;
 }
 
+/* Public API */
+
+DVector*
+d_axes_new ()
+{
+    DAxes *axes;
+    axes = g_object_new(D_TYPE_AXES, NULL);
+    return D_VECTOR(axes);
+}
+
+DVector*
+d_axes_new_full (gdouble ax1,
+                 gdouble ax2,
+                 gdouble ax3)
+{
+    DAxes* a = D_AXES(d_axes_new());
+    d_vector_set(D_VECTOR(a), 0, ax1);
+    d_vector_set(D_VECTOR(a), 1, ax2);
+    d_vector_set(D_VECTOR(a), 2, ax3);
+    return D_VECTOR(a);
+}
+
 /* ################ Extended DExtAxes ###################### */
+
+/* Forward declarations */
+static void d_ext_axes_class_init   (DExtAxesClass  *klass);
+
+static void d_ext_axes_init         (DExtAxes       *self);
+
+static void d_ext_axes_dispose      (GObject        *obj);
+
+static void d_ext_axes_finalize     (GObject        *obj);
 
 /* Register Type */
 G_DEFINE_TYPE (DExtAxes, d_ext_axes, G_TYPE_OBJECT);
 
-/* Create new DAxes instance */
-DExtAxes*
-d_ext_axes_new()
-{
-    return D_EXTAXES(g_object_new(D_TYPE_EXTAXES, NULL));
-}
-
-/* Dispose and Finalize functions */
 static void
 d_ext_axes_dispose (GObject *gobject)
 {
     DExtAxes *self = D_EXTAXES(gobject);
     /* Unref all */
-    {
-        int i;
-        for (i = 0; i < 3; i++) {
-            if (self->axes[i]) {
-                g_object_unref(self->axes[i]);
-                self->axes[i] = NULL;
-            }
-        }
+    if (self->axes) {
+        gsl_matrix_free(self->axes);
+        self->axes = NULL;
     }
     /* Chain up */
     G_OBJECT_CLASS(d_ext_axes_parent_class)->dispose(gobject);
@@ -110,41 +117,40 @@ d_ext_axes_finalize (GObject *gobject)
     G_OBJECT_CLASS (d_ext_axes_parent_class)->finalize (gobject);
 }
 
-/* Init functions */
 static void
-d_ext_axes_init ( DExtAxes* self )
+d_ext_axes_init (DExtAxes   *self)
 {
-    /* Stub initialize function */
-    {
-        int i;
-        for (i = 0; i < 3; i++) {
-            self->axes[i] = D_AXES(d_axes_new());
-        }
-    }
+    self->axes = gsl_matrix_calloc(3, 3);
 }
 
 static void
-d_ext_axes_class_init ( DExtAxesClass *klass )
+d_ext_axes_class_init (DExtAxesClass    *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
     gobject_class->dispose = d_ext_axes_dispose;
     gobject_class->finalize = d_ext_axes_finalize;
 }
 
-/* Methods */
-void
-d_ext_axes_set ( DExtAxes   *self,
-                 gint       i,
-                 gint       j,
-                 gdouble    value )
+/* Public API */
+DExtAxes*
+d_ext_axes_new()
 {
-    d_vector3_set(D_VECTOR3(self->axes[i]), j, value);
+    return D_EXTAXES(g_object_new(D_TYPE_EXTAXES, NULL));
+}
+
+void
+d_ext_axes_set (DExtAxes   *self,
+                size_t     i,
+                size_t     j,
+                gdouble    x)
+{
+    gsl_matrix_set(self->axes, i, j, x);
 }
 
 gdouble
-d_ext_axes_get ( DExtAxes   *self,
-                 gint       i,
-                 gint       j )
+d_ext_axes_get (DExtAxes    *self,
+                size_t      i,
+                size_t      j)
 {
-    return d_vector3_get(D_VECTOR3(self->axes[i]), j);
+    return gsl_matrix_get(self->axes, i, j);
 }
