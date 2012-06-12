@@ -28,6 +28,7 @@
 #include <glib-object.h>
 #include <math.h>
 #include <dsim/dsim_vector.h>
+#include <gsl/gsl_matrix.h>
 
 /* Type macros */
 #define D_TYPE_MATRIX             (d_matrix_get_type ())
