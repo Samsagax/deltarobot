@@ -60,6 +60,6 @@ void    d_viewer_draw_robot_with_ext_axes (DGeometry    *geometry,
                                            DExtAxes     *extaxes);
 
 void    d_viewer_draw_robot_at_pos      (DGeometry *geometry,
-                                         DVector3  *pos );
+                                         DVector   *pos );
 
 #endif   /* ----- #ifndef DVIEWER_ENGINE_INC  ----- */

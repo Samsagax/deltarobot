@@ -345,11 +345,11 @@ d_viewer_draw_robot_with_ext_axes (DGeometry    *geometry,
 
     // Moving platform
     glColor3f(0.0, 1.0, 0.4);
-    DVector3 *p = d_pos_new();
+    DVector *p = d_pos_new();
     d_solver_solve_direct_with_ext_axes(geometry, extaxes, p);
-    glTranslatef( d_vector3_get(p, 0),
-                  d_vector3_get(p, 1),
-                  d_vector3_get(p, 2));
+    glTranslatef( d_vector_get(p, 0),
+                  d_vector_get(p, 1),
+                  d_vector_get(p, 2));
     d_viewer_draw_platform(geometry->h, thick, jdiam);
     g_object_unref(p);
 
@@ -360,7 +360,7 @@ d_viewer_draw_robot_with_ext_axes (DGeometry    *geometry,
 
 void
 d_viewer_draw_robot_at_pos (DGeometry   *geometry,
-                            DVector3    *pos)
+                            DVector     *pos)
 {
     g_return_if_fail(D_IS_POS(pos));
     g_return_if_fail(D_IS_GEOMETRY(geometry));
