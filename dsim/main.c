@@ -21,6 +21,18 @@
 #include <stdio.h>
 #include "dsim.h"
 
+static gchar*
+d_vector_to_string (DVector *v,
+                    GString *s)
+{
+    g_string_printf(s,
+                    "[ %f ; %f ; %f ]",
+                    d_vector_get(v, 0),
+                    d_vector_get(v, 1),
+                    d_vector_get(v, 2));
+    return s->str;
+}
+
 int
 main (int argc, char* argv[]) {
 
@@ -28,9 +40,9 @@ main (int argc, char* argv[]) {
 
     GString     *string;
     DGeometry   *geometry;
-    DVector3    *ax_from;
-    DVector3    *ax_to;
-    DVector3    *speed;
+    DVector    *ax_from;
+    DVector    *ax_to;
+    DVector    *speed;
 
     string = g_string_new(NULL);
     geometry = d_geometry_new(
@@ -43,21 +55,17 @@ main (int argc, char* argv[]) {
     ax_to = d_axes_new_full(0.0, 0.0, 3.0);
     speed = d_speed_new_full(90.0, 90.0, 90.0);
 
-    d_vector3_to_string(ax_from, string);
-    g_print("FROM : %s\n", string->str);
-    d_vector3_to_string(ax_to, string);
-    g_print("TO:    %s\n", string->str);
-    d_vector3_to_string(speed, string);
-    g_print("SPEED: %s\n", string->str);
+    g_print("FROM : %s\n", d_vector_to_string(ax_from, string));
+    g_print("TO:    %s\n", d_vector_to_string(ax_to, string));
+    g_print("SPEED: %s\n", d_vector_to_string(speed, string));
 
-    DJointTrajectory *movej = d_joint_trajectory_new(D_AXES(ax_from),
-                                                     D_AXES(ax_from),
-                                                     D_AXES(ax_to),
+    DJointTrajectory *movej = d_joint_trajectory_new(ax_from,
+                                                     ax_from,
+                                                     ax_to,
                                                      D_SPEED(speed));
-    for (int i = 0; i < 10; i++) {
-        DAxes* current = D_AXES(d_trajectory_next(D_ITRAJECTORY(movej)));
-        d_vector3_to_string(D_VECTOR3(current), string);
-        g_print("AT:    %s\n", string->str);
+    for (int i = 0; i < 20; i++) {
+        DVector* current = d_trajectory_next(D_ITRAJECTORY(movej));
+        g_print("AT:    %s\n", d_vector_to_string(current, string));
         g_object_unref(current);
     }
 
