@@ -1,4 +1,4 @@
-AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) ${gobject_CFLAGS}
+AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) ${gobject_CFLAGS} ${gsl_CFLAGS}
 AM_CFLAGS = -std=c99
 
 sources = \
@@ -12,7 +12,7 @@ sources = \
 	dsim_speed.c
 lib_LTLIBRARIES = libdsim.la
 libdsim_la_SOURCES = ${sources}
-libdsim_la_LIBADD = ${gobject_LIBS} -lm
+libdsim_la_LIBADD = ${gobject_LIBS} ${gsl_LIBS} -lm
 
 noinst_PROGRAMS = ../test/dsim
 ___test_dsim_SOURCES = main.c libdsim.la

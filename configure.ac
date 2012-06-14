@@ -25,10 +25,11 @@ AC_CHECK_HEADERS([stdlib.h math.h])
 PKG_CHECK_MODULES([gobject], [gobject-2.0])
 PKG_CHECK_MODULES([gl], [gl])
 PKG_CHECK_MODULES([glu], [glu])
-#PKG_CHECK_MODULES([glib], [glib-2.0])
+PKG_CHECK_MODULES([glib], [glib-2.0])
 #PKG_CHECK_MODULES([gthread], [gthread-2.0])
 PKG_CHECK_MODULES([gtk], [gtk+-2.0])
 PKG_CHECK_MODULES([gtkglext], [gtkglext-1.0])
+PKG_CHECK_MODULES([gsl], [gsl])
 
 AC_FUNC_ERROR_AT_LINE
 
