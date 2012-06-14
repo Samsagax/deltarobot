@@ -111,11 +111,11 @@ increment_pos (DPos     *pos,
                gdouble  dy,
                gdouble  dz)
 {
-    DVector3 *dp;
+    DVector *dp;
 
     dp = d_pos_new_full (dx, dy, dz);
 
-    d_vector3_add(D_VECTOR3(pos), dp);
+    d_vector_add(D_VECTOR(pos), dp);
 
     g_object_unref(dp);
 }
@@ -137,9 +137,9 @@ show_about (void)
 static void
 create_main_window (void)
 {
-    GtkWidget       *main_vbox;
-    GtkWidget       *viewport;
-    GtkWidget       *menu_bar;
+    GtkWidget *main_vbox;
+    GtkWidget *viewport;
+    GtkWidget *menu_bar;
 
     /*
      * Create the window
@@ -152,7 +152,7 @@ create_main_window (void)
      * Set up drawing area
     */
     viewport = d_viewport_new_with_pos(robot, pos);
-    d_viewport_set_scene_center_xyz(viewport, 0.0, 0.0, 30.0);
+    d_viewport_set_scene_center_xyz(D_VIEWPORT(viewport), 0.0, 0.0, 30.0);
 
     /*
      * Create Menus
@@ -220,8 +220,8 @@ main(int argc, char* argv[])
     gtk_init(&argc, &argv);
     gtk_gl_init(&argc, &argv);
 
-    robot = d_geometry_new(30.0, 50.0, 30.0, 10.0);
-    pos   = d_pos_new_full(0.0, 0.0, 50.0);
+    robot = d_geometry_new(30.0, 50.0, 25.0, 10.0);
+    pos   = D_POS(d_pos_new_full(0.0, 0.0, 50.0));
 
     /*
      * Create the window and show it
