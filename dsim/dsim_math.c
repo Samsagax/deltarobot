@@ -24,8 +24,6 @@
 
 #include "dsim_math.h"
 
-#define EPSILON_DEFAULT_DOUBLE 1e-6
-#define EPSILON_DEFAULT_FLOAT 1e-12
 #define MAX_ULPS_DEFAULT 10
 
 typedef union _DDoubleRepresentation DDoubleRepresentation;
@@ -148,7 +146,7 @@ gboolean
 d_math_equals (gdouble a,
                gdouble b)
 {
-    if (d_math_equals_within_epsilon(a, b, EPSILON_DEFAULT_DOUBLE)) {
+    if (d_math_equals_within_epsilon(a, b, FLT_EPSILON)) {
         return TRUE;
     }
     return d_math_equals_within_ulps(a, b, MAX_ULPS_DEFAULT);
@@ -158,7 +156,7 @@ gboolean
 d_math_equalsf (gfloat  a,
                 gfloat  b)
 {
-    if (d_math_equals_within_epsilonf(a, b, EPSILON_DEFAULT_FLOAT)) {
+    if (d_math_equals_within_epsilonf(a, b, FLT_EPSILON)) {
         return TRUE;
     }
     return d_math_equals_within_ulpsf(a, b, MAX_ULPS_DEFAULT);
