@@ -68,13 +68,13 @@ struct _DViewport {
     GdkGLConfig     *glconfig;
 
     /* Define a sphere containing the geometry */
-    DVector3        *scene_center;
+    DVector         *scene_center;
     gdouble         scene_distance;
     gdouble         polar_angle;
     gdouble         azimuth_angle;
 
     /* Define position for a light */
-    //DVector3        *light_position;
+    //DVector         *light_position;
 
     /* Far and near clip distance */
     gdouble         near_clip;
@@ -84,11 +84,11 @@ struct _DViewport {
     gdouble         eye_angle;
 
     /* Euler view rotation angles in degrees */
-    //DVector3        *view_angles;
+    //DVector         *view_angles;
 
     /* Trackball for 3D rotation of camera */
     //gdouble         track_angle;
-    //DVector3        *track_axis;
+    //DVector         *track_axis;
 
     /* Zooming */
     //gdouble         zoom;
@@ -109,7 +109,7 @@ GtkWidget*  d_viewport_new_with_pos             (DGeometry  *geometry,
 
 GtkWidget*  d_viewport_new_full                 (DGeometry  *geometry,
                                                  DExtAxes   *extaxes,
-                                                 DVector3   *scene_center,
+                                                 DVector    *scene_center,
                                                  gdouble    scene_distance,
                                                  gdouble    polar_angle,
                                                  gdouble    azimuth_angle,
@@ -117,7 +117,7 @@ GtkWidget*  d_viewport_new_full                 (DGeometry  *geometry,
                                                  gdouble    far_clip,
                                                  gdouble    eye_angle);
 
-DVector3*   d_viewport_get_pos                  (const DViewport    *self);
+DVector *   d_viewport_get_pos                  (const DViewport    *self);
 
 void        d_viewport_set_pos                  (DViewport  *self,
                                                  DPos       *pos);
@@ -127,10 +127,10 @@ DExtAxes*   d_viewport_get_ext_axes             (const DViewport    *self);
 void        d_viewport_set_ext_axes             (DViewport  *self,
                                                  DExtAxes   *extaxes);
 
-DVector3*   d_viewport_get_scene_center         (const DViewport    *self);
+DVector *   d_viewport_get_scene_center         (const DViewport    *self);
 
 void        d_viewport_set_scene_center         (DViewport  *self,
-                                                 DVector3   *scene_center);
+                                                 DVector    *scene_center);
 
 void        d_viewport_set_scene_center_xyz     (DViewport  *self,
                                                  gdouble    x,
@@ -168,7 +168,7 @@ void        d_viewport_set_eye_angle            (DViewport  *self,
                                                  gdouble    eye_angle);
 
 void        d_viewport_configure_view           (DViewport  *self,
-                                                 DVector3   *scene_center,
+                                                 DVector    *scene_center,
                                                  gdouble    scene_distance,
                                                  gdouble    polar_angle,
                                                  gdouble    azimuth_angle,

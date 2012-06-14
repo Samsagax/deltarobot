@@ -124,7 +124,7 @@ d_viewport_init (DViewport  *self)
     //self->max_fps = 60;
     //self->timer = 0;
     self->glconfig = d_viewport_configure_gl(FALSE);
-    self->scene_center = d_vector3_new_full(0.0, 0.0, 0.0);
+    self->scene_center = d_pos_new_full(0.0, 0.0, 0.0);
     self->scene_distance = 300.0;
     self->polar_angle = G_PI / 4.0;
     self->azimuth_angle = G_PI / 4.0;
@@ -178,7 +178,7 @@ d_viewport_class_init (DViewportClass   *klass)
         g_param_spec_object ("scene-center",
                              "Scene Center",
                              "The Viewport's scene center",
-                             D_TYPE_VECTOR3,
+                             D_TYPE_VECTOR,
                              G_PARAM_READWRITE);
 
     viewport_properties[PROP_SCENE_DISTANCE] =
@@ -317,7 +317,7 @@ d_viewport_set_property (GObject        *obj,
     switch (prop_id) {
         DGeometry *geometry;
         DExtAxes *extaxes;
-        DVector3 *scene_center;
+        DVector *scene_center;
 
         case PROP_EXTAXES:
             extaxes = D_EXTAXES(g_value_get_object(value));
@@ -334,9 +334,9 @@ d_viewport_set_property (GObject        *obj,
             d_viewport_set_geometry(self, geometry);
             break;
         case PROP_SCENE_CENTER:
-            scene_center = D_VECTOR3(g_value_get_object(value));
+            scene_center = D_VECTOR(g_value_get_object(value));
             if (!scene_center) {
-                scene_center = d_vector3_new_full(0.0, 0.0, 0.0);
+                scene_center = d_pos_new_full(0.0, 0.0, 0.0);
             }
             d_viewport_set_scene_center(self, scene_center);
             break;
@@ -519,12 +519,12 @@ d_viewport_expose (GtkWidget        *widget,
     glMatrixMode (GL_MODELVIEW);
     glLoadIdentity();
 
-    gluLookAt(d_vector3_get(self->scene_center, 0) + self->scene_distance * sin(self->polar_angle) * cos(self->azimuth_angle),
-              d_vector3_get(self->scene_center, 1) + self->scene_distance * sin(self->polar_angle) * sin(self->azimuth_angle),
-              d_vector3_get(self->scene_center, 2) + self->scene_distance * cos(self->polar_angle),
-              d_vector3_get(self->scene_center, 0),
-              d_vector3_get(self->scene_center, 1),
-              d_vector3_get(self->scene_center, 2),
+    gluLookAt(d_vector_get(self->scene_center, 0) + self->scene_distance * sin(self->polar_angle) * cos(self->azimuth_angle),
+              d_vector_get(self->scene_center, 1) + self->scene_distance * sin(self->polar_angle) * sin(self->azimuth_angle),
+              d_vector_get(self->scene_center, 2) + self->scene_distance * cos(self->polar_angle),
+              d_vector_get(self->scene_center, 0),
+              d_vector_get(self->scene_center, 1),
+              d_vector_get(self->scene_center, 2),
               -cos(self->polar_angle) * cos(self->azimuth_angle),
               -cos(self->polar_angle) * sin(self->azimuth_angle),
               sin(self->polar_angle));
@@ -724,7 +724,7 @@ d_viewport_new_with_pos (DGeometry  *geometry,
 GtkWidget*
 d_viewport_new_full (DGeometry  *geometry,
                      DExtAxes   *extaxes,
-                     DVector3   *scene_center,
+                     DVector   *scene_center,
                      gdouble    scene_distance,
                      gdouble    polar_angle,
                      gdouble    azimuth_angle,
@@ -755,7 +755,7 @@ d_viewport_new_full (DGeometry  *geometry,
 
 void
 d_viewport_configure_view (DViewport    *self,
-                           DVector3     *scene_center,
+                           DVector     *scene_center,
                            gdouble      scene_distance,
                            gdouble      polar_angle,
                            gdouble      azimuth_angle,
@@ -812,7 +812,7 @@ d_viewport_set_pos (DViewport   *self,
     DExtAxes *extaxes;
     extaxes = d_ext_axes_new();
     d_solver_solve_inverse(self->geometry,
-                           D_VECTOR3(pos),
+                           D_VECTOR(pos),
                            NULL,
                            extaxes);
 
@@ -820,22 +820,22 @@ d_viewport_set_pos (DViewport   *self,
     g_object_unref(extaxes);
 }
 
-DVector3*
+DVector*
 d_viewport_get_pos (const DViewport *self)
 {
     g_return_val_if_fail (D_IS_VIEWPORT(self), NULL);
 
-    DVector3 *pos;
+    DVector *pos;
     d_solver_solve_direct_with_ext_axes(self->geometry, self->extaxes, pos);
     return pos;
 }
 
 void
 d_viewport_set_scene_center (DViewport  *self,
-                             DVector3   *scene_center)
+                             DVector   *scene_center)
 {
     g_return_if_fail(D_IS_VIEWPORT(self));
-    g_return_if_fail(D_IS_VECTOR3(scene_center));
+    g_return_if_fail(D_IS_VECTOR(scene_center));
 
     if (self->scene_center != scene_center) {
         if (self->scene_center) {
@@ -857,15 +857,15 @@ d_viewport_set_scene_center_xyz (DViewport  *self,
 {
     g_return_if_fail(D_IS_VIEWPORT(self));
 
-    DVector3 *center;
+    DVector *center;
 
-    center = d_vector3_new_full(x, y, z);
+    center = d_pos_new_full(x, y, z);
     d_viewport_set_scene_center (self, center);
 
     g_object_unref(center);
 }
 
-DVector3*
+DVector*
 d_viewport_get_scene_center (const DViewport *self)
 {
     g_return_val_if_fail(D_IS_VIEWPORT(self), NULL);
