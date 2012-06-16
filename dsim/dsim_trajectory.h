@@ -52,6 +52,7 @@ struct _DITrajectoryInterface {
     GTypeInterface  parent;
 
     /* interface methods */
+    gboolean        (*has_next)     (DITrajectory   *self);
     DVector*        (*next)         (DITrajectory   *self);
 };
 
@@ -63,6 +64,8 @@ struct _DITrajectoryInterface {
 GType       d_itrajectory_get_type  (void);
 
 /* Interface methods default implementations */
+gboolean    d_trajectory_has_next   (DITrajectory   *self);
+
 DVector*    d_trajectory_next       (DITrajectory   *self);
 
 /* #######################  LINEAR TRAJECTORY  ######################### */
@@ -104,14 +107,14 @@ GType               d_linear_trajectory_get_type    (void);
 DLinearTrajectory*  d_linear_trajectory_new         (DVector    *currentPosition,
                                                      DVector    *currentDestination,
                                                      DVector    *nextDestination,
-                                                     DSpeed     *aSpeed,
-                                                     DSpeed     *cSpeed);
+                                                     DVector     *aSpeed,
+                                                     DVector     *cSpeed);
 
 DLinearTrajectory*  d_linear_trajectory_new_full    (DVector    *currentPosition,
                                                      DVector    *currentDestination,
                                                      DVector    *nextDestination,
-                                                     DSpeed     *aSpeed,
-                                                     DSpeed     *cSpeed,
+                                                     DVector     *aSpeed,
+                                                     DVector     *cSpeed,
                                                      gdouble    accTime,
                                                      gdouble    stepTime);
 
@@ -154,7 +157,7 @@ GType               d_joint_trajectory_get_type     (void);
 DJointTrajectory*   d_joint_trajectory_new          (DVector    *currentPosition,
                                                      DVector    *currentDestination,
                                                      DVector    *nextDestination,
-                                                     DSpeed     *maxSpeed );
+                                                     DVector     *maxSpeed );
 
 DJointTrajectory*   d_joint_trajectory_new_full     (DVector    *currentPosition,
                                                      DVector    *currentDestination,

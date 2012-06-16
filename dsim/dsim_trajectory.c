@@ -31,8 +31,8 @@
 struct _DLinearTrajectoryPrivate {
     /* private members of DLinearTrajectory */
     DVector     *pos;           /* Instant position */
-    DSpeed      *cSpeed;        /* Cartesian Speed */
-    DSpeed      *aSpeed;        /* Axes maximum speed */
+    DVector      *cSpeed;        /* Cartesian Speed */
+    DVector      *aSpeed;        /* Axes maximum speed */
     DVector     *deltaA;        /* Distance to current destination */
     DVector     *deltaC;        /* Distance from current/next destination */
     DVector     *pointB;        /* Current destination */
@@ -45,7 +45,7 @@ struct _DLinearTrajectoryPrivate {
 struct _DJointTrajectoryPrivate {
     /* private members of DJointTrajectory */
     DVector     *axes;          /* Instant position */
-    DSpeed      *speed;         /* Axes Speed */
+    DVector      *speed;         /* Axes Speed */
     DVector     *deltaA;        /* Distance to current destination */
     DVector     *deltaC;        /* Distance from current/next destination */
     DVector     *pointB;        /* Current destination */
@@ -60,6 +60,7 @@ static void     d_linear_trajectory_interface_init  (DITrajectoryInterface  *ifa
 static DVector* d_linear_trajectory_next            (DITrajectory           *self);
 
 static void     d_joint_trajectory_interface_init   (DITrajectoryInterface  *iface);
+static gboolean d_joint_trajectory_has_next         (DITrajectory           *self);
 static DVector* d_joint_trajectory_next             (DITrajectory           *self);
 
 static gdouble  d_joint_trajectory_calculate_move_time (DVector             *deltaC,
@@ -79,10 +80,18 @@ G_DEFINE_INTERFACE(DITrajectory, d_itrajectory, G_TYPE_OBJECT);
 static void
 d_itrajectory_default_init (DITrajectoryInterface   *klass)
 {
+    g_error("Interface DITrajectory is not initialized");
+}
+
+gboolean
+d_trajectory_has_next (DITrajectory *self)
+{
+    g_return_val_if_fail(D_IS_ITRAJECTORY(self), FALSE);
+    return D_ITRAJECTORY_GET_INTERFACE(self)->has_next(self);
 }
 
 DVector*
-d_trajectory_next (DITrajectory *self)
+d_trajectory_next (DITrajectory     *self)
 {
     g_return_val_if_fail (D_IS_ITRAJECTORY(self), NULL);
     return D_ITRAJECTORY_GET_INTERFACE(self)->next(self);
@@ -100,8 +109,8 @@ DLinearTrajectory*
 d_linear_trajectory_new (DVector    *currentPosition,
                          DVector    *currentDestination,
                          DVector    *nextDestination,
-                         DSpeed     *aSpeed,
-                         DSpeed     *cSpeed)
+                         DVector     *aSpeed,
+                         DVector     *cSpeed)
 {
     return d_linear_trajectory_new_full (currentPosition,
                                          currentDestination,
@@ -116,8 +125,8 @@ DLinearTrajectory*
 d_linear_trajectory_new_full (DVector   *currentPosition,
                               DVector   *currentDestination,
                               DVector   *nextDestination,
-                              DSpeed    *aSpeed,
-                              DSpeed    *cSpeed,
+                              DVector    *aSpeed,
+                              DVector    *cSpeed,
                               gdouble   accTime,
                               gdouble   stepTime)
 {
@@ -220,10 +229,10 @@ G_DEFINE_TYPE_WITH_CODE (DJointTrajectory,
 
 /* Create new DJointTrajectory object */
 DJointTrajectory*
-d_joint_trajectory_new ( DVector      *currentPosition,
-                         DVector      *currentDestination,
-                         DVector      *nextDestination,
-                         DSpeed     *maxSpeed )
+d_joint_trajectory_new (DVector *currentPosition,
+                        DVector *currentDestination,
+                        DVector *nextDestination,
+                        DVector *maxSpeed)
 {
     return d_joint_trajectory_new_full ( currentPosition,
                                          currentDestination,
@@ -331,10 +340,25 @@ d_joint_trajectory_class_init ( DJointTrajectoryClass   *klass )
 static void
 d_joint_trajectory_interface_init (DITrajectoryInterface    *iface)
 {
+    iface->has_next = d_joint_trajectory_has_next;
     iface->next = d_joint_trajectory_next;
 }
 
 /* Methods */
+static gboolean
+d_joint_trajectory_has_next (DITrajectory   *self)
+{
+    g_return_val_if_fail(D_IS_JOINT_TRAJECTORY(self), FALSE);
+
+    DJointTrajectory *joint = D_JOINT_TRAJECTORY(self);
+    DJTPrivate *priv = D_JOINT_TRAJECTORY_GET_PRIVATE(joint);
+
+    if (priv->time < priv->moveTime - priv->accTime) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
 static DVector*
 d_joint_trajectory_next (DITrajectory   *self)
 {
