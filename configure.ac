@@ -17,7 +17,7 @@ AM_PROG_CC_C_O
 # Checks for libraries.
 
 # Checks for header files.
-AC_CHECK_HEADERS([stdlib.h math.h])
+AC_CHECK_HEADERS([stdlib.h math.h signal.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 

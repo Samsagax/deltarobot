@@ -1,5 +1,5 @@
 AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) ${gobject_CFLAGS} ${gsl_CFLAGS}
-AM_CFLAGS = -std=c99
+AM_CFLAGS = -std=gnu99
 
 sources = \
 	dsim.h \
@@ -16,4 +16,4 @@ libdsim_la_LIBADD = ${gobject_LIBS} ${gsl_LIBS} -lm
 
 noinst_PROGRAMS = ../test/dsim
 ___test_dsim_SOURCES = main.c libdsim.la
-___test_dsim_LDADD = -ldsim -lm
+___test_dsim_LDADD = -ldsim -lm -lrt
