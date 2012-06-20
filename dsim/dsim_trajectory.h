@@ -52,8 +52,9 @@ struct _DITrajectoryInterface {
     GTypeInterface  parent;
 
     /* interface methods */
-    gboolean        (*has_next)     (DITrajectory   *self);
-    DVector*        (*next)         (DITrajectory   *self);
+    gboolean        (*has_next)         (DITrajectory   *self);
+    DVector*        (*next)             (DITrajectory   *self);
+    gdouble         (*get_step_time)    (DITrajectory   *self);
 };
 
 /* Interface constants */
@@ -64,9 +65,11 @@ struct _DITrajectoryInterface {
 GType       d_itrajectory_get_type  (void);
 
 /* Interface methods default implementations */
-gboolean    d_trajectory_has_next   (DITrajectory   *self);
+gboolean    d_trajectory_has_next       (DITrajectory   *self);
 
-DVector*    d_trajectory_next       (DITrajectory   *self);
+DVector*    d_trajectory_next           (DITrajectory   *self);
+
+gdouble     d_trajectory_get_step_time  (DITrajectory   *self);
 
 /* #######################  LINEAR TRAJECTORY  ######################### */
 /*
@@ -157,7 +160,7 @@ GType               d_joint_trajectory_get_type     (void);
 DJointTrajectory*   d_joint_trajectory_new          (DVector    *currentPosition,
                                                      DVector    *currentDestination,
                                                      DVector    *nextDestination,
-                                                     DVector     *maxSpeed );
+                                                     DVector    *maxSpeed );
 
 DJointTrajectory*   d_joint_trajectory_new_full     (DVector    *currentPosition,
                                                      DVector    *currentDestination,
