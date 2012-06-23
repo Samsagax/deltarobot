@@ -77,6 +77,9 @@ timed_trajectory (gpointer  data)
     GString *string = g_string_new(NULL);
 
     while (d_trajectory_has_next(traj)) {
+        g_mutex_lock(&tic_mutex);
+        g_cond_wait(&tic_cond, &tic_mutex);
+        g_mutex_unlock(&tic_mutex);
         DVector* current = d_trajectory_next(traj);
         g_print("AT:    %s\n", d_vector_to_string(current, string));
         g_object_unref(current);
@@ -128,7 +131,7 @@ main (int argc, char* argv[]) {
                 20.0);              /* Moving Platform */
     ax_from = d_axes_new_full(0.0, 0.0, 0.0);
     ax_to = d_axes_new_full(0.0, 0.0, 6.0);
-    speed = d_speed_new_full(90.0, 90.0, 90.0);
+    speed = d_speed_new_full(3.0, 3.0, 3.0);
 
     g_print("FROM :     %s\n", d_vector_to_string(ax_from, string));
     g_print("TO:        %s\n", d_vector_to_string(ax_to, string));
@@ -139,7 +142,7 @@ main (int argc, char* argv[]) {
                                          ax_from,
                                          ax_to,
                                          speed,
-                                         0.5,
+                                         0.2,
                                          0.01);
 
 //    for (int i = 0; i < 20; i++) {

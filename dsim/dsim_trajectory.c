@@ -79,7 +79,7 @@ static void     d_itrajectory_interpolate_lspb      (DVector                *res
 G_DEFINE_INTERFACE(DITrajectory, d_itrajectory, G_TYPE_OBJECT);
 
 static void
-d_itrajectory_default_init (DITrajectoryInterface   *klass)
+d_itrajectory_default_init(DITrajectoryInterface   *klass)
 {
 }
 
