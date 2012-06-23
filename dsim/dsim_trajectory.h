@@ -26,11 +26,58 @@
 #define  DSIM_TRAJ_INC
 
 #include <glib-object.h>
-#include <dsim/dsim_vector.h>
-#include <dsim_pos.h>
-#include <dsim_axes.h>
-#include <dsim_speed.h>
+#include "dsim_vector.h"
+#include "dsim_pos.h"
+#include "dsim_axes.h"
+#include "dsim_speed.h"
 
+/* ##########################  TRAJECTORY CONTROL  ######################*/
+/*
+ * Defines a DTrajectoryControl object. A singleton multithreaded real-time dispatcher
+ * for controling trajectories
+ */
+#define D_TYPE_TRAJECTORY_CONTROL               (d_trajectory_control_get_type ())
+#define D_TRAJECTORY_CONTROL(obj)               (G_TYPE_CHECK_INSTANCE_CAST ((obj), D_TYPE_TRAJECTORY_CONTROL, DTrajectoryControl))
+#define D_IS_TRAJECTORY_CONTROL(obj)            (G_TYPE_CHECK_INSTANCE_TYPE ((obj), D_TYPE_TRAJECTORY_CONTROL))
+#define D_TRAJECTORY_CONTROL_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST ((klass), D_TYPE_TRAJECTORY_CONTROL, DTrajectoryControlClass))
+#define D_IS_TRAJECTORY_CONTROL_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE ((klass), D_TYPE_TRAJECTORY_CONTROL))
+#define D_TRAJECTORY_CONTROL_GET_CLASS(obj)     (G_TYPE_INSTANCE_GET_CLASS ((obj), D_TYPE_TRAJECTORY_CONTROL, DTrajectoryControlClass))
+
+typedef struct _DTrajectoryControl DTrajectoryControl;
+struct _DTrajectoryControl {
+    GObject         parent_instence;
+
+    /* List of destinations */
+    GAsyncQueue     *point_list;
+
+    /* Absolute positions in work space */
+    DVector         *destination;
+    DVector         *current_position;
+
+    /* Acceleration time for both ends */
+    gdouble         accelTime;
+    gdouble         decelTime;      /* Set equal to accelTime for now */
+
+    /* Step time for trajectory, used for timers */
+    gdouble         stepTime;
+
+    /* Thread control */
+    gboolean        exit_flag;
+    GThread         *main_loop;
+};
+
+typedef struct _DTrajectoryControlClass DTrajectoryControlClass;
+struct _DTrajectoryControlClass {
+    GObjectClass    parent_class;
+};
+
+GType               d_trajectory_control_get_type   (void);
+
+DTrajectoryControl* d_trajectory_control_new        (void);
+
+void    d_trajectory_control_start          (DTrajectoryControl *self);
+
+void    d_trajectory_control_stop           (DTrajectoryControl *self);
 
 /* ##########################  TRAJECTORY INTERFACE  ################### */
 /*

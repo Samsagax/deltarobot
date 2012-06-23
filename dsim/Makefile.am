@@ -9,6 +9,7 @@ sources = \
 	dsim_geometry.c \
 	dsim_solver.c \
 	dsim_trajectory.c \
+	dsim_trajectory_control.c \
 	dsim_speed.c
 lib_LTLIBRARIES = libdsim.la
 libdsim_la_SOURCES = ${sources}
