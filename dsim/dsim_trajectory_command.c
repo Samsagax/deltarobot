@@ -65,17 +65,19 @@ d_trajectory_command_dispose (GObject   *obj)
                 self->data = NULL;
             }
             break;
+        case OT_END:
+            break;
         default:
             g_warning("cannot handle CommandType %i", self->command_type);
             break;
     }
-    G_OBJECT_CLASS(d_trajectory_command_parent_class)->dispose;
+    G_OBJECT_CLASS(d_trajectory_command_parent_class)->dispose(obj);
 }
 
 static void
 d_trajectory_command_finalize (GObject  *obj)
 {
-    G_OBJECT_CLASS(d_trajectory_command_parent_class)->finalize;
+    G_OBJECT_CLASS(d_trajectory_command_parent_class)->finalize(obj);
 }
 
 
@@ -84,5 +86,9 @@ DTrajectoryCommand*
 d_trajectory_command_new (CommandType   cmdt,
                           gpointer      data)
 {
-
+    DTrajectoryCommand *dtc;
+    dtc = g_object_new(D_TYPE_TRAJECTORY_COMMAND, NULL);
+    dtc->command_type = cmdt;
+    dtc->data = data;
+    return dtc;
 }
