@@ -57,11 +57,9 @@ static void     d_trajectory_control_notify_timer
 static gpointer d_trajectory_control_main_loop
                         (gpointer                   *trajectory_control);
 
-static void     d_trajectory_control_worker
-                        (DTrajectoryControl         *self);
-
-static void     d_trajectory_control_kill_worker
-                        (DTrajectoryControl         *self);
+static void     d_trajectory_control_execute_trajectory
+                        (DTrajectoryControl         *self,
+                         DITrajectory               *traj);
 
 /* Implementation */
 G_DEFINE_TYPE(DTrajectoryControl, d_trajectory_control, G_TYPE_OBJECT);
@@ -100,7 +98,7 @@ d_trajectory_control_init (DTrajectoryControl   *self)
     self->exit_flag = FALSE;
     self->main_loop = NULL;
 
-    self->point_list = NULL;
+    self->orders = g_async_queue_new();
     self->current_position = NULL;
     self->destination = NULL;
 
@@ -118,9 +116,9 @@ d_trajectory_control_dispose (GObject   *obj)
     if (self->main_loop) {
         d_trajectory_control_stop(self);
     }
-    if (self->point_list) {
-        g_object_unref(self->point_list);
-        self->point_list = NULL;
+    if (self->orders) {
+        g_object_unref(self->orders);
+        self->orders = NULL;
     }
     if (self->current_position) {
         g_object_unref(self->current_position);
@@ -154,17 +152,63 @@ d_trajectory_control_main_loop (gpointer    *trajectory_control)
     g_return_val_if_fail(D_IS_TRAJECTORY_CONTROL(trajectory_control), NULL);
     DTrajectoryControl *self = D_TRAJECTORY_CONTROL(trajectory_control);
 
+    /* Hardcoded Dummy trajectory */
+    DVector *ax_from = d_axes_new_full(0.0, 0.0, 0.0);
+    DVector *ax_to = d_axes_new_full(0.0, 0.0, 6.0);
+    DVector *speed = d_speed_new_full(3.0, 3.0, 3.0);
+    DJointTrajectory *djt = d_joint_trajectory_new_full
+                                        (ax_from,
+                                         ax_from,
+                                         ax_to,
+                                         speed,
+                                         self->accelTime,
+                                         self->stepTime);
+    DTrajectoryCommand *dummy = d_trajectory_command_new(OT_MOVEJ, djt);
+    d_trajectory_control_push_order(self, dummy);
+
+    /* Start waiting for orders */
+    while(!self->exit_flag) {
+        g_warning("d_trajectory_control_main_loop: no order list, implement!");
+        /* Wait until order is available with a 2 second timeout */
+        DTrajectoryCommand *order = NULL;
+        while(!order) {
+            order = g_async_queue_timeout_pop(self->orders, 2.0 * G_TIME_SPAN_SECOND);
+        }
+        /* Process the order */
+        switch (order->command_type) {
+            case OT_MOVEJ:
+                d_trajectory_control_execute_trajectory(self, D_ITRAJECTORY(order->data));
+                break;
+            case OT_MOVEL:
+                g_warning("d_trajectory_control_main_loop: no OT_MOVEL command, implement!");
+                break;
+            case OT_WAIT:
+                g_warning("d_trajectory_control_main_loop: no OT_WAIT command, implement!");
+                break;
+            default:
+                g_error("Unknown command type: %i", order->command_type);
+        }
+        if (order) {
+            g_object_unref(order);
+            order = NULL;
+        }
+    }
+    g_thread_exit(NULL);
+}
+
+static void
+d_trajectory_control_execute_trajectory (DTrajectoryControl *self,
+                                         DITrajectory       *traj)
+{
     timer_t timerid;
     struct itimerspec value;
     struct sigevent event;
 
     //TODO: Allow stepTime greater than 1
-    value.it_value.tv_sec = 1;
-//    value.it_value.tv_nsec = self->stepTime * D_NANOS_PER_SEC;
-    value.it_value.tv_nsec = 0;
-    value.it_interval.tv_sec = 1;
-//    value.it_interval.tv_nsec = self->stepTime * D_NANOS_PER_SEC;
-    value.it_interval.tv_nsec = 0;
+    value.it_value.tv_sec = 0;
+    value.it_value.tv_nsec = self->stepTime * D_NANOS_PER_SEC;
+    value.it_interval.tv_sec = 0;
+    value.it_interval.tv_nsec = self->stepTime * D_NANOS_PER_SEC;
 
     //TODO: Set the attributes for real-time notification
     event.sigev_notify = SIGEV_THREAD;
@@ -174,20 +218,23 @@ d_trajectory_control_main_loop (gpointer    *trajectory_control)
     timer_create(CLOCK_REALTIME, &event, &timerid);
     timer_settime(timerid, 0, &value, NULL);
 
-    /* Start trajectory execution */
-    while(!self->exit_flag) {
-        g_mutex_lock(&timer_mutex);
-        g_cond_wait(&wakeup_cond, &timer_mutex);
-        g_mutex_unlock(&timer_mutex);
-        if (self->exit_flag) {
-            g_print("Exiting...\n");
-            timer_delete(timerid);
-            g_thread_exit(NULL);
-        }
-        g_print("Timer Triggered\n");
+    while(d_trajectory_has_next(traj)) {
+            g_mutex_lock(&timer_mutex);
+            g_cond_wait(&wakeup_cond, &timer_mutex);
+            g_mutex_unlock(&timer_mutex);
+            if (self->exit_flag) {
+                g_print("Exiting...\n");
+                timer_delete(timerid);
+                g_thread_exit(NULL);
+            }
+            DVector* axes = d_trajectory_next(traj);
+            g_print("Timer Triggered: %f, %f, %f\n",
+                    d_vector_get(axes, 0),
+                    d_vector_get(axes, 1),
+                    d_vector_get(axes, 2));
     }
+
     timer_delete(timerid);
-    g_thread_exit(NULL);
 }
 
 /* Public API */
@@ -217,4 +264,13 @@ d_trajectory_control_stop (DTrajectoryControl   *self)
     g_cond_signal(&wakeup_cond);
     g_thread_join(self->main_loop);
     self->main_loop = NULL;
+}
+
+void
+d_trajectory_control_push_order (DTrajectoryControl *self,
+                                 DTrajectoryCommand *order)
+{
+    g_return_if_fail(D_IS_TRAJECTORY_COMMAND(order));
+
+    g_async_queue_push(self->orders, order);
 }
