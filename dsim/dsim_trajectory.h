@@ -31,6 +31,48 @@
 #include "dsim_axes.h"
 #include "dsim_speed.h"
 
+
+/* #######################  TRAJECTORY CONTROL ORDERS  #################### */
+/*
+ * Specification of orders to be executed by DTrajectoryControl
+ */
+
+/* Type DTrajectoryCommand macros */
+#define D_TYPE_TRAJECTORY_COMMAND               (d_trajectory_command_get_type ())
+#define D_TRAJECTORY_COMMAND(obj)               (G_TYPE_CHECK_INSTANCE_CAST ((obj), D_TYPE_TRAJECTORY_COMMAND, DTrajectoryCommand))
+#define D_IS_TRAJECTORY_COMMAND(obj)            (G_TYPE_CHECK_INSTANCE_TYPE ((obj), D_TYPE_TRAJECTORY_COMMAND))
+#define D_TRAJECTORY_COMMAND_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST ((klass), D_TYPE_TRAJECTORY_COMMAND, DTrajectoryCommandClass))
+#define D_IS_TRAJECTORY_COMMAND_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE ((klass), D_TYPE_TRAJECTORY_COMMAND))
+#define D_TRAJECTORY_COMMAND_GET_CLASS(obj)     (G_TYPE_INSTANCE_GET_CLASS ((obj), D_TYPE_TRAJECTORY_COMMAND, DTrajectoryCommandClass))
+
+typedef enum CommandType {
+    OT_MOVEJ,
+    OT_MOVEL,
+    OT_WAIT,
+    OT_END,
+} CommandType;
+
+/* Instance Structure of DTrajectoryCommand */
+typedef struct _DTrajectoryCommand DTrajectoryCommand;
+struct _DTrajectoryCommand {
+    GObject         parent_instance;
+
+    CommandType     command_type;
+    gpointer        data;
+};
+
+/* Class Structure of DTrajectoryCommand */
+typedef struct _DTrajectoryCommandClass DTrajectoryCommandClass;
+struct _DTrajectoryCommandClass {
+    GObjectClass        parent_class;
+};
+
+/* Register DTrajectoryCommand type */
+GType               d_trajectory_command_get_type       (void);
+
+DTrajectoryCommand* d_trajectory_command_new            (CommandType    cmdt,
+                                                         gpointer       data);
+
 /* ##########################  TRAJECTORY CONTROL  ######################*/
 /*
  * Defines a DTrajectoryControl object. A singleton multithreaded real-time dispatcher
@@ -48,7 +90,7 @@ struct _DTrajectoryControl {
     GObject         parent_instence;
 
     /* List of destinations */
-    GAsyncQueue     *point_list;
+    GAsyncQueue     *orders;
 
     /* Absolute positions in work space */
     DVector         *destination;
@@ -75,9 +117,12 @@ GType               d_trajectory_control_get_type   (void);
 
 DTrajectoryControl* d_trajectory_control_new        (void);
 
-void    d_trajectory_control_start          (DTrajectoryControl *self);
+void                d_trajectory_control_push_order (DTrajectoryControl *self,
+                                                     DTrajectoryCommand *order);
 
-void    d_trajectory_control_stop           (DTrajectoryControl *self);
+void                d_trajectory_control_start      (DTrajectoryControl *self);
+
+void                d_trajectory_control_stop       (DTrajectoryControl *self);
 
 /* ##########################  TRAJECTORY INTERFACE  ################### */
 /*
@@ -215,5 +260,6 @@ DJointTrajectory*   d_joint_trajectory_new_full     (DVector    *currentPosition
                                                      DVector    *maxSpeed,
                                                      gdouble    accTime,
                                                      gdouble    stepTime );
+
 
 #endif   /* ----- #ifndef DSIM_TRAJ_INC  ----- */
