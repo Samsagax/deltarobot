@@ -61,6 +61,9 @@ static void     d_trajectory_control_execute_trajectory
                         (DTrajectoryControl         *self,
                          DITrajectory               *traj);
 
+static void     d_trajectory_control_default_output
+                        (DVector                    *position);
+
 /* Implementation */
 G_DEFINE_TYPE(DTrajectoryControl, d_trajectory_control, G_TYPE_OBJECT);
 
@@ -101,6 +104,7 @@ d_trajectory_control_init (DTrajectoryControl   *self)
     self->orders = g_async_queue_new();
     self->current_position = NULL;
     self->destination = NULL;
+    self->output_func = d_trajectory_control_default_output;
 
     self->accelTime = 0.1;
     self->decelTime = 0.1;
@@ -117,7 +121,7 @@ d_trajectory_control_dispose (GObject   *obj)
         d_trajectory_control_stop(self);
     }
     if (self->orders) {
-        g_object_unref(self->orders);
+        g_async_queue_unref(self->orders);
         self->orders = NULL;
     }
     if (self->current_position) {
@@ -168,7 +172,6 @@ d_trajectory_control_main_loop (gpointer    *trajectory_control)
 
     /* Start waiting for orders */
     while(!self->exit_flag) {
-        g_warning("d_trajectory_control_main_loop: no order list, implement!");
         /* Wait until order is available with a 2 second timeout */
         DTrajectoryCommand *order = NULL;
         while(!order) {
@@ -185,6 +188,9 @@ d_trajectory_control_main_loop (gpointer    *trajectory_control)
             case OT_WAIT:
                 g_warning("d_trajectory_control_main_loop: no OT_WAIT command, implement!");
                 break;
+            case OT_END:
+                self->exit_flag = TRUE;
+                break;
             default:
                 g_error("Unknown command type: %i", order->command_type);
         }
@@ -194,6 +200,13 @@ d_trajectory_control_main_loop (gpointer    *trajectory_control)
         }
     }
     g_thread_exit(NULL);
+}
+
+static void
+d_trajectory_control_execute_wait (DTrajectoryControl   *self,
+                                   guint64              *msecs)
+{
+    g_warning("d_trajectory_control_execute_wait is a stub");
 }
 
 static void
@@ -222,19 +235,25 @@ d_trajectory_control_execute_trajectory (DTrajectoryControl *self,
             g_mutex_lock(&timer_mutex);
             g_cond_wait(&wakeup_cond, &timer_mutex);
             g_mutex_unlock(&timer_mutex);
+            //TODO: Do cleanup
             if (self->exit_flag) {
-                g_print("Exiting...\n");
+                g_message("Exiting...\n");
                 timer_delete(timerid);
-                g_thread_exit(NULL);
+                return;
             }
             DVector* axes = d_trajectory_next(traj);
-            g_print("Timer Triggered: %f, %f, %f\n",
-                    d_vector_get(axes, 0),
-                    d_vector_get(axes, 1),
-                    d_vector_get(axes, 2));
+            self->output_func(axes);
     }
-
     timer_delete(timerid);
+}
+
+static void
+d_trajectory_control_default_output (DVector    *position)
+{
+    g_print("Current position: %f, %f, %f\n",
+                    d_vector_get(position, 0),
+                    d_vector_get(position, 1),
+                    d_vector_get(position, 2));
 }
 
 /* Public API */
@@ -249,7 +268,6 @@ d_trajectory_control_new (void)
 void
 d_trajectory_control_start (DTrajectoryControl  *self)
 {
-    g_warning("d_trajectory_control_start is a stub");
     g_return_if_fail(D_IS_TRAJECTORY_CONTROL(self));
 
     self->main_loop = g_thread_new("control_main",
@@ -259,9 +277,8 @@ d_trajectory_control_start (DTrajectoryControl  *self)
 void
 d_trajectory_control_stop (DTrajectoryControl   *self)
 {
-    g_warning ("d_trajectory_control_stop is a stub");
+    d_trajectory_control_push_order(self, d_trajectory_command_new(OT_END, NULL));
     self->exit_flag = TRUE;
-    g_cond_signal(&wakeup_cond);
     g_thread_join(self->main_loop);
     self->main_loop = NULL;
 }
@@ -273,4 +290,13 @@ d_trajectory_control_push_order (DTrajectoryControl *self,
     g_return_if_fail(D_IS_TRAJECTORY_COMMAND(order));
 
     g_async_queue_push(self->orders, order);
+}
+
+void
+d_trajectory_control_set_output_func (DTrajectoryControl    *self,
+                                      DTrajectoryOutputFunc func)
+{
+    g_return_if_fail(D_IS_TRAJECTORY_CONTROL(self));
+
+    self->output_func = func;
 }
