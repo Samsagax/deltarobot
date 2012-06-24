@@ -21,3 +21,4 @@ libtool
 /config.*
 /config/
 /test/
+/lib/
