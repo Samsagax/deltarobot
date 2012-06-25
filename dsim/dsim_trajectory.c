@@ -22,8 +22,6 @@
  * dsim_trajectory.c :
  */
 
-#include <stdlib.h>
-#include <math.h>
 #include "dsim_trajectory.h"
 
 

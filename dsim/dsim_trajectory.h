@@ -26,6 +26,7 @@
 #define  DSIM_TRAJ_INC
 
 #include <glib-object.h>
+#include <math.h>
 #include "dsim_vector.h"
 #include "dsim_pos.h"
 #include "dsim_axes.h"
