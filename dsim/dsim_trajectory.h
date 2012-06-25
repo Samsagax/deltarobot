@@ -154,6 +154,7 @@ struct _DITrajectoryInterface {
     GTypeInterface  parent;
 
     /* interface methods */
+    DVector*        (*get_destination)  (DITrajectory   *self);
     gboolean        (*has_next)         (DITrajectory   *self);
     DVector*        (*next)             (DITrajectory   *self);
     gdouble         (*get_step_time)    (DITrajectory   *self);
@@ -167,6 +168,8 @@ struct _DITrajectoryInterface {
 GType       d_itrajectory_get_type  (void);
 
 /* Interface methods default implementations */
+DVector*    d_trajectory_get_destination(DITrajectory   *self);
+
 gboolean    d_trajectory_has_next       (DITrajectory   *self);
 
 DVector*    d_trajectory_next           (DITrajectory   *self);

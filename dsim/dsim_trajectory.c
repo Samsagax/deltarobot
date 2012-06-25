@@ -60,6 +60,7 @@ static void     d_linear_trajectory_interface_init  (DITrajectoryInterface  *ifa
 static DVector* d_linear_trajectory_next            (DITrajectory           *self);
 
 static void     d_joint_trajectory_interface_init   (DITrajectoryInterface  *iface);
+static DVector* d_joint_trajectory_get_destination  (DITrajectory           *self);
 static gboolean d_joint_trajectory_has_next         (DITrajectory           *self);
 static DVector* d_joint_trajectory_next             (DITrajectory           *self);
 static gdouble  d_joint_trajectory_get_step_time    (DITrajectory           *self);
@@ -81,6 +82,13 @@ G_DEFINE_INTERFACE(DITrajectory, d_itrajectory, G_TYPE_OBJECT);
 static void
 d_itrajectory_default_init(DITrajectoryInterface   *klass)
 {
+}
+
+DVector*
+d_trajectory_get_destination (DITrajectory *self)
+{
+    g_return_val_if_fail(D_IS_ITRAJECTORY(self), NULL);
+    return D_ITRAJECTORY_GET_INTERFACE(self)->get_destination(self);
 }
 
 gboolean
@@ -347,6 +355,7 @@ d_joint_trajectory_class_init ( DJointTrajectoryClass   *klass )
 static void
 d_joint_trajectory_interface_init (DITrajectoryInterface    *iface)
 {
+    iface->get_destination = d_joint_trajectory_get_destination;
     iface->has_next = d_joint_trajectory_has_next;
     iface->next = d_joint_trajectory_next;
     iface->get_step_time = d_joint_trajectory_get_step_time;
@@ -365,6 +374,15 @@ d_joint_trajectory_has_next (DITrajectory   *self)
         return TRUE;
     }
     return FALSE;
+}
+
+static DVector*
+d_joint_trajectory_get_destination (DITrajectory    *self)
+{
+    g_return_val_if_fail(D_IS_JOINT_TRAJECTORY(self), NULL);
+    DJointTrajectory *joint = D_JOINT_TRAJECTORY(self);
+    DJTPrivate *priv = D_JOINT_TRAJECTORY_GET_PRIVATE(joint);
+    return priv->axes;
 }
 
 static DVector*
