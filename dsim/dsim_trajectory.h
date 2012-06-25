@@ -95,7 +95,7 @@ struct _DTrajectoryControl {
     GAsyncQueue     *orders;
 
     /* Absolute positions in work space */
-    DVector         *destination;
+    DVector         *current_destination;
     DVector         *current_position;
 
     /* Acceleration time for both ends */

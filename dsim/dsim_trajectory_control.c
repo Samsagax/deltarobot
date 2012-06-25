@@ -104,7 +104,7 @@ d_trajectory_control_init (DTrajectoryControl   *self)
 
     self->orders = g_async_queue_new();
     self->current_position = NULL;
-    self->destination = NULL;
+    self->current_destination = NULL;
     self->output_func = d_trajectory_control_default_output;
     self->output_data = NULL;
 
@@ -130,9 +130,9 @@ d_trajectory_control_dispose (GObject   *obj)
         g_object_unref(self->current_position);
         self->current_position = NULL;
     }
-    if (self->destination) {
-        g_object_unref(self->destination);
-        self->destination = NULL;
+    if (self->current_destination) {
+        g_object_unref(self->current_destination);
+        self->current_destination = NULL;
     }
     /* Chain Up */
     G_OBJECT_CLASS(d_trajectory_control_parent_class)->dispose(obj);
