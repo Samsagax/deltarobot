@@ -54,6 +54,14 @@ static void     d_trajectory_control_finalize
 static void     d_trajectory_control_notify_timer
                         (int                        signal);
 
+static void     d_trajectory_control_set_current_position
+                        (DTrajectoryControl         *self,
+                         DVector                    *current_position);
+
+static void     d_trajectory_control_set_current_destination
+                        (DTrajectoryControl         *self,
+                         DVector                    *current_destination);
+
 static gpointer d_trajectory_control_main_loop
                         (gpointer                   *trajectory_control);
 
@@ -247,6 +255,28 @@ d_trajectory_control_execute_trajectory (DTrajectoryControl *self,
             self->output_func(axes, self->output_data);
     }
     timer_delete(timerid);
+}
+
+static void
+d_trajectory_control_set_current_destination (DTrajectoryControl    *self,
+                                              DVector               *dest)
+{
+    if (self->current_destination) {
+        g_object_unref(self->current_destination);
+    }
+    self->current_destination = g_object_ref(dest);
+}
+
+static void
+d_trajectory_control_set_current_position (DTrajectoryControl   *self,
+                                           DVector              *pos)
+{
+    /* Call the output function first so we can avoid delays */
+    self->output_func(pos, self->output_data);
+    if (self->current_position) {
+        g_object_unref(self->current_position);
+    }
+    self->current_position = g_object_ref(pos);
 }
 
 static void
