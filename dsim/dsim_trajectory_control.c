@@ -65,6 +65,10 @@ static void     d_trajectory_control_set_current_destination
 static gpointer d_trajectory_control_main_loop
                         (gpointer                   *trajectory_control);
 
+static DJointTrajectory* d_trajectory_control_prepare_joint_trajectory
+                        (DTrajectoryControl         *self,
+                         DVector                    *destination);
+
 static void     d_trajectory_control_execute_trajectory
                         (DTrajectoryControl         *self,
                          DITrajectory               *traj);
@@ -111,14 +115,17 @@ d_trajectory_control_init (DTrajectoryControl   *self)
     self->main_loop = NULL;
 
     self->orders = g_async_queue_new();
-    self->current_position = NULL;
-    self->current_destination = NULL;
+    self->current_position = d_axes_new();
+    self->current_destination = d_axes_new();
+    self->max_speed = d_speed_new_full(G_PI/8.0, G_PI/8.0, G_PI/8.0);
+
     self->output_func = d_trajectory_control_default_output;
     self->output_data = NULL;
 
-    self->accelTime = 0.1;
-    self->decelTime = 0.1;
-    self->stepTime = 0.01;
+    self->accelTime = 0.5;
+    self->decelTime = 0.5;
+    self->stepTime = 0.05;
+    g_message("d_trajectory_control_init finished");
 }
 
 static void
@@ -166,20 +173,14 @@ d_trajectory_control_main_loop (gpointer    *trajectory_control)
     g_return_val_if_fail(D_IS_TRAJECTORY_CONTROL(trajectory_control), NULL);
     DTrajectoryControl *self = D_TRAJECTORY_CONTROL(trajectory_control);
 
-    /* Hardcoded Dummy trajectory */
-    DVector *ax_from = d_axes_new_full(0.0, 0.0, 0.0);
-    DVector *ax_to = d_axes_new_full(0.0, 0.0, 6.0);
-    DVector *speed = d_speed_new_full(3.0, 3.0, 3.0);
-    DJointTrajectory *djt = d_joint_trajectory_new_full
-                                        (ax_from,
-                                         ax_from,
-                                         ax_to,
-                                         speed,
-                                         self->accelTime,
-                                         self->stepTime);
-    DTrajectoryCommand *dummy = d_trajectory_command_new(OT_MOVEJ, djt);
-    d_trajectory_control_push_order(self, dummy);
 
+    /* Hardcoded orders */
+    DVector *dest = d_axes_new_full(G_PI/4.0, G_PI/4.0, G_PI/4.0);
+    DTrajectoryCommand *move1 = d_trajectory_command_new(OT_MOVEJ, dest);
+    d_trajectory_control_push_order(self, move1);
+    d_trajectory_control_push_order(self, move1);
+    g_object_unref(move1);
+    g_object_unref(dest);
     /* Start waiting for orders */
     while(!self->exit_flag) {
         /* Wait until order is available with a 2 second timeout */
@@ -190,7 +191,14 @@ d_trajectory_control_main_loop (gpointer    *trajectory_control)
         /* Process the order */
         switch (order->command_type) {
             case OT_MOVEJ:
-                d_trajectory_control_execute_trajectory(self, D_ITRAJECTORY(order->data));
+                {
+                g_message("d_trajectory_control_main_loop: Received OT_MOVEJ");
+                DVector *destination = D_VECTOR(order->data);
+                DJointTrajectory *traj = d_trajectory_control_prepare_joint_trajectory(self, destination);
+                d_trajectory_control_execute_trajectory(self, D_ITRAJECTORY(traj));
+                g_object_unref(traj);
+                g_object_unref(destination);
+                }
                 break;
             case OT_MOVEL:
                 g_warning("d_trajectory_control_main_loop: no OT_MOVEL command, implement!");
@@ -217,6 +225,21 @@ d_trajectory_control_execute_wait (DTrajectoryControl   *self,
                                    guint64              *msecs)
 {
     g_warning("d_trajectory_control_execute_wait is a stub");
+}
+
+static DJointTrajectory*
+d_trajectory_control_prepare_joint_trajectory (DTrajectoryControl   *self,
+                                               DVector              *destination)
+{
+    g_message("d_trajectory_control_prepare_joint_trajectory: Preparing joint trajectory");
+    DJointTrajectory *traj;
+    traj = d_joint_trajectory_new_full(self->current_position,
+                                       self->current_destination,
+                                       destination,
+                                       self->max_speed,
+                                       self->accelTime,
+                                       self->stepTime);
+    return traj;
 }
 
 static void
