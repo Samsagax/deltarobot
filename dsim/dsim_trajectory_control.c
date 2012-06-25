@@ -241,6 +241,7 @@ d_trajectory_control_execute_trajectory (DTrajectoryControl *self,
     timer_create(CLOCK_REALTIME, &event, &timerid);
     timer_settime(timerid, 0, &value, NULL);
 
+    d_trajectory_control_set_current_destination(self, d_trajectory_get_destination(traj));
     while(d_trajectory_has_next(traj)) {
             g_mutex_lock(&timer_mutex);
             g_cond_wait(&wakeup_cond, &timer_mutex);
@@ -251,8 +252,7 @@ d_trajectory_control_execute_trajectory (DTrajectoryControl *self,
                 timer_delete(timerid);
                 return;
             }
-            DVector* axes = d_trajectory_next(traj);
-            self->output_func(axes, self->output_data);
+            d_trajectory_control_set_current_position(self, d_trajectory_next(traj));
     }
     timer_delete(timerid);
 }
