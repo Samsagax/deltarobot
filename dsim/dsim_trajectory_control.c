@@ -62,7 +62,8 @@ static void     d_trajectory_control_execute_trajectory
                          DITrajectory               *traj);
 
 static void     d_trajectory_control_default_output
-                        (DVector                    *position);
+                        (DVector                    *position,
+                         gpointer                   output_data);
 
 /* Implementation */
 G_DEFINE_TYPE(DTrajectoryControl, d_trajectory_control, G_TYPE_OBJECT);
@@ -105,6 +106,7 @@ d_trajectory_control_init (DTrajectoryControl   *self)
     self->current_position = NULL;
     self->destination = NULL;
     self->output_func = d_trajectory_control_default_output;
+    self->output_data = NULL;
 
     self->accelTime = 0.1;
     self->decelTime = 0.1;
@@ -242,13 +244,14 @@ d_trajectory_control_execute_trajectory (DTrajectoryControl *self,
                 return;
             }
             DVector* axes = d_trajectory_next(traj);
-            self->output_func(axes);
+            self->output_func(axes, self->output_data);
     }
     timer_delete(timerid);
 }
 
 static void
-d_trajectory_control_default_output (DVector    *position)
+d_trajectory_control_default_output (DVector    *position,
+                                     gpointer   data)
 {
     g_print("Current position: %f, %f, %f\n",
                     d_vector_get(position, 0),
@@ -294,9 +297,11 @@ d_trajectory_control_push_order (DTrajectoryControl *self,
 
 void
 d_trajectory_control_set_output_func (DTrajectoryControl    *self,
-                                      DTrajectoryOutputFunc func)
+                                      DTrajectoryOutputFunc func,
+                                      gpointer              output_data)
 {
     g_return_if_fail(D_IS_TRAJECTORY_CONTROL(self));
 
+    self->output_data = output_data;
     self->output_func = func;
 }

@@ -85,7 +85,7 @@ DTrajectoryCommand* d_trajectory_command_new            (CommandType    cmdt,
 #define D_IS_TRAJECTORY_CONTROL_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE ((klass), D_TYPE_TRAJECTORY_CONTROL))
 #define D_TRAJECTORY_CONTROL_GET_CLASS(obj)     (G_TYPE_INSTANCE_GET_CLASS ((obj), D_TYPE_TRAJECTORY_CONTROL, DTrajectoryControlClass))
 
-typedef void (*DTrajectoryOutputFunc) (DVector *axes);
+typedef void (*DTrajectoryOutputFunc) (DVector *axes, gpointer data);
 
 typedef struct _DTrajectoryControl DTrajectoryControl;
 struct _DTrajectoryControl {
@@ -111,6 +111,7 @@ struct _DTrajectoryControl {
 
     /* Output function */
     DTrajectoryOutputFunc   output_func;
+    gpointer                output_data;
 };
 
 typedef struct _DTrajectoryControlClass DTrajectoryControlClass;
@@ -130,7 +131,9 @@ void                d_trajectory_control_start      (DTrajectoryControl *self);
 void                d_trajectory_control_stop       (DTrajectoryControl *self);
 
 void                d_trajectory_control_set_output_func (DTrajectoryControl    *self,
-                                                     DTrajectoryOutputFunc  func);
+                                                     DTrajectoryOutputFunc  func,
+                                                     gpointer               output_data);
+
 /* ##########################  TRAJECTORY INTERFACE  ################### */
 /*
  * Defines a DTrajectoryInterface with methods needed for both trajectory
