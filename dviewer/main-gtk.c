@@ -27,9 +27,10 @@
 #include "dviewer_viewport.h"
 
 /* Global variables */
-static GtkWidget    *main_window;
-static DGeometry    *robot;
-static DPos         *pos;
+static GtkWidget            *main_window;
+static DGeometry            *robot;
+static DTrajectoryControl   *trajcontrol;
+static DPos                 *pos;
 
 /* Forward declarations */
 static GtkWidget*   create_menu_bar (GtkWidget *window);
@@ -131,6 +132,24 @@ show_about (void)
                               NULL );
 }
 
+static void
+d_trajectory_viewport_link (DVector     *axes,
+                            gpointer    *data)
+{
+    g_return_if_fail(D_IS_VIEWPORT(data));
+    DViewport *viewport = D_VIEWPORT(data);
+
+    g_message("Current Axes: %f, %f, %f",
+                d_vector_get(axes, 0),
+                d_vector_get(axes, 1),
+                d_vector_get(axes, 2));
+    DVector *pos = d_pos_new();
+    d_solver_solve_direct(robot, axes, pos);
+
+    d_viewport_set_pos(viewport, pos);
+    g_object_unref(pos);
+}
+
 /*
  * Create main window
  */
@@ -153,6 +172,7 @@ create_main_window (void)
     */
     viewport = d_viewport_new_with_pos(robot, pos);
     d_viewport_set_scene_center_xyz(D_VIEWPORT(viewport), 0.0, 0.0, 30.0);
+    d_trajectory_control_set_output_func(trajcontrol, d_trajectory_viewport_link, viewport);
 
     /*
      * Create Menus
@@ -169,12 +189,17 @@ create_main_window (void)
                               viewport );
     g_signal_connect (G_OBJECT(main_window),
                       "destroy",
+                      G_CALLBACK(d_trajectory_control_stop),
+                      trajcontrol);
+    g_signal_connect (G_OBJECT(main_window),
+                      "destroy",
                       G_CALLBACK(gtk_main_quit),
                       NULL);
 
 
     /* Set layout */
     main_vbox = gtk_vbox_new(FALSE, 0);
+
     gtk_box_pack_start(GTK_BOX(main_vbox), menu_bar, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(main_vbox), viewport, TRUE, TRUE, 0);
     gtk_container_add(GTK_CONTAINER(main_window), main_vbox);
@@ -224,14 +249,23 @@ main(int argc, char* argv[])
     pos   = D_POS(d_pos_new_full(0.0, 0.0, 50.0));
 
     /*
+     * Trajectory control
+     */
+    trajcontrol = d_trajectory_control_new();
+
+    /*
      * Create the window and show it
      */
     create_main_window();
     gtk_widget_show_all(main_window);
 
+    d_trajectory_control_start(trajcontrol);
+
     /* Start program main loop */
     gtk_main();
 
+    d_trajectory_control_stop(trajcontrol);
+    g_object_unref(trajcontrol);
     g_object_unref(robot);
     g_object_unref(pos);
 
