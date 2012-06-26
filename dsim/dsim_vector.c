@@ -96,9 +96,10 @@ d_vector_new (size_t lenght)
 
 
 DVector*
-d_vector_memcpy (DVector    *dest,
-                 DVector    *src)
+d_vector_clone (DVector    *src)
 {
+    DVector *dest;
+    dest = d_vector_new (src->vector->size);
     gsl_vector_memcpy(dest->vector, src->vector);
     return dest;
 }
@@ -128,7 +129,7 @@ d_vector_sub (DVector   *a,
 {
     g_return_val_if_fail(D_IS_VECTOR(a), NULL);
     g_return_val_if_fail(D_IS_VECTOR(b), NULL);
-    g_return_val_if_fail(a->vector->size == a->vector->size, NULL);
+    g_return_val_if_fail(a->vector->size == b->vector->size, NULL);
 
     gsl_vector_sub(a->vector, b->vector);
 
@@ -141,7 +142,7 @@ d_vector_add (DVector   *a,
 {
     g_return_val_if_fail(D_IS_VECTOR(a), NULL);
     g_return_val_if_fail(D_IS_VECTOR(b), NULL);
-    g_return_val_if_fail(a->vector->size == a->vector->size, NULL);
+    g_return_val_if_fail(a->vector->size == b->vector->size, NULL);
 
     gsl_vector_sub(a->vector, b->vector);
 

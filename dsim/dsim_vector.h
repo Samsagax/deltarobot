@@ -37,8 +37,6 @@
 #define D_IS_VECTOR_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), D_TYPE_VECTOR))
 #define D_VECTOR_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), D_TYPE_VECTOR, DVectorClass))
 
-//TODO: Use GSL as underlying library
-
 /* Instance Structure of DVector */
 typedef struct _DVector DVector;
 struct _DVector {
@@ -62,8 +60,7 @@ DVector*    d_vector_new            (size_t     size);
 DVector*    d_vector_new_gsl        (gsl_vector *vector);
 
 /* Methods */
-DVector*    d_vector_memcpy         (DVector    *dest,
-                                     DVector    *src);
+DVector*    d_vector_clone          (DVector    *src);
 
 gdouble     d_vector_get            (DVector    *self,
                                      size_t     i);

@@ -249,11 +249,36 @@ DLinearTrajectory*  d_linear_trajectory_new_full    (DVector    *currentPosition
 
 /* Instance Structure of DJointTrajectory */
 typedef struct _DJointTrajectory           DJointTrajectory;
-typedef struct _DJointTrajectoryPrivate    DJTPrivate;
 struct _DJointTrajectory {
     GObject         parent_instance;
     /* private */
-    DJTPrivate      *priv;
+
+    /* Instant position */
+    DVector     *axes;
+
+    /* Axes Speed */
+    DVector     *speed;
+
+    /* Distance to current destination */
+    DVector     *deltaA;
+
+    /* Distance from current/next destination */
+    DVector     *deltaC;
+
+    /* Current destination */
+    DVector     *pointB;
+
+    /* Segment Time starts at -accTime */
+    gdouble     time;
+
+    /* Acceleration Time */
+    gdouble     accTime;
+
+    /* Step time for calculation */
+    gdouble     stepTime;
+
+    /* Total Movement Time */
+    gdouble     moveTime;
 };
 
 /* Class Structure of DJointTrajectory */

@@ -24,20 +24,6 @@
 
 #include "dsim_trajectory.h"
 
-/* Local Variables */
-struct _DJointTrajectoryPrivate {
-    /* private members of DJointTrajectory */
-    DVector     *axes;          /* Instant position */
-    DVector     *speed;         /* Axes Speed */
-    DVector     *deltaA;        /* Distance to current destination */
-    DVector     *deltaC;        /* Distance from current/next destination */
-    DVector     *pointB;        /* Current destination */
-    gdouble     time;           /* Segment Time starts at -accTime */
-    gdouble     accTime;        /* Acceleration Time */
-    gdouble     stepTime;       /* Step time for calculation */
-    gdouble     moveTime;       /* Total Movement Time */
-};
-
 /* Forward declarations */
 static void
 d_joint_trajectory_class_init           (DJointTrajectoryClass  *klass);
@@ -88,12 +74,11 @@ G_DEFINE_TYPE_WITH_CODE (DJointTrajectory,
                                                 d_joint_trajectory_interface_init));
 
 static void
-d_joint_trajectory_class_init ( DJointTrajectoryClass   *klass )
+d_joint_trajectory_class_init (DJointTrajectoryClass    *klass)
 {
     GObjectClass *goc = G_OBJECT_CLASS(klass);
     goc->dispose = d_joint_trajectory_dispose;
     goc->finalize = d_joint_trajectory_finalize;
-    g_type_class_add_private(klass, sizeof(DJTPrivate));
 }
 
 static void
@@ -106,45 +91,42 @@ d_joint_trajectory_interface_init (DITrajectoryInterface    *iface)
 }
 
 static void
-d_joint_trajectory_init ( DJointTrajectory  *self )
+d_joint_trajectory_init (DJointTrajectory   *self)
 {
-    DJTPrivate *priv;
-    self->priv = priv = D_JOINT_TRAJECTORY_GET_PRIVATE(self);
-    /* Initialize private fields */
-    priv->axes = d_axes_new();
-    priv->speed = d_speed_new();
-    priv->deltaA = d_axes_new();
-    priv->pointB = d_axes_new();
-    priv->deltaC = d_axes_new();
-    priv->time = 0.0;
-    priv->accTime = 0.0;
-    priv->moveTime = 0.0;
-    priv->stepTime = 0.0;
+    self->axes = NULL;
+    self->speed = NULL;
+    self->deltaA = NULL;
+    self->pointB = NULL;
+    self->deltaC = NULL;
+    self->time = 0.0;
+    self->accTime = 0.0;
+    self->moveTime = 0.0;
+    self->stepTime = 0.0;
 }
 
 static void
-d_joint_trajectory_dispose ( GObject    *obj )
+d_joint_trajectory_dispose (GObject    *obj)
 {
     DJointTrajectory *self = D_JOINT_TRAJECTORY(obj);
-    if (self->priv->axes) {
-        g_object_unref(self->priv->axes);
-        self->priv->axes = NULL;
+    if (self->axes) {
+        g_object_unref(self->axes);
+        self->axes = NULL;
     }
-    if (self->priv->speed) {
-        g_object_unref(self->priv->speed);
-        self->priv->speed = NULL;
+    if (self->speed) {
+        g_object_unref(self->speed);
+        self->speed = NULL;
     }
-    if (self->priv->deltaA) {
-        g_object_unref(self->priv->deltaA);
-        self->priv->deltaA = NULL;
+    if (self->deltaA) {
+        g_object_unref(self->deltaA);
+        self->deltaA = NULL;
     }
-    if (self->priv->pointB) {
-        g_object_unref(self->priv->pointB);
-        self->priv->pointB = NULL;
+    if (self->pointB) {
+        g_object_unref(self->pointB);
+        self->pointB = NULL;
     }
-    if (self->priv->deltaC) {
-        g_object_unref(self->priv->deltaC);
-        self->priv->deltaC = NULL;
+    if (self->deltaC) {
+        g_object_unref(self->deltaC);
+        self->deltaC = NULL;
     }
     /* Chain up */
     G_OBJECT_CLASS(d_joint_trajectory_parent_class)->dispose(obj);
@@ -164,9 +146,8 @@ d_joint_trajectory_has_next (DITrajectory   *self)
     g_return_val_if_fail(D_IS_JOINT_TRAJECTORY(self), FALSE);
 
     DJointTrajectory *joint = D_JOINT_TRAJECTORY(self);
-    DJTPrivate *priv = D_JOINT_TRAJECTORY_GET_PRIVATE(joint);
 
-    if (priv->time > priv->moveTime - priv->accTime) {
+    if (joint->time > joint->moveTime - joint->accTime) {
         return FALSE;
     }
     return TRUE;
@@ -176,9 +157,10 @@ static DVector*
 d_joint_trajectory_get_destination (DITrajectory    *self)
 {
     g_return_val_if_fail(D_IS_JOINT_TRAJECTORY(self), NULL);
+
     DJointTrajectory *joint = D_JOINT_TRAJECTORY(self);
-    DJTPrivate *priv = D_JOINT_TRAJECTORY_GET_PRIVATE(joint);
-    return priv->axes;
+
+    return joint->axes;
 }
 
 static DVector*
@@ -189,18 +171,17 @@ d_joint_trajectory_next (DITrajectory   *self)
     g_warning("d_joint_trajectory_next is a stub!!!");
 
     DJointTrajectory *joint = D_JOINT_TRAJECTORY(self);
-    DJTPrivate *priv = D_JOINT_TRAJECTORY_GET_PRIVATE(joint);
 
-    priv->time += priv->stepTime;
-    d_joint_trajectory_interpolate_lspb(priv->axes,
-                                   priv->deltaA,
-                                   priv->deltaC,
-                                   priv->pointB,
-                                   priv->moveTime,
-                                   priv->accTime,
-                                   priv->time);
+    joint->time += joint->stepTime;
+    d_joint_trajectory_interpolate_lspb(joint->axes,
+                                   joint->deltaA,
+                                   joint->deltaC,
+                                   joint->pointB,
+                                   joint->moveTime,
+                                   joint->accTime,
+                                   joint->time);
 
-    return priv->axes;
+    return joint->axes;
 }
 
 static gdouble
@@ -209,9 +190,8 @@ d_joint_trajectory_get_step_time (DITrajectory  *self)
     g_return_val_if_fail(D_IS_JOINT_TRAJECTORY(self), 0.0);
 
     DJointTrajectory *joint = D_JOINT_TRAJECTORY(self);
-    DJTPrivate *priv = D_JOINT_TRAJECTORY_GET_PRIVATE(joint);
 
-    return priv->stepTime;
+    return joint->stepTime;
 }
 
 static gdouble
@@ -233,6 +213,11 @@ d_joint_trajectory_calculate_move_time (DVector *deltaC,
         }
     }
     return max;
+}
+static void
+d_joint_trajectory_set_axes ()
+{
+
 }
 
 static void
@@ -264,6 +249,7 @@ d_joint_trajectory_interpolate_lspb (DVector *resPoint,
         }
     }
 }
+
 /* Public API */
 DJointTrajectory*
 d_joint_trajectory_new (DVector *currentPosition,
@@ -287,27 +273,27 @@ d_joint_trajectory_new_full (DVector    *currentPosition,
                              gdouble    accTime,
                              gdouble    stepTime)
 {
-    DJointTrajectory* djt;
-    djt = g_object_new (D_TYPE_JOINT_TRAJECTORY, NULL);
-    DJTPrivate *priv = D_JOINT_TRAJECTORY_GET_PRIVATE(djt);
+    DJointTrajectory *self;
+    self = g_object_new (D_TYPE_JOINT_TRAJECTORY, NULL);
 
-    d_vector_memcpy(priv->axes, currentPosition);
-    d_vector_memcpy(priv->deltaA, currentDestination);
-    d_vector_sub(priv->deltaA, currentPosition);
+    self->axes = d_vector_clone(currentPosition);
 
-    d_vector_memcpy(priv->deltaC, nextDestination);
-    d_vector_sub(priv->deltaC, currentDestination);
+    self->deltaA = d_vector_clone(currentDestination);
+    d_vector_sub(self->deltaA, currentPosition);
 
-    d_vector_memcpy(priv->pointB, currentDestination);
+    self->deltaC = d_vector_clone(nextDestination);
+    d_vector_sub(self->deltaC, currentDestination);
 
-    d_vector_memcpy(priv->speed, maxSpeed);
+    self->pointB = d_vector_clone(currentDestination);
 
-    priv->time = -accTime;
-    priv->accTime = accTime;
-    priv->stepTime = stepTime;
-    priv->moveTime = d_joint_trajectory_calculate_move_time (priv->deltaC,
+    self->speed = d_vector_clone(maxSpeed);
+
+    self->time = -accTime;
+    self->accTime = accTime;
+    self->stepTime = stepTime;
+    self->moveTime = d_joint_trajectory_calculate_move_time (self->deltaC,
                                                              maxSpeed,
                                                              accTime);
-    return djt;
+    return self;
 }
 
