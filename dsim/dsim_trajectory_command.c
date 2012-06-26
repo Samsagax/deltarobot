@@ -61,6 +61,7 @@ d_trajectory_command_dispose (GObject   *obj)
     switch (self->command_type) {
         case OT_MOVEJ:
             if (self->data) {
+                g_message("d_trajectory_command_dispose: Unref command data");
                 g_object_unref(self->data);
                 self->data = NULL;
             }

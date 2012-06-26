@@ -109,8 +109,6 @@ d_trajectory_control_class_init (DTrajectoryControlClass    *klass)
 static void
 d_trajectory_control_init (DTrajectoryControl   *self)
 {
-    g_warning("d_trajectory_control_init is a stub");
-
     self->exit_flag = FALSE;
     self->main_loop = NULL;
 
@@ -122,8 +120,8 @@ d_trajectory_control_init (DTrajectoryControl   *self)
     self->output_func = d_trajectory_control_default_output;
     self->output_data = NULL;
 
-    self->accelTime = 0.5;
-    self->decelTime = 0.5;
+    self->accelTime = 0.1;
+    self->decelTime = 0.1;
     self->stepTime = 0.05;
     g_message("d_trajectory_control_init finished");
 }
@@ -131,7 +129,6 @@ d_trajectory_control_init (DTrajectoryControl   *self)
 static void
 d_trajectory_control_dispose (GObject   *obj)
 {
-    g_warning("d_trajectory_control_dispose is a stub");
     DTrajectoryControl *self = D_TRAJECTORY_CONTROL(obj);
 
     if (self->main_loop) {
@@ -156,7 +153,6 @@ d_trajectory_control_dispose (GObject   *obj)
 static void
 d_trajectory_control_finalize (GObject  *obj)
 {
-    g_warning("d_trajectory_control_finalize is a stub");
     /* Chain Up */
     G_OBJECT_CLASS(d_trajectory_control_parent_class)->finalize(obj);
 }
@@ -173,14 +169,22 @@ d_trajectory_control_main_loop (gpointer    *trajectory_control)
     g_return_val_if_fail(D_IS_TRAJECTORY_CONTROL(trajectory_control), NULL);
     DTrajectoryControl *self = D_TRAJECTORY_CONTROL(trajectory_control);
 
-
+    g_message("d_trajectory_control_main_loop: Starting loop");
     /* Hardcoded orders */
     DVector *dest = d_axes_new_full(G_PI/4.0, G_PI/4.0, G_PI/4.0);
+    DVector *home = d_axes_new_full(0.0, 0.0, 0.0);
     DTrajectoryCommand *move1 = d_trajectory_command_new(OT_MOVEJ, dest);
+    DTrajectoryCommand *move2 = d_trajectory_command_new(OT_MOVEJ, home);
     d_trajectory_control_push_order(self, move1);
     d_trajectory_control_push_order(self, move1);
+    d_trajectory_control_push_order(self, move2);
+    d_trajectory_control_push_order(self, move2);
     g_object_unref(move1);
+    g_object_unref(move2);
     g_object_unref(dest);
+    g_object_unref(home);
+
+    g_message("d_trajectory_control_main_loop: Start waiting for orders");
     /* Start waiting for orders */
     while(!self->exit_flag) {
         /* Wait until order is available with a 2 second timeout */
@@ -188,15 +192,21 @@ d_trajectory_control_main_loop (gpointer    *trajectory_control)
         while(!order) {
             order = g_async_queue_timeout_pop(self->orders, 2.0 * G_TIME_SPAN_SECOND);
         }
+        g_message("d_trajectory_control_main_loop: Order recieved");
         /* Process the order */
         switch (order->command_type) {
             case OT_MOVEJ:
                 {
-                g_message("d_trajectory_control_main_loop: Received OT_MOVEJ");
-                DVector *destination = D_VECTOR(order->data);
-                DJointTrajectory *traj = d_trajectory_control_prepare_joint_trajectory(self, destination);
-                d_trajectory_control_execute_trajectory(self, D_ITRAJECTORY(traj));
-                g_object_unref(traj);
+                    g_message("d_trajectory_control_main_loop: Received OT_MOVEJ");
+                    DVector *destination = D_VECTOR(order->data);
+                    DJointTrajectory *traj;
+                    traj = d_trajectory_control_prepare_joint_trajectory(self,
+                                                    destination);
+                    d_trajectory_control_set_current_destination (self,
+                                                    destination);
+                    d_trajectory_control_execute_trajectory(self,
+                                                    D_ITRAJECTORY(traj));
+                    g_object_unref(traj);
                 }
                 break;
             case OT_MOVEL:
@@ -263,7 +273,6 @@ d_trajectory_control_execute_trajectory (DTrajectoryControl *self,
     timer_create(CLOCK_REALTIME, &event, &timerid);
     timer_settime(timerid, 0, &value, NULL);
 
-    d_trajectory_control_set_current_destination(self, d_trajectory_get_destination(traj));
     while(d_trajectory_has_next(traj)) {
             g_mutex_lock(&timer_mutex);
             g_cond_wait(&wakeup_cond, &timer_mutex);
@@ -276,6 +285,7 @@ d_trajectory_control_execute_trajectory (DTrajectoryControl *self,
             }
             d_trajectory_control_set_current_position(self, d_trajectory_next(traj));
     }
+    g_message("d_trajectory_control_execute_trajectory: Trajectory ended");
     timer_delete(timerid);
 }
 
