@@ -59,15 +59,17 @@ DVector*    d_vector_new            (size_t     size);
 
 DVector*    d_vector_new_gsl        (gsl_vector *vector);
 
-/* Methods */
 DVector*    d_vector_clone          (DVector    *src);
 
+/* Methods */
 gdouble     d_vector_get            (DVector    *self,
                                      size_t     i);
 
 void        d_vector_set            (DVector    *self,
                                      size_t     i,
                                      gdouble    x);
+
+gint        d_vector_length         (DVector    *self);
 
 DVector*    d_vector_sub            (DVector    *a,
                                      DVector    *b);

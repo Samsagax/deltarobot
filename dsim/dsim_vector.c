@@ -123,6 +123,12 @@ d_vector_set (DVector   *self,
     gsl_vector_set(self->vector, i, x);
 }
 
+gint
+d_vector_length (DVector    *self)
+{
+    return self->vector->size;
+}
+
 DVector*
 d_vector_sub (DVector   *a,
               DVector   *b)
