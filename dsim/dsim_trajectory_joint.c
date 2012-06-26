@@ -173,8 +173,6 @@ d_joint_trajectory_next (DITrajectory   *self)
 {
     g_return_val_if_fail(D_IS_JOINT_TRAJECTORY(self), NULL);
 
-    g_warning("d_joint_trajectory_next is a stub!!!");
-
     DJointTrajectory *joint = D_JOINT_TRAJECTORY(self);
 
     joint->time += joint->stepTime;
@@ -211,8 +209,8 @@ d_joint_trajectory_calculate_move_time (DVector *deltaC,
         2.0 * accTime
     };
     g_message("deltaC: %f, %f, %f", d_vector_get(deltaC, 0),
-                        d_vector_get(deltaC, 0),
-                        d_vector_get(deltaC, 0));
+                        d_vector_get(deltaC, 1),
+                        d_vector_get(deltaC, 2));
     gdouble max = values[0];
     {
         int i;
@@ -231,13 +229,13 @@ d_joint_trajectory_set_axes ()
 }
 
 static void
-d_joint_trajectory_interpolate_lspb (DVector *resPoint,
-                                DVector *deltaA,
-                                DVector *deltaC,
-                                DVector *pointB,
-                                gdouble moveTime,
-                                gdouble accelTime,
-                                gdouble segTime)
+d_joint_trajectory_interpolate_lspb (DVector    *resPoint,
+                                     DVector    *deltaA,
+                                     DVector    *deltaC,
+                                     DVector    *pointB,
+                                     gdouble    moveTime,
+                                     gdouble    accelTime,
+                                     gdouble    segTime)
 {
     gdouble tfactC, tfactA;
     if (segTime > accelTime) {
@@ -264,12 +262,12 @@ d_joint_trajectory_new (DVector *currentPosition,
                         DVector *nextDestination,
                         DVector *maxSpeed)
 {
-    return d_joint_trajectory_new_full ( currentPosition,
-                                         currentDestination,
-                                         nextDestination,
-                                         maxSpeed,
-                                         D_IT_DEFAULT_ACC_TIME,
-                                         D_IT_DEFAULT_STEP_TIME );
+    return d_joint_trajectory_new_full (currentPosition,
+                                        currentDestination,
+                                        nextDestination,
+                                        maxSpeed,
+                                        D_IT_DEFAULT_ACC_TIME,
+                                        D_IT_DEFAULT_STEP_TIME);
 }
 
 DJointTrajectory*
@@ -287,8 +285,8 @@ d_joint_trajectory_new_full (DVector    *currentPosition,
 
     self->move_destination = d_vector_clone(nextDestination);
 
-    self->deltaA = d_vector_clone(currentDestination);
-    d_vector_sub(self->deltaA, currentPosition);
+    self->deltaA = d_vector_clone(currentPosition);
+    d_vector_sub(self->deltaA, currentDestination);
 
     self->deltaC = d_vector_clone(nextDestination);
     d_vector_sub(self->deltaC, currentDestination);
@@ -301,8 +299,8 @@ d_joint_trajectory_new_full (DVector    *currentPosition,
     self->accTime = accTime;
     self->stepTime = stepTime;
     self->moveTime = d_joint_trajectory_calculate_move_time (self->deltaC,
-                                                             maxSpeed,
-                                                             accTime);
+                                                             self->speed,
+                                                             self->accTime);
     return self;
 }
 
