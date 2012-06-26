@@ -197,7 +197,6 @@ d_trajectory_control_main_loop (gpointer    *trajectory_control)
                 DJointTrajectory *traj = d_trajectory_control_prepare_joint_trajectory(self, destination);
                 d_trajectory_control_execute_trajectory(self, D_ITRAJECTORY(traj));
                 g_object_unref(traj);
-                g_object_unref(destination);
                 }
                 break;
             case OT_MOVEL:
@@ -345,7 +344,7 @@ d_trajectory_control_push_order (DTrajectoryControl *self,
 {
     g_return_if_fail(D_IS_TRAJECTORY_COMMAND(order));
 
-    g_async_queue_push(self->orders, order);
+    g_async_queue_push(self->orders, g_object_ref(order));
 }
 
 void
