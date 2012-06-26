@@ -89,6 +89,8 @@ d_trajectory_command_new (CommandType   cmdt,
     DTrajectoryCommand *dtc;
     dtc = g_object_new(D_TYPE_TRAJECTORY_COMMAND, NULL);
     dtc->command_type = cmdt;
-    dtc->data = data;
+    if (data) {
+        dtc->data = g_object_ref(data);
+    }
     return dtc;
 }
