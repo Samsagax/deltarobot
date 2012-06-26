@@ -259,6 +259,9 @@ struct _DJointTrajectory {
     /* Axes Speed */
     DVector     *speed;
 
+    /* Current destination */
+    DVector     *move_destination;
+
     /* Distance to current destination */
     DVector     *deltaA;
 

@@ -94,6 +94,7 @@ static void
 d_joint_trajectory_init (DJointTrajectory   *self)
 {
     self->axes = NULL;
+    self->move_destination = NULL;
     self->speed = NULL;
     self->deltaA = NULL;
     self->pointB = NULL;
@@ -111,6 +112,10 @@ d_joint_trajectory_dispose (GObject    *obj)
     if (self->axes) {
         g_object_unref(self->axes);
         self->axes = NULL;
+    }
+    if (self->move_destination) {
+        g_object_unref(self->move_destination);
+        self->move_destination = NULL;
     }
     if (self->speed) {
         g_object_unref(self->speed);
@@ -147,10 +152,10 @@ d_joint_trajectory_has_next (DITrajectory   *self)
 
     DJointTrajectory *joint = D_JOINT_TRAJECTORY(self);
 
-    if (joint->time > joint->moveTime - joint->accTime) {
-        return FALSE;
+    if (joint->time < joint->moveTime - joint->accTime) {
+        return TRUE;
     }
-    return TRUE;
+    return FALSE;
 }
 
 static DVector*
@@ -160,7 +165,7 @@ d_joint_trajectory_get_destination (DITrajectory    *self)
 
     DJointTrajectory *joint = D_JOINT_TRAJECTORY(self);
 
-    return joint->axes;
+    return joint->move_destination;
 }
 
 static DVector*
@@ -205,6 +210,9 @@ d_joint_trajectory_calculate_move_time (DVector *deltaC,
         abs(d_vector_get(deltaC, 2) / d_vector_get(speed, 2)),
         2.0 * accTime
     };
+    g_message("deltaC: %f, %f, %f", d_vector_get(deltaC, 0),
+                        d_vector_get(deltaC, 0),
+                        d_vector_get(deltaC, 0));
     gdouble max = values[0];
     {
         int i;
@@ -212,8 +220,10 @@ d_joint_trajectory_calculate_move_time (DVector *deltaC,
             max = fmax (values[i-1], values[i]);
         }
     }
+    g_message("d_joint_trajectory_calculate_move_time: move time: %f", max);
     return max;
 }
+
 static void
 d_joint_trajectory_set_axes ()
 {
@@ -230,23 +240,20 @@ d_joint_trajectory_interpolate_lspb (DVector *resPoint,
                                 gdouble segTime)
 {
     gdouble tfactC, tfactA;
-    if (segTime < accelTime) {
+    if (segTime > accelTime) {
+        tfactC = segTime / moveTime;
+        tfactA = 0.0;
+    } else {
         tfactC = pow(segTime + accelTime, 2.0)
                         / (4.0 * accelTime * moveTime);
         tfactA = pow(segTime - accelTime, 2.0)
                         / (4.0 * accelTime * accelTime);
-    } else {
-        tfactC = segTime / moveTime;
-        tfactA = 0.0;
     }
-    {
-        int i;
-        for (i = 0; i < 3; i++) {
-            d_vector_set(resPoint, i,
-                      d_vector_get(pointB, i)
-                    + d_vector_get(deltaC, i) * tfactC
-                    + d_vector_get(deltaA, i) * tfactA);
-        }
+    for (int i = 0; i < 3; i++) {
+        d_vector_set(resPoint, i,
+                  d_vector_get(pointB, i)
+                + d_vector_get(deltaC, i) * tfactC
+                + d_vector_get(deltaA, i) * tfactA);
     }
 }
 
@@ -277,6 +284,8 @@ d_joint_trajectory_new_full (DVector    *currentPosition,
     self = g_object_new (D_TYPE_JOINT_TRAJECTORY, NULL);
 
     self->axes = d_vector_clone(currentPosition);
+
+    self->move_destination = d_vector_clone(nextDestination);
 
     self->deltaA = d_vector_clone(currentDestination);
     d_vector_sub(self->deltaA, currentPosition);
