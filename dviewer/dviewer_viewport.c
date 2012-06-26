@@ -121,8 +121,6 @@ d_viewport_init (DViewport  *self)
     self->geometry = NULL;
     self->extaxes = NULL;
     self->button = 0;
-    //self->max_fps = 60;
-    //self->timer = 0;
     self->glconfig = d_viewport_configure_gl(FALSE);
     self->scene_center = d_pos_new_full(0.0, 0.0, 0.0);
     self->scene_distance = 300.0;
@@ -131,7 +129,6 @@ d_viewport_init (DViewport  *self)
     self->near_clip = 1.0;
     self->far_clip = 400.0;
     self->eye_angle = 25.0;
-    //self->zoom = 1.0;
 
     gtk_widget_set_gl_capability ( GTK_WIDGET(self),
                                    self->glconfig,
