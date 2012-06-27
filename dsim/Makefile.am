@@ -11,13 +11,14 @@ sources = \
 	dsim_vector.c \
 	dsim_pos.c \
 	dsim_axes.c \
+	dsim_speed.c \
 	dsim_geometry.c \
 	dsim_solver.c \
-	dsim_trajectory.c \
+	dsim_trajectory_interface.c \
 	dsim_trajectory_joint.c \
+	dsim_trajectory_linear.c \
 	dsim_trajectory_command.c \
-	dsim_trajectory_control.c \
-	dsim_speed.c
+	dsim_trajectory_control.c 
 
 lib_LTLIBRARIES = ../lib/libdsim.la
 ___lib_libdsim_la_SOURCES = ${sources}
