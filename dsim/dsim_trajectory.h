@@ -169,16 +169,16 @@ struct _DITrajectoryInterface {
 #define D_IT_DEFAULT_STEP_TIME  0.01
 
 /* Interface get type */
-GType       d_itrajectory_get_type  (void);
+GType       d_itrajectory_get_type          (void);
 
 /* Interface methods default implementations */
-DVector*    d_trajectory_get_destination(DITrajectory   *self);
+DVector*    d_trajectory_get_destination    (DITrajectory   *self);
 
-gboolean    d_trajectory_has_next       (DITrajectory   *self);
+gboolean    d_trajectory_has_next           (DITrajectory   *self);
 
-DVector*    d_trajectory_next           (DITrajectory   *self);
+DVector*    d_trajectory_next               (DITrajectory   *self);
 
-gdouble     d_trajectory_get_step_time  (DITrajectory   *self);
+gdouble     d_trajectory_get_step_time      (DITrajectory   *self);
 
 /* #######################  LINEAR TRAJECTORY  ######################### */
 /*
@@ -279,8 +279,8 @@ DLinearTrajectory*  d_linear_trajectory_new_full    (DVector    *currentPosition
 typedef struct _DJointTrajectory           DJointTrajectory;
 struct _DJointTrajectory {
     GObject         parent_instance;
-    /* private */
 
+    /* private */
     /* Instant position */
     DVector     *axes;
 
