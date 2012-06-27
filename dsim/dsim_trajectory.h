@@ -199,11 +199,39 @@ gdouble     d_trajectory_get_step_time  (DITrajectory   *self);
 
 /* Instance Structure of DLinearTrajectory */
 typedef struct _DLinearTrajectory           DLinearTrajectory;
-typedef struct _DLinearTrajectoryPrivate    DLTPrivate;
 struct _DLinearTrajectory {
     GObject         parent_instance;
+
     /* private */
-    DLTPrivate      *priv;
+    /* Instant position */
+    DVector     *pos;
+
+    /* Cartesian Speed */
+    DVector     *cSpeed;
+
+    /* Axes maximum speed */
+    DVector     *aSpeed;
+
+    /* Distance to current destination */
+    DVector     *deltaA;
+
+    /* Distance from current/next destination */
+    DVector     *deltaC;
+
+    /* Current destination */
+    DVector     *pointB;
+
+    /* Segment time starts at -accTime */
+    gdouble     time;
+
+    /* Acceleration Time */
+    gdouble     accTime;
+
+    /* Step time for calculation */
+    gdouble     stepTime;
+
+    /* Total movement time */
+    gdouble     moveTime;
 };
 
 /* Class Structure of DLinearTrajectory */
