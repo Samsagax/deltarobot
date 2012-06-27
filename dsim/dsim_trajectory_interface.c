@@ -19,12 +19,12 @@
  */
 
 /*
- * dsim_trajectory.c :
+ * dsim_trajectory_interface.c :
  */
 
 #include "dsim_trajectory.h"
 
-/* #####   DTRAJECTORYINTERFACE IMPLEMENTATION   ###################### */
+/* Implementation internals */
 G_DEFINE_INTERFACE(DITrajectory, d_itrajectory, G_TYPE_OBJECT);
 
 static void
@@ -32,6 +32,7 @@ d_itrajectory_default_init(DITrajectoryInterface   *klass)
 {
 }
 
+/* Public API */
 DVector*
 d_trajectory_get_destination (DITrajectory *self)
 {
