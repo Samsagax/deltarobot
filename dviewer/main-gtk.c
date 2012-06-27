@@ -22,7 +22,6 @@
  * main-gtk.c :
  */
 
-#include <stdlib.h>
 #include <gdk/gdkkeysyms.h>
 #include "dviewer_viewport.h"
 
@@ -32,11 +31,16 @@ static DGeometry            *robot;
 static DTrajectoryControl   *trajcontrol;
 static DPos                 *pos;
 
+static GtkWidget            *go_button;
+static GtkWidget            *axis_controls[3];
+
 /* Forward declarations */
 static GtkWidget*   create_menu_bar (GtkWidget *window);
+static GtkWidget*   create_controls (void);
 static void         create_main_window (void);
 static gboolean     key_handler (GtkWidget *widget, GdkEventKey *event, gpointer data);
 static void         increment_pos (DPos *pos, gdouble dx, gdouble dy, gdouble dz);
+static void         go_button_clicked (GtkButton *button, gpointer data);
 
 /*
  * Handle key pressed on main window
@@ -51,29 +55,20 @@ key_handler (GtkWidget      *widget,
     viewport = D_VIEWPORT(widget);
 
     switch (event->keyval) {
-        case GDK_KEY_w:
-            increment_pos(pos, 0.0, 0.0, 1.0);
-            d_viewport_set_pos(viewport, pos);
+        case GDK_KEY_Return:
+            gtk_button_clicked(go_button);
             break;
-        case GDK_KEY_s:
-            increment_pos(pos, 0.0, 0.0, -1.0);
-            d_viewport_set_pos(viewport, pos);
+        case GDK_KEY_t:
             break;
-        case GDK_KEY_a:
-            increment_pos(pos, 1.0, 0.0, 0.0);
-            d_viewport_set_pos(viewport, pos);
+        case GDK_KEY_g:
             break;
-        case GDK_KEY_d:
-            increment_pos(pos, 0.0, 1.0, 0.0);
-            d_viewport_set_pos(viewport, pos);
+        case GDK_KEY_y:
             break;
-        case GDK_KEY_q:
-            increment_pos(pos, 0.0, -1.0, 0.0);
-            d_viewport_set_pos(viewport, pos);
+        case GDK_KEY_h:
             break;
-        case GDK_KEY_e:
-            increment_pos(pos, -1.0, 0.0, 0.0);
-            d_viewport_set_pos(viewport, pos);
+        case GDK_KEY_r:
+            break;
+        case GDK_KEY_f:
             break;
         case GDK_KEY_Page_Up:
             d_viewport_set_scene_distance(viewport,
@@ -104,6 +99,24 @@ key_handler (GtkWidget      *widget,
     }
 
     return TRUE;
+}
+
+static void
+go_button_clicked (GtkButton *button,
+                  gpointer  data)
+{
+    DTrajectoryCommand *cmd;
+    DVector *axes;
+
+    axes = d_axes_new();
+    for (int i = 0; i < d_vector_length(axes); i++) {
+        d_vector_set (axes, i, gtk_spin_button_get_value(axis_controls[i]));
+    }
+    cmd = d_trajectory_command_new(OT_MOVEJ, axes);
+    d_trajectory_control_push_order(trajcontrol, cmd);
+
+    g_object_unref(axes);
+    g_object_unref(cmd);
 }
 
 static void
@@ -158,6 +171,7 @@ create_main_window (void)
 {
     GtkWidget *main_vbox;
     GtkWidget *viewport;
+    GtkWidget *controls;
     GtkWidget *menu_bar;
 
     /*
@@ -175,6 +189,11 @@ create_main_window (void)
     d_trajectory_control_set_output_func(trajcontrol, d_trajectory_viewport_link, viewport);
 
     /*
+     * Create the controls
+     */
+    controls = create_controls();
+
+    /*
      * Create Menus
      */
     menu_bar = create_menu_bar(main_window);
@@ -187,14 +206,14 @@ create_main_window (void)
                               "key_press_event",
                               G_CALLBACK(key_handler),
                               viewport );
-    g_signal_connect (G_OBJECT(main_window),
-                      "destroy",
-                      G_CALLBACK(d_trajectory_control_stop),
-                      trajcontrol);
-    g_signal_connect (G_OBJECT(main_window),
-                      "destroy",
-                      G_CALLBACK(gtk_main_quit),
-                      NULL);
+    g_signal_connect_swapped (G_OBJECT(main_window),
+                              "destroy",
+                              G_CALLBACK(d_trajectory_control_stop),
+                              trajcontrol);
+    g_signal_connect_swapped (G_OBJECT(main_window),
+                              "destroy",
+                              G_CALLBACK(gtk_main_quit),
+                              NULL);
 
 
     /* Set layout */
@@ -202,6 +221,7 @@ create_main_window (void)
 
     gtk_box_pack_start(GTK_BOX(main_vbox), menu_bar, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(main_vbox), viewport, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(main_vbox), controls, FALSE, FALSE, 0);
     gtk_container_add(GTK_CONTAINER(main_window), main_vbox);
 }
 
@@ -231,6 +251,59 @@ create_menu_bar (GtkWidget  *window)
     gtk_window_add_accel_group(GTK_WINDOW(window), accel_group);
 
     return gtk_item_factory_get_widget(item_factory, "<Main>");
+}
+
+static GtkWidget*
+create_controls (void)
+{
+    GtkWidget *hbox;
+    GtkWidget *table;
+
+    /*
+     * Table with spinbuttons
+     */
+    guint rows = 2;
+    guint columns = 3;
+    table = gtk_table_new(rows, columns, TRUE);
+
+    GtkWidget *axis_labels[] = {
+        gtk_label_new("Axis 1:"),
+        gtk_label_new("Axis 2:"),
+        gtk_label_new("Axis 3:"),
+    };
+
+    axis_controls[0] = gtk_spin_button_new_with_range(-G_PI/4.0, G_PI/2.0, G_PI/180.0);
+    axis_controls[1] = gtk_spin_button_new_with_range(-G_PI/4.0, G_PI/2.0, G_PI/180.0);
+    axis_controls[2] = gtk_spin_button_new_with_range(-G_PI/4.0, G_PI/2.0, G_PI/180.0);
+
+    for (int i = 0; i < columns; i++) {
+        gtk_table_attach_defaults(GTK_TABLE(table),
+                                  axis_labels[i],
+                                  i, i+1,
+                                  0, 1);
+        gtk_table_attach_defaults(GTK_TABLE(table),
+                                  axis_controls[i],
+                                  i, i+1,
+                                  1, 2);
+    }
+
+    /*
+     * Go! Button
+     */
+    go_button = gtk_button_new_with_label("GO!");
+    g_signal_connect(G_OBJECT(go_button),
+                     "clicked",
+                     G_CALLBACK(go_button_clicked),
+                     NULL);
+
+    /*
+     * Horizontal Box
+     */
+    hbox = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), go_button, FALSE, FALSE, 0);
+
+    return hbox;
 }
 
 /*
