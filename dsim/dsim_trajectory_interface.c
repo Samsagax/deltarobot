@@ -63,11 +63,26 @@ d_trajectory_get_step_time (DITrajectory    *self)
 
 void
 d_trajectory_interpolate_lspb (DVector  *res_point,
-                               DVector  *current_speed,
-                               DVector  *segment_speed,
+                               DVector  *start_speed,
+                               DVector  *end_speed,
                                DVector  *control_point,
                                gdouble  acceleration_time,
                                gdouble  time)
 {
-
+    gdouble fact_end, fact_start;
+    if (time > acceleration_time) {
+        fact_end = time;
+        fact_start = 0.0;
+    } else {
+        fact_end = pow(time + acceleration_time, 2.0)
+                        / (4.0 * acceleration_time);
+        fact_start = pow(time - acceleration_time, 2.0)
+                        / (4.0 * acceleration_time);
+    }
+    for (int i = 0; i < 3; i++) {
+        d_vector_set(res_point, i,
+                  d_vector_get(control_point, i)
+                + d_vector_get(end_speed, i) * fact_end
+                - d_vector_get(start_speed, i) * fact_start);
+    }
 }
