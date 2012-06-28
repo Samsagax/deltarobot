@@ -217,18 +217,17 @@ d_joint_trajectory_set_axes ()
 
 }
 
-
 /* Public API */
 DJointTrajectory*
-d_joint_trajectory_new (DVector *currentPosition,
-                        DVector *currentDestination,
-                        DVector *nextDestination,
-                        DVector *maxSpeed)
+d_joint_trajectory_new (DVector *current_axes,
+                        DVector *control_point,
+                        DVector *move_destination,
+                        DVector *max_speed)
 {
-    return d_joint_trajectory_new_full (currentPosition,
-                                        currentDestination,
-                                        nextDestination,
-                                        maxSpeed,
+    return d_joint_trajectory_new_full (current_axes,
+                                        control_point,
+                                        move_destination,
+                                        max_speed,
                                         D_IT_DEFAULT_ACC_TIME,
                                         D_IT_DEFAULT_STEP_TIME);
 }

@@ -332,17 +332,16 @@ struct _DJointTrajectoryClass {
 GType               d_joint_trajectory_get_type     (void);
 
 /* Methods */
-DJointTrajectory*   d_joint_trajectory_new          (DVector    *currentPosition,
-                                                     DVector    *currentDestination,
-                                                     DVector    *nextDestination,
-                                                     DVector    *maxSpeed );
+DJointTrajectory*   d_joint_trajectory_new          (DVector    *current_axes,
+                                                     DVector    *control_point,
+                                                     DVector    *move_destination,
+                                                     DVector    *max_speed);
 
-DJointTrajectory*   d_joint_trajectory_new_full     (DVector    *currentPosition,
-                                                     DVector    *currentDestination,
-                                                     DVector    *nextDestination,
-                                                     DVector    *maxSpeed,
-                                                     gdouble    accTime,
-                                                     gdouble    stepTime );
-
+DJointTrajectory*   d_joint_trajectory_new_full     (DVector    *current_axes,
+                                                     DVector    *control_point,
+                                                     DVector    *move_destination,
+                                                     DVector    *max_speed,
+                                                     gdouble    acceleration_time,
+                                                     gdouble    step_time);
 
 #endif   /* ----- #ifndef DSIM_TRAJ_INC  ----- */
