@@ -57,15 +57,6 @@ d_joint_trajectory_calculate_move_time  (DVector                *deltaC,
                                          DVector                *speed,
                                          gdouble                accTime);
 
-static void
-d_joint_trajectory_interpolate_lspb     (DVector                *resPoint,
-                                         DVector                *deltaA,
-                                         DVector                *deltaC,
-                                         DVector                *pointB,
-                                         gdouble                moveTime,
-                                         gdouble                accelTime,
-                                         gdouble                segTime);
-
 /* Implementation internals */
 G_DEFINE_TYPE_WITH_CODE (DJointTrajectory,
                          d_joint_trajectory,
@@ -174,16 +165,15 @@ d_joint_trajectory_next (DITrajectory   *self)
 
     DJointTrajectory *joint = D_JOINT_TRAJECTORY(self);
 
-    joint->time += joint->stepTime;
-    d_joint_trajectory_interpolate_lspb(joint->axes,
-                                   joint->deltaA,
-                                   joint->deltaC,
-                                   joint->pointB,
-                                   joint->moveTime,
-                                   joint->accTime,
-                                   joint->time);
+    joint->time += joint->step_time;
+    d_trajectory_interpolate_lspb(joint->current_axes,
+                                  joint->start_speed,
+                                  joint->end_speed,
+                                  joint->control_point,
+                                  joint->acceleration_time,
+                                  joint->time);
 
-    return joint->axes;
+    return joint->current_axes;
 }
 
 static gdouble
@@ -227,32 +217,6 @@ d_joint_trajectory_set_axes ()
 
 }
 
-static void
-d_joint_trajectory_interpolate_lspb (DVector    *resPoint,
-                                     DVector    *deltaA,
-                                     DVector    *deltaC,
-                                     DVector    *pointB,
-                                     gdouble    moveTime,
-                                     gdouble    accelTime,
-                                     gdouble    segTime)
-{
-    gdouble tfactC, tfactA;
-    if (segTime > accelTime) {
-        tfactC = segTime / moveTime;
-        tfactA = 0.0;
-    } else {
-        tfactC = pow(segTime + accelTime, 2.0)
-                        / (4.0 * accelTime * moveTime);
-        tfactA = pow(segTime - accelTime, 2.0)
-                        / (4.0 * accelTime * accelTime);
-    }
-    for (int i = 0; i < 3; i++) {
-        d_vector_set(resPoint, i,
-                  d_vector_get(pointB, i)
-                + d_vector_get(deltaC, i) * tfactC
-                + d_vector_get(deltaA, i) * tfactA);
-    }
-}
 
 /* Public API */
 DJointTrajectory*
