@@ -180,6 +180,13 @@ DVector*    d_trajectory_next               (DITrajectory   *self);
 
 gdouble     d_trajectory_get_step_time      (DITrajectory   *self);
 
+void        d_trajectory_interpolate_lspb   (DVector        *res_point,
+                                             DVector        *start_speed,
+                                             DVector        *end_speed,
+                                             DVector        *control_point,
+                                             gdouble        acceleration_time,
+                                             gdouble        time);
+
 /* #######################  LINEAR TRAJECTORY  ######################### */
 /*
  * DLinearTrajectory implements DITrajectory Interface
