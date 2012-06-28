@@ -58,7 +58,7 @@ key_handler (GtkWidget      *widget,
 
     switch (event->keyval) {
         case GDK_KEY_Return:
-            gtk_button_joint_clicked(go_button_joint);
+            gtk_button_clicked(go_button_joint);
             break;
         case GDK_KEY_t:
             break;
