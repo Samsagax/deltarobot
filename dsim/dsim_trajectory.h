@@ -289,34 +289,37 @@ struct _DJointTrajectory {
 
     /* private */
     /* Instant position */
-    DVector     *axes;
+    DVector     *current_axes;
 
-    /* Axes Speed */
-    DVector     *speed;
+//    /* Axes Max Speed (end_speed)*/
+//    DVector     *speed;
 
     /* Current destination */
     DVector     *move_destination;
 
-    /* Distance to current destination */
-    DVector     *deltaA;
+    /* Start and end speeds (end_speed = max_speed) */
+    DVector     *start_speed;
+    DVector     *end_speed;
 
-    /* Distance from current/next destination */
-    DVector     *deltaC;
+    /* Control point (current destination) */
+    DVector     *control_point;
 
-    /* Current destination */
-    DVector     *pointB;
+//    /* Distance to current destination */
+//    DVector     *deltaA;
+//
+//    /* Distance from current/next destination */
+//    DVector     *deltaC;
+//
+//    /* Current destination */
+//    DVector     *pointB;
 
-    /* Segment Time starts at -accTime */
+    /* Time constants for this movement */
+    gdouble     acceleration_time;
+    gdouble     step_time;
+    gdouble     move_time;
+
+    /* Segment time counter (starts at -accTime) */
     gdouble     time;
-
-    /* Acceleration Time */
-    gdouble     accTime;
-
-    /* Step time for calculation */
-    gdouble     stepTime;
-
-    /* Total Movement Time */
-    gdouble     moveTime;
 };
 
 /* Class Structure of DJointTrajectory */
