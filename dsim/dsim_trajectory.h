@@ -99,6 +99,10 @@ struct _DTrajectoryControl {
     DVector         *current_destination;
     DVector         *current_position;
 
+    /* Absolute positions in axes space */
+    DVector         *current_destination_axes;
+    DVector         *current_position_axes;
+
     /* Acceleration time for both ends */
     gdouble         accelTime;
     gdouble         decelTime;      /* Set equal to accelTime for now */
@@ -114,8 +118,12 @@ struct _DTrajectoryControl {
     GThread         *main_loop;
 
     /* Output function */
-    DTrajectoryOutputFunc   output_func;
-    gpointer                output_data;
+    DTrajectoryOutputFunc   joint_out_fun;
+    gpointer                joint_out_data;
+
+    /* Output function for linear trajectories */
+    DTrajectoryOutputFunc   linear_out_fun;
+    gpointer                linear_out_data;
 };
 
 typedef struct _DTrajectoryControlClass DTrajectoryControlClass;
@@ -212,7 +220,6 @@ struct _DLinearTrajectory {
     /* private */
     /* Instant position */
     DVector     *current_pos;
-    DVector     *current_axes;
 
     /* Current destination */
     DVector     *move_destination;

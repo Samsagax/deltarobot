@@ -113,12 +113,17 @@ d_trajectory_control_init (DTrajectoryControl   *self)
     self->main_loop = NULL;
 
     self->orders = g_async_queue_new();
-    self->current_position = d_axes_new();
-    self->current_destination = d_axes_new();
+
+    self->current_position = d_pos_new();
+    self->current_destination = d_pos_new();
+    self->current_position_axes = d_axes_new();
+    self->current_destination_axes = d_axes_new();
     self->max_speed = d_speed_new_full(G_PI/8.0, G_PI/8.0, G_PI/8.0);
 
-    self->output_func = d_trajectory_control_default_output;
-    self->output_data = NULL;
+    self->linear_out_fun = d_trajectory_control_default_output;
+    self->linear_out_data = NULL;
+    self->joint_out_fun = d_trajectory_control_default_output;
+    self->joint_out_data = NULL;
 
     self->accelTime = 0.1;
     self->decelTime = 0.1;
@@ -145,6 +150,14 @@ d_trajectory_control_dispose (GObject   *obj)
     if (self->current_destination) {
         g_object_unref(self->current_destination);
         self->current_destination = NULL;
+    }
+    if (self->current_position_axes) {
+        g_object_unref(self->current_position_axes);
+        self->current_position_axes = NULL;
+    }
+    if (self->current_destination_axes) {
+        g_object_unref(self->current_destination_axes);
+        self->current_destination_axes = NULL;
     }
     /* Chain Up */
     G_OBJECT_CLASS(d_trajectory_control_parent_class)->dispose(obj);
@@ -300,15 +313,37 @@ d_trajectory_control_set_current_destination (DTrajectoryControl    *self,
 }
 
 static void
+d_trajectory_control_set_current_destination_axes (DTrajectoryControl   *self,
+                                                   DVector              *dest_axes)
+{
+    if (self->current_destination_axes) {
+        g_object_unref(self->current_destination_axes);
+    }
+    self->current_destination_axes = g_object_ref(dest_axes);
+}
+
+static void
 d_trajectory_control_set_current_position (DTrajectoryControl   *self,
                                            DVector              *pos)
 {
     /* Call the output function first so we can avoid delays */
-    self->output_func(pos, self->output_data);
+    self->linear_out_fun(pos, self->linear_out_data);
     if (self->current_position) {
         g_object_unref(self->current_position);
     }
     self->current_position = g_object_ref(pos);
+}
+
+static void
+d_trajectory_control_set_current_position_axes (DTrajectoryControl  *self,
+                                                DVector             *axes)
+{
+    /* Call the output function first so we can avoid delays */
+    self->joint_out_fun(axes, self->joint_out_data);
+    if (self->current_position_axes) {
+        g_object_unref(self->current_position_axes);
+    }
+    self->current_position_axes = g_object_ref(axes);
 }
 
 static void
@@ -358,12 +393,23 @@ d_trajectory_control_push_order (DTrajectoryControl *self,
 }
 
 void
-d_trajectory_control_set_output_func (DTrajectoryControl    *self,
-                                      DTrajectoryOutputFunc func,
-                                      gpointer              output_data)
+d_trajectory_control_set_linear_out_fun (DTrajectoryControl     *self,
+                                         DTrajectoryOutputFunc  out_fun,
+                                         gpointer               out_data)
 {
     g_return_if_fail(D_IS_TRAJECTORY_CONTROL(self));
 
-    self->output_data = output_data;
-    self->output_func = func;
+    self->linear_out_data = out_data;
+    self->linear_out_fun = out_fun;
+}
+
+void
+d_trajectory_control_set_joint_out_fun (DTrajectoryControl      *self,
+                                        DTrajectoryOutputFunc   out_fun,
+                                        gpointer                out_data)
+{
+    g_return_if_fail(D_IS_TRAJECTORY_CONTROL(self));
+
+    self->joint_out_data = out_data;
+    self->joint_out_fun = out_fun;
 }
