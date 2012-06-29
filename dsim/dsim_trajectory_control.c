@@ -79,7 +79,8 @@ static DJointTrajectory* d_trajectory_control_prepare_joint_trajectory
 
 static void     d_trajectory_control_execute_trajectory
                         (DTrajectoryControl         *self,
-                         DITrajectory               *traj);
+                         DITrajectory               *traj,
+                         CommandType                order_type);
 
 static void     d_trajectory_control_default_output
                         (DVector                    *position,
@@ -228,10 +229,11 @@ d_trajectory_control_main_loop (gpointer    *trajectory_control)
                     DJointTrajectory *traj;
                     traj = d_trajectory_control_prepare_joint_trajectory(self,
                                                     destination);
-                    d_trajectory_control_set_current_destination (self,
+                    d_trajectory_control_set_current_destination_axes (self,
                                                     destination);
                     d_trajectory_control_execute_trajectory(self,
-                                                    D_ITRAJECTORY(traj));
+                                                    D_ITRAJECTORY(traj),
+                                                    order->command_type);
                     g_object_unref(traj);
                 }
                 break;
@@ -266,11 +268,27 @@ static DJointTrajectory*
 d_trajectory_control_prepare_joint_trajectory (DTrajectoryControl   *self,
                                                DVector              *destination)
 {
-    g_message("d_trajectory_control_prepare_joint_trajectory: Preparing joint trajectory");
+    g_message("d_trajectory_control_prepare_joint_trajectory: Preparing trajectory");
     DJointTrajectory *traj;
-    traj = d_joint_trajectory_new_full(self->current_position,
-                                       self->current_destination,
+    traj = d_joint_trajectory_new_full(self->current_position_axes,
+                                       self->current_destination_axes,
                                        destination,
+                                       self->max_speed,
+                                       self->accelTime,
+                                       self->stepTime);
+    return traj;
+}
+
+static DLinearTrajectory*
+d_trajectory_control_prepare_linear_trajectory (DTrajectoryControl *self,
+                                                DVector            *destination)
+{
+    g_message("d_trajectory_control_prepare_linear_trajectory: Preparing trajectory");
+    DLinearTrajectory *traj;
+    traj = d_linear_trajectory_new_full(self->current_position_axes,
+                                       self->current_destination_axes,
+                                       destination,
+                                       self->max_speed,
                                        self->max_speed,
                                        self->accelTime,
                                        self->stepTime);
@@ -279,7 +297,8 @@ d_trajectory_control_prepare_joint_trajectory (DTrajectoryControl   *self,
 
 static void
 d_trajectory_control_execute_trajectory (DTrajectoryControl *self,
-                                         DITrajectory       *traj)
+                                         DITrajectory       *traj,
+                                         CommandType        order_type)
 {
     timer_t timerid;
     struct itimerspec value;
@@ -309,7 +328,16 @@ d_trajectory_control_execute_trajectory (DTrajectoryControl *self,
                 timer_delete(timerid);
                 return;
             }
-            d_trajectory_control_set_current_position(self, d_trajectory_next(traj));
+            switch (order_type) {
+                case OT_MOVEJ:
+                    d_trajectory_control_set_current_position_axes(self, d_trajectory_next(traj));
+                    break;
+                case OT_MOVEL:
+                    d_trajectory_control_set_current_position(self, d_trajectory_next(traj));
+                    break;
+                default:
+                    g_error("d_trajectory_control_execute_trajectory: unknown trajectory type!");
+            }
     }
     g_message("d_trajectory_control_execute_trajectory: Trajectory ended");
     timer_delete(timerid);
