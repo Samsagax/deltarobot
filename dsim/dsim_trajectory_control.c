@@ -58,9 +58,17 @@ static void     d_trajectory_control_set_current_position
                         (DTrajectoryControl         *self,
                          DVector                    *current_position);
 
+static void     d_trajectory_control_set_current_position_axes
+                        (DTrajectoryControl         *self,
+                         DVector                    *current_position_axes);
+
 static void     d_trajectory_control_set_current_destination
                         (DTrajectoryControl         *self,
                          DVector                    *current_destination);
+
+static void     d_trajectory_control_set_current_destination_axes
+                        (DTrajectoryControl         *self,
+                         DVector                    *current_destination_axes);
 
 static gpointer d_trajectory_control_main_loop
                         (gpointer                   *trajectory_control);
