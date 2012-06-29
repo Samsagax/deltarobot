@@ -291,9 +291,6 @@ struct _DJointTrajectory {
     /* Instant position */
     DVector     *current_axes;
 
-//    /* Axes Max Speed (end_speed)*/
-//    DVector     *speed;
-
     /* Current destination */
     DVector     *move_destination;
 
@@ -303,15 +300,6 @@ struct _DJointTrajectory {
 
     /* Control point (current destination) */
     DVector     *control_point;
-
-//    /* Distance to current destination */
-//    DVector     *deltaA;
-//
-//    /* Distance from current/next destination */
-//    DVector     *deltaC;
-//
-//    /* Current destination */
-//    DVector     *pointB;
 
     /* Time constants for this movement */
     gdouble     acceleration_time;
