@@ -26,22 +26,36 @@
 
 /* Forward declarations */
 static void
-d_linear_trajectory_interface_init  (DITrajectoryInterface  *iface);
+d_linear_trajectory_interface_init      (DITrajectoryInterface  *iface);
 
 static void
-d_linear_trajectory_class_init      (DLinearTrajectoryClass *klass);
+d_linear_trajectory_class_init          (DLinearTrajectoryClass *klass);
 
 static void
-d_linear_trajectory_init            (DLinearTrajectory      *self);
+d_linear_trajectory_init                (DLinearTrajectory      *self);
 
 static void
-d_linear_trajectory_dispose         (GObject                *obj);
+d_linear_trajectory_dispose             (GObject                *obj);
 
 static void
-d_linear_trajectory_finalize        (GObject                *obj);
+d_linear_trajectory_finalize            (GObject                *obj);
 
 static DVector*
-d_linear_trajectory_next            (DITrajectory           *self);
+d_linear_trajectory_get_destination     (DITrajectory           *self);
+
+static gboolean
+d_linear_trajectory_has_next            (DITrajectory           *self);
+
+static DVector*
+d_linear_trajectory_next                (DITrajectory           *self);
+
+static gdouble
+d_linear_trajectory_get_step_time       (DITrajectory           *self);
+
+static gdouble
+d_linear_trajectory_calculate_move_time (DVector                *deltaC,
+                                         DVector                *speed,
+                                         gdouble                acceleration_time);
 
 /* Implementation Internals */
 G_DEFINE_TYPE_WITH_CODE (DLinearTrajectory,
@@ -53,7 +67,10 @@ G_DEFINE_TYPE_WITH_CODE (DLinearTrajectory,
 static void
 d_linear_trajectory_interface_init (DITrajectoryInterface   *iface)
 {
+    iface->get_destination = d_linear_trajectory_get_destination;
+    iface->has_next = d_linear_trajectory_has_next;
     iface->next = d_linear_trajectory_next;
+    iface->get_step_time = d_linear_trajectory_get_step_time;
 }
 
 static void
@@ -67,18 +84,16 @@ d_linear_trajectory_class_init (DLinearTrajectoryClass  *klass)
 static void
 d_linear_trajectory_init (DLinearTrajectory *self)
 {
-    g_warning("d_linear_trajectory_init is a stub");
-
-    self->pos = NULL;
-    self->aSpeed = NULL;
-    self->cSpeed = NULL;
-    self->deltaA = NULL;
-    self->pointB = NULL;
-    self->deltaC = NULL;
+    self->current_pos = NULL;
+    self->move_destination = NULL;
+    self->start_speed = NULL;
+    self->end_speed = NULL;
+    self->axes_speed = NULL;
+    self->control_point = NULL;
+    self->acceleration_time = 0.0;
+    self->step_time = 0.0;
+    self->move_time = 0.0;
     self->time = 0.0;
-    self->accTime = 0.0;
-    self->moveTime = 0.0;
-    self->stepTime = 0.0;
 }
 
 static void
@@ -87,30 +102,27 @@ d_linear_trajectory_dispose (GObject    *obj)
     g_warning("d_linear_trajectory_dispose is a stub");
 
     DLinearTrajectory *self = D_LINEAR_TRAJECTORY(obj);
-    if (self->pos) {
-        g_object_unref(self->pos);
-        self->pos = NULL;
+    if (self->current_pos) {
+        g_object_unref(self->current_pos);
+        self->current_pos = NULL;
     }
-    if (self->aSpeed) {
-        g_object_unref(self->aSpeed);
-        self->aSpeed = NULL;
+    if (self->move_destination) {
+        g_object_unref(self->move_destination);
+        self->move_destination = NULL;
     }
-    if (self->cSpeed) {
-        g_object_unref(self->cSpeed);
-        self->cSpeed = NULL;
+    if (self->start_speed) {
+        g_object_unref(self->start_speed);
+        self->start_speed = NULL;
     }
-    if (self->deltaA) {
-        g_object_unref(self->deltaA);
-        self->deltaA = NULL;
+    if (self->end_speed) {
+        g_object_unref(self->end_speed);
+        self->end_speed = NULL;
     }
-    if (self->pointB) {
-        g_object_unref(self->pointB);
-        self->pointB = NULL;
+    if (self->control_point) {
+        g_object_unref(self->control_point);
+        self->control_point = NULL;
     }
-    if (self->deltaC) {
-        g_object_unref(self->deltaC);
-        self->deltaC = NULL;
-    }
+
     /* Chain up */
     G_OBJECT_CLASS(d_linear_trajectory_parent_class)->dispose(obj);
 }
@@ -122,11 +134,57 @@ d_linear_trajectory_finalize (GObject   *obj)
     G_OBJECT_CLASS(d_linear_trajectory_parent_class)->finalize(obj);
 }
 
+static gboolean
+d_linear_trajectory_has_next (DITrajectory  *self)
+{
+    g_return_val_if_fail(D_IS_LINEAR_TRAJECTORY(self), FALSE);
+
+    DLinearTrajectory *linear = D_LINEAR_TRAJECTORY(self);
+
+    if (linear->time < linear->move_time - linear->acceleration_time) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static DVector*
+d_linear_trajectory_get_destination (DITrajectory    *self)
+{
+    g_return_val_if_fail(D_IS_LINEAR_TRAJECTORY(self), NULL);
+
+    DLinearTrajectory *linear = D_LINEAR_TRAJECTORY(self);
+
+    return linear->move_destination;
+}
+
+static gdouble
+d_linear_trajectory_get_step_time (DITrajectory     *self)
+{
+    g_return_val_if_fail(D_IS_LINEAR_TRAJECTORY(self), 0.0);
+
+    DLinearTrajectory *linear = D_LINEAR_TRAJECTORY(self);
+
+    return linear->step_time;
+}
+
 static DVector*
 d_linear_trajectory_next (DITrajectory  *self)
 {
     g_warning("d_linear_trajectory_next is a stub!!!");
-    return d_pos_new();
+
+    g_return_val_if_fail(D_IS_LINEAR_TRAJECTORY(self), NULL);
+
+    DLinearTrajectory *linear = D_LINEAR_TRAJECTORY(self);
+
+    linear->time += linear->step_time;
+    d_trajectory_interpolate_lspb(linear->current_pos,
+                                  linear->start_speed,
+                                  linear->end_speed,
+                                  linear->control_point,
+                                  linear->acceleration_time,
+                                  linear->time);
+
+    return linear->current_pos;
 }
 
 /* Public API */
