@@ -19,7 +19,7 @@
  */
 
 /*
- * dsim_traj.h : Trajectory dispatcher for the Delta Robot Simulator
+ * dsim_trajectory.h : Trajectory dispatcher for the Delta Robot Simulator
  */
 
 #ifndef  DSIM_TRAJ_INC
