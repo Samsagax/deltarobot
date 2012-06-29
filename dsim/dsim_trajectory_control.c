@@ -80,7 +80,7 @@ static DJointTrajectory* d_trajectory_control_prepare_joint_trajectory
 static void     d_trajectory_control_execute_trajectory
                         (DTrajectoryControl         *self,
                          DITrajectory               *traj,
-                         CommandType                order_type);
+                         DCommandType               order_type);
 
 static void     d_trajectory_control_default_output
                         (DVector                    *position,
@@ -298,7 +298,7 @@ d_trajectory_control_prepare_linear_trajectory (DTrajectoryControl *self,
 static void
 d_trajectory_control_execute_trajectory (DTrajectoryControl *self,
                                          DITrajectory       *traj,
-                                         CommandType        order_type)
+                                         DCommandType       order_type)
 {
     timer_t timerid;
     struct itimerspec value;

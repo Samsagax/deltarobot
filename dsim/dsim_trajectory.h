@@ -47,19 +47,19 @@
 #define D_IS_TRAJECTORY_COMMAND_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE ((klass), D_TYPE_TRAJECTORY_COMMAND))
 #define D_TRAJECTORY_COMMAND_GET_CLASS(obj)     (G_TYPE_INSTANCE_GET_CLASS ((obj), D_TYPE_TRAJECTORY_COMMAND, DTrajectoryCommandClass))
 
-typedef enum CommandType {
+typedef enum DCommandType{
     OT_MOVEJ,
     OT_MOVEL,
     OT_WAIT,
     OT_END,
-} CommandType;
+} DCommandType;
 
 /* Instance Structure of DTrajectoryCommand */
 typedef struct _DTrajectoryCommand DTrajectoryCommand;
 struct _DTrajectoryCommand {
     GObject         parent_instance;
 
-    CommandType     command_type;
+    DCommandType    command_type;
     gpointer        data;
 };
 
@@ -72,7 +72,7 @@ struct _DTrajectoryCommandClass {
 /* Register DTrajectoryCommand type */
 GType               d_trajectory_command_get_type       (void);
 
-DTrajectoryCommand* d_trajectory_command_new            (CommandType    cmdt,
+DTrajectoryCommand* d_trajectory_command_new            (DCommandType   cmdt,
                                                          gpointer       data);
 
 /* ##########################  TRAJECTORY CONTROL  ######################*/

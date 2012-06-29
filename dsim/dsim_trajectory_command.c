@@ -61,7 +61,7 @@ d_trajectory_command_dispose (GObject   *obj)
     switch (self->command_type) {
         case OT_MOVEJ:
             if (self->data) {
-                g_message("d_trajectory_command_dispose: Unref command data");
+                g_message("d_trajectory_command_dispose: unref OT_MOVEJ command data");
                 g_object_unref(self->data);
                 self->data = NULL;
             }
@@ -69,7 +69,7 @@ d_trajectory_command_dispose (GObject   *obj)
         case OT_END:
             break;
         default:
-            g_warning("cannot handle CommandType %i", self->command_type);
+            g_warning("cannot handle DCommandType %i", self->command_type);
             break;
     }
     G_OBJECT_CLASS(d_trajectory_command_parent_class)->dispose(obj);
@@ -84,7 +84,7 @@ d_trajectory_command_finalize (GObject  *obj)
 
 /* Public API */
 DTrajectoryCommand*
-d_trajectory_command_new (CommandType   cmdt,
+d_trajectory_command_new (DCommandType  cmdt,
                           gpointer      data)
 {
     DTrajectoryCommand *dtc;
