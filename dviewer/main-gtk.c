@@ -191,7 +191,7 @@ create_main_window (void)
     */
     viewport = d_viewport_new_with_pos(robot, pos);
     d_viewport_set_scene_center_xyz(D_VIEWPORT(viewport), 0.0, 0.0, 30.0);
-    d_trajectory_control_set_output_func(trajcontrol, d_trajectory_viewport_link, viewport);
+    d_trajectory_control_set_joint_out_fun(trajcontrol, d_trajectory_viewport_link, viewport);
 
     /*
      * Create the controls
