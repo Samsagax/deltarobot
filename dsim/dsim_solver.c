@@ -33,6 +33,10 @@ d_solver_solve_direct (DGeometry    *geometry,
                        DVector      *axes,
                        DVector      *pos)
 {
+    g_return_if_fail(D_IS_GEOMETRY(geometry));
+    g_return_if_fail(D_IS_VECTOR(axes));
+    g_return_if_fail(D_IS_VECTOR(pos));
+
     //TODO: Checkear que los centros no sean colineales
     //TODO: Use GError for non-reachable positions
 
