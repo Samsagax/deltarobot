@@ -211,34 +211,31 @@ struct _DLinearTrajectory {
 
     /* private */
     /* Instant position */
-    DVector     *pos;
-
-    /* Cartesian Speed */
-    DVector     *cSpeed;
-
-    /* Axes maximum speed */
-    DVector     *aSpeed;
-
-    /* Distance to current destination */
-    DVector     *deltaA;
-
-    /* Distance from current/next destination */
-    DVector     *deltaC;
+    DVector     *current_pos;
+    DVector     *current_axes;
 
     /* Current destination */
-    DVector     *pointB;
+    DVector     *move_destination;
 
-    /* Segment time starts at -accTime */
+    /* Start and end speeds (end_speed = cartesian_speed) */
+    DVector     *start_speed;
+    DVector     *end_speed;
+
+    /* Axes maximum speed, currently not checked */
+    DVector     *axes_speed;
+
+    /* Control point (current destination) */
+    DVector     *control_point;
+
+    /* Time constants for this movement */
+    gdouble     acceleration_time;
+    gdouble     step_time;
+
+    /* Move time estimated */
+    gdouble     move_time;
+
+    /* Segment time counter (starts at -accTime) */
     gdouble     time;
-
-    /* Acceleration Time */
-    gdouble     accTime;
-
-    /* Step time for calculation */
-    gdouble     stepTime;
-
-    /* Total movement time */
-    gdouble     moveTime;
 };
 
 /* Class Structure of DLinearTrajectory */
