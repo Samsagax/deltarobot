@@ -114,6 +114,7 @@ d_trajectory_control_init (DTrajectoryControl   *self)
 
     self->orders = g_async_queue_new();
 
+    self->geometry = NULL;
     self->current_position = d_pos_new();
     self->current_destination = d_pos_new();
     self->current_position_axes = d_axes_new();
@@ -142,6 +143,10 @@ d_trajectory_control_dispose (GObject   *obj)
     if (self->orders) {
         g_async_queue_unref(self->orders);
         self->orders = NULL;
+    }
+    if (self->geometry) {
+        g_object_unref(self->geometry);
+        self->geometry = NULL;
     }
     if (self->current_position) {
         g_object_unref(self->current_position);
@@ -310,6 +315,10 @@ d_trajectory_control_set_current_destination (DTrajectoryControl    *self,
         g_object_unref(self->current_destination);
     }
     self->current_destination = g_object_ref(dest);
+    d_solver_solve_inverse(self->geometry,
+                           dest,
+                           self->current_destination_axes,
+                           NULL);
 }
 
 static void
@@ -320,6 +329,9 @@ d_trajectory_control_set_current_destination_axes (DTrajectoryControl   *self,
         g_object_unref(self->current_destination_axes);
     }
     self->current_destination_axes = g_object_ref(dest_axes);
+    d_solver_solve_direct(self->geometry,
+                          dest_axes,
+                          self->current_destination);
 }
 
 static void
@@ -332,6 +344,10 @@ d_trajectory_control_set_current_position (DTrajectoryControl   *self,
         g_object_unref(self->current_position);
     }
     self->current_position = g_object_ref(pos);
+    d_solver_solve_inverse(self->geometry,
+                           pos,
+                           self->current_position_axes,
+                           NULL);
 }
 
 static void
@@ -344,6 +360,9 @@ d_trajectory_control_set_current_position_axes (DTrajectoryControl  *self,
         g_object_unref(self->current_position_axes);
     }
     self->current_position_axes = g_object_ref(axes);
+    d_solver_solve_direct(self->geometry,
+                          axes,
+                          self->current_position);
 }
 
 static void

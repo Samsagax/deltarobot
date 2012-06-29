@@ -31,6 +31,7 @@
 #include "dsim_pos.h"
 #include "dsim_axes.h"
 #include "dsim_speed.h"
+#include "dsim_solver.h"
 
 
 /* #######################  TRAJECTORY CONTROL ORDERS  #################### */
@@ -91,6 +92,9 @@ typedef void (*DTrajectoryOutputFunc) (DVector *axes, gpointer data);
 typedef struct _DTrajectoryControl DTrajectoryControl;
 struct _DTrajectoryControl {
     GObject         parent_instence;
+
+    /* Geometry of the manipulator */
+    DGeometry       *geometry;
 
     /* List of destinations */
     GAsyncQueue     *orders;
