@@ -225,7 +225,7 @@ gdouble     d_trajectory_get_step_time      (DTrajectory    *self);
 DVector*    d_trajectory_get_destination    (DTrajectory    *self);
 
 gdouble     d_trajectory_calculate_move_time(DVector        *displacement,
-                                             DSpeed         *speed,
+                                             DVector        *speed,
                                              gdouble        acceleration_time);
 
 //void        d_trajectory_interpolate_lspb   (DVector        *res_point,
