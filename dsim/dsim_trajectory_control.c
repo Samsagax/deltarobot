@@ -123,7 +123,7 @@ d_trajectory_control_init (DTrajectoryControl   *self)
 
     self->orders = g_async_queue_new();
 
-    self->geometry = NULL;
+    self->geometry = d_geometry_new(30.0, 50.0, 25.0, 10.0);
     self->current_position = d_pos_new();
     self->current_destination = d_pos_new();
     self->current_position_axes = d_axes_new();
