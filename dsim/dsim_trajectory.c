@@ -55,12 +55,6 @@ d_trajectory_real_next              (DTrajectory        *self);
 static gdouble
 d_trajectory_real_get_step_time     (DTrajectory        *self);
 
-static gdouble
-d_trajectory_calculate_move_time    (DTrajectory        *self);
-
-static gdouble
-d_trajectory_real_calculate_move_time (DTrajectory      *self);
-
 static void
 d_trajectory_interpolate_lspb       (DVector            *res_point,
                                      DVector            *start_speed,
@@ -80,7 +74,6 @@ d_trajectory_class_init (DTrajectoryClass    *klass)
     goc->finalize = d_trajectory_finalize;
 
     klass->interpolate_fun = d_trajectory_real_interpolate_fun;
-    klass->calculate_move_time = d_trajectory_real_calculate_move_time;
     klass->get_destination = d_trajectory_real_get_destination;
     klass->has_next = d_trajectory_real_has_next;
     klass->next = d_trajectory_real_next;
@@ -134,7 +127,7 @@ d_trajectory_dispose (GObject    *obj)
 }
 
 static void
-d_trajectory_finalize ( GObject   *obj )
+d_trajectory_finalize (GObject  *obj)
 {
     /* Chain up */
     G_OBJECT_CLASS(d_trajectory_parent_class)->finalize(obj);
@@ -183,17 +176,15 @@ d_trajectory_real_get_step_time (DTrajectory    *self)
     return self->step_time;
 }
 
-static gdouble
-d_trajectory_real_calculate_move_time (DTrajectory  *self)
+gdouble
+d_trajectory_calculate_move_time (DVector  *displacement,
+                                       DSpeed   *speed,
+                                       gdouble  acceleration_time)
 {
-    DVector *displacement = d_vector_clone(self->destination);
-    d_vector_sub(displacement, self->control_point);
-    DVector *speed = self->end_speed;
-    gdouble acceleration_time = self->acceleration_time;
     gdouble values[4] = {
-        abs(d_vector_get(displacement, 0) / d_vector_get(speed, 0)),
-        abs(d_vector_get(displacement, 1) / d_vector_get(speed, 1)),
-        abs(d_vector_get(displacement, 2) / d_vector_get(speed, 2)),
+        abs(d_vector_get(displacement, 0) / d_vector_get(D_VECTOR(speed), 0)),
+        abs(d_vector_get(displacement, 1) / d_vector_get(D_VECTOR(speed), 1)),
+        abs(d_vector_get(displacement, 2) / d_vector_get(D_VECTOR(speed), 2)),
         2.0 * acceleration_time
     };
     g_message("displacement: %f, %f, %f", d_vector_get(displacement, 0),
@@ -209,13 +200,6 @@ d_trajectory_real_calculate_move_time (DTrajectory  *self)
     g_message("d_trajectory_calculate_move_time: move time: %f", max);
     g_object_unref(displacement);
     return max;
-}
-
-static gdouble
-d_trajectory_calculate_move_time (DTrajectory   *self)
-{
-    g_return_val_if_fail(D_IS_TRAJECTORY(self), 0.0);
-    return D_TRAJECTORY_GET_CLASS(self)->calculate_move_time(self);
 }
 
 static void

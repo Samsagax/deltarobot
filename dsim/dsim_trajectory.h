@@ -205,7 +205,6 @@ struct _DTrajectoryClass {
 
     /* Private virtual methods */
     void            (*interpolate_fun)  (DTrajectory    *self);
-    gdouble         (*calculate_move_time)  (DTrajectory    *self);
 
     /* Public virtual methods */
     DVector*        (*get_destination)  (DTrajectory    *self);
@@ -224,6 +223,10 @@ DVector*    d_trajectory_next               (DTrajectory    *self);
 gdouble     d_trajectory_get_step_time      (DTrajectory    *self);
 
 DVector*    d_trajectory_get_destination    (DTrajectory    *self);
+
+gdouble     d_trajectory_calculate_move_time(DVector        *displacement,
+                                             DSpeed         *speed,
+                                             gdouble        acceleration_time);
 
 //void        d_trajectory_interpolate_lspb   (DVector        *res_point,
 //                                             DVector        *start_speed,
