@@ -42,7 +42,7 @@ d_speed_finalize (GObject *gobject)
 static void
 d_speed_init (DSpeed* self)
 {
-    self->parent_instance.vector = gsl_vector_calloc(3);
+    D_VECTOR(self)->vector = gsl_vector_calloc(3);
 }
 
 static void
@@ -57,8 +57,8 @@ d_speed_class_init (DSpeedClass *klass)
 DVector*
 d_speed_new (void)
 {
-    DSpeed* a = g_object_new (D_TYPE_SPEED, NULL);
-    return D_VECTOR(a);
+    DVector *a = g_object_new (D_TYPE_SPEED, NULL);
+    return a;
 }
 
 DVector*
@@ -66,17 +66,18 @@ d_speed_new_full (gdouble   s1,
                   gdouble   s2,
                   gdouble   s3)
 {
-    DSpeed* a = d_speed_new();
-    d_vector_set(D_VECTOR(a), 0, s1);
-    d_vector_set(D_VECTOR(a), 1, s2);
-    d_vector_set(D_VECTOR(a), 2, s3);
-    return D_VECTOR(a);
+    DVector *a = d_speed_new();
+    d_vector_set(a, 0, s1);
+    d_vector_set(a, 1, s2);
+    d_vector_set(a, 2, s3);
+    return a;
 }
 
 DVector*
 d_speed_new_from_displacement (DVector  *displacement,
                                gdouble  time)
 {
+    g_return_val_if_fail(D_IS_VECTOR(displacement), NULL);
     DVector *s = d_speed_new();
     for (int i = 0; i < d_vector_length(s); i++) {
         d_vector_set(s, i, d_vector_get(displacement, i) / time);
