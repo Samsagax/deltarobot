@@ -23,25 +23,6 @@
 /* GType register */
 G_DEFINE_TYPE (DSpeed, d_speed, D_TYPE_VECTOR);
 
-/* Create new DSpeed instance */
-DVector*
-d_speed_new (void)
-{
-    DSpeed* a = g_object_new (D_TYPE_SPEED, NULL);
-    return D_VECTOR(a);
-}
-DVector*
-d_speed_new_full (gdouble   s1,
-                  gdouble   s2,
-                  gdouble   s3)
-{
-    DSpeed* a = d_speed_new();
-    d_vector_set(D_VECTOR(a), 0, s1);
-    d_vector_set(D_VECTOR(a), 1, s2);
-    d_vector_set(D_VECTOR(a), 2, s3);
-    return D_VECTOR(a);
-}
-
 /* Dipose and finalize functions */
 static void
 d_speed_dispose (GObject *gobject)
@@ -72,3 +53,33 @@ d_speed_class_init (DSpeedClass *klass)
     gobject_class->finalize = d_speed_finalize;
 }
 
+/* Public API */
+DVector*
+d_speed_new (void)
+{
+    DSpeed* a = g_object_new (D_TYPE_SPEED, NULL);
+    return D_VECTOR(a);
+}
+
+DVector*
+d_speed_new_full (gdouble   s1,
+                  gdouble   s2,
+                  gdouble   s3)
+{
+    DSpeed* a = d_speed_new();
+    d_vector_set(D_VECTOR(a), 0, s1);
+    d_vector_set(D_VECTOR(a), 1, s2);
+    d_vector_set(D_VECTOR(a), 2, s3);
+    return D_VECTOR(a);
+}
+
+DVector*
+d_speed_new_from_displacement (DVector  *displacement,
+                               gdouble  time)
+{
+    DVector *s = d_speed_new();
+    for (int i = 0; i < d_vector_length(s); i++) {
+        d_vector_set(s, i, d_vector_get(displacement, i) / time);
+    }
+    return s;
+}

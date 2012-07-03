@@ -24,7 +24,7 @@
 #include <dsim/dsim_vector.h>
 
 /*
- * Object representing the maximum speed allowed for each axis
+ * Object representing speeds
  */
 
 /* DSpeed type macros */
@@ -54,6 +54,10 @@ DVector*    d_speed_new         (void);
 DVector*    d_speed_new_full    (gdouble    s1,
                                  gdouble    s2,
                                  gdouble    s3);
+
+DVector*    d_speed_new_from_displacement
+                                (DVector  *displacement,
+                                 gdouble    time);
 
 #endif   /* ----- #ifndef DSIM_SPEED_INC  ----- */
 
