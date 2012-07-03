@@ -53,9 +53,9 @@ print_time(int sig)
 static void
 timed_trajectory (gpointer  data)
 {
-    g_return_if_fail(D_IS_ITRAJECTORY(data));
+    g_return_if_fail(D_IS_TRAJECTORY(data));
 
-    DITrajectory *traj = D_ITRAJECTORY(data);
+    DTrajectory *traj = D_TRAJECTORY(data);
 
     timer_t timerid;
     struct itimerspec value;
