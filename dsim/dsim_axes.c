@@ -31,6 +31,8 @@ static void     d_axes_dispose      (GObject        *obj);
 
 static void     d_axes_finalize     (GObject        *obj);
 
+static DVector* d_axes_real_clone   (DVector        *src);
+
 /* Register Type */
 G_DEFINE_TYPE (DAxes, d_axes, D_TYPE_VECTOR);
 
@@ -50,20 +52,30 @@ d_axes_finalize (GObject *gobject)
 static void
 d_axes_init (DAxes  *self)
 {
-    self->parent_instance.vector = gsl_vector_calloc(3);
+    D_VECTOR(self)->vector = gsl_vector_calloc(3);
 }
 
 static void
-d_axes_class_init ( DAxesClass *klass )
+d_axes_class_init (DAxesClass   *klass)
 {
     /* Stub */
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
     gobject_class->dispose = d_axes_dispose;
     gobject_class->finalize = d_axes_finalize;
+
+    DVectorClass *vector_class = D_VECTOR_CLASS(klass);
+    vector_class->clone = d_axes_real_clone;
+}
+
+static DVector*
+d_axes_real_clone (DVector  *src)
+{
+    DVector *v = d_axes_new();
+    gsl_vector_memcpy(v->vector, src->vector);
+    return v;
 }
 
 /* Public API */
-
 DVector*
 d_axes_new ()
 {
