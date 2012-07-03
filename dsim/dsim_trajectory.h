@@ -247,59 +247,30 @@ gdouble     d_trajectory_calculate_move_time(DVector        *displacement,
 /* Instance Structure of DLinearTrajectory */
 typedef struct _DLinearTrajectory           DLinearTrajectory;
 struct _DLinearTrajectory {
-    GObject         parent_instance;
-
-    /* private */
-    /* Instant position */
-    DVector     *current_pos;
-
-    /* Current destination */
-    DVector     *move_destination;
-
-    /* Start and end speeds (end_speed = cartesian_speed) */
-    DVector     *start_speed;
-    DVector     *end_speed;
-
-    /* Axes maximum speed, currently not checked */
-    DVector     *axes_speed;
-
-    /* Control point (current destination) */
-    DVector     *control_point;
-
-    /* Time constants for this movement */
-    gdouble     acceleration_time;
-    gdouble     step_time;
-
-    /* Move time estimated */
-    gdouble     move_time;
-
-    /* Segment time counter (starts at -accTime) */
-    gdouble     time;
+    DTrajectory         parent_instance;
 };
 
 /* Class Structure of DLinearTrajectory */
 typedef struct _DLinearTrajectoryClass DLinearTrajectoryClass;
 struct _DLinearTrajectoryClass {
-    GObjectClass        parent_class;
+    DTrajectoryClass    parent_class;
 };
 
 /* Register DLinearTrajectory type */
 GType               d_linear_trajectory_get_type    (void);
 
 /* Methods */
-DLinearTrajectory*  d_linear_trajectory_new         (DVector    *currentPosition,
-                                                     DVector    *currentDestination,
-                                                     DVector    *nextDestination,
-                                                     DVector    *aSpeed,
-                                                     DVector    *cSpeed);
+DLinearTrajectory*  d_linear_trajectory_new         (DVector    *current_pos,
+                                                     DVector    *control_point,
+                                                     DVector    *move_destination,
+                                                     DVector    *speed);
 
-DLinearTrajectory*  d_linear_trajectory_new_full    (DVector    *currentPosition,
-                                                     DVector    *currentDestination,
-                                                     DVector    *nextDestination,
-                                                     DVector    *aSpeed,
-                                                     DVector    *cSpeed,
-                                                     gdouble    accTime,
-                                                     gdouble    stepTime);
+DLinearTrajectory*  d_linear_trajectory_new_full    (DVector    *current_pos,
+                                                     DVector    *control_point,
+                                                     DVector    *move_destination,
+                                                     DVector    *speed,
+                                                     gdouble    acceleration_time,
+                                                     gdouble    step_time);
 
 
 /* #######################  JOINT TRAJECTORY  ########################## */
