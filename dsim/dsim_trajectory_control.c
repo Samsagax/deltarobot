@@ -229,16 +229,29 @@ d_trajectory_control_main_loop (gpointer    *trajectory_control)
                 {
                     DVector *destination = D_VECTOR(order->data);
                     trajectory = d_trajectory_control_prepare_trajectory(self,
-                                                    destination, order->command_type);
+                                                    destination,
+                                                    type);
                     d_trajectory_control_set_current_destination_axes (self,
                                                     destination);
                     d_trajectory_control_execute_trajectory(self,
                                                     trajectory,
-                                                    order->command_type);
+                                                    type);
                     g_object_unref(trajectory);
                 }
                 break;
             case OT_MOVEL:
+                {
+                    DVector *destination = D_VECTOR(order->data);
+                    trajectory = d_trajectory_control_prepare_trajectory(self,
+                                                    destination,
+                                                    type);
+                    d_trajectory_control_set_current_destination (self,
+                                                    destination);
+                    d_trajectory_control_execute_trajectory(self,
+                                                    trajectory,
+                                                    type);
+                    g_object_unref(trajectory);
+                }
                 break;
             case OT_WAIT:
                 g_warning("d_trajectory_control_main_loop: no OT_WAIT command, implement!");
@@ -278,6 +291,16 @@ d_trajectory_control_prepare_trajectory (DTrajectoryControl     *self,
             traj = D_TRAJECTORY(d_joint_trajectory_new_full(
                                     self->current_position_axes,
                                     self->current_destination_axes,
+                                    destination,
+                                    self->max_speed,
+                                    self->accelTime,
+                                    self->stepTime));
+            break;
+        case OT_MOVEL:
+            g_return_val_if_fail(D_IS_POS(destination), NULL);
+            traj = D_TRAJECTORY(d_linear_trajectory_new_full(
+                                    self->current_position,
+                                    self->current_destination,
                                     destination,
                                     self->max_speed,
                                     self->accelTime,
