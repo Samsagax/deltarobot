@@ -170,6 +170,7 @@ void                d_trajectory_control_set_output_func (DTrajectoryControl    
 
 #define D_DEFAULT_ACC_TIME 0.2
 #define D_DEFAULT_STEP_TIME  0.01
+
 /* Instance structure of DTrajectory */
 typedef struct _DTrajectory DTrajectory;
 struct _DTrajectory {
@@ -227,13 +228,6 @@ DVector*    d_trajectory_get_destination    (DTrajectory    *self);
 gdouble     d_trajectory_calculate_move_time(DVector        *displacement,
                                              DVector        *speed,
                                              gdouble        acceleration_time);
-
-//void        d_trajectory_interpolate_lspb   (DVector        *res_point,
-//                                             DVector        *start_speed,
-//                                             DVector        *end_speed,
-//                                             DVector        *control_point,
-//                                             gdouble        acceleration_time,
-//                                             gdouble        time);
 
 /* #######################  LINEAR TRAJECTORY  ######################### */
 /*
@@ -296,14 +290,14 @@ GType               d_linear_trajectory_get_type    (void);
 DLinearTrajectory*  d_linear_trajectory_new         (DVector    *currentPosition,
                                                      DVector    *currentDestination,
                                                      DVector    *nextDestination,
-                                                     DVector     *aSpeed,
-                                                     DVector     *cSpeed);
+                                                     DVector    *aSpeed,
+                                                     DVector    *cSpeed);
 
 DLinearTrajectory*  d_linear_trajectory_new_full    (DVector    *currentPosition,
                                                      DVector    *currentDestination,
                                                      DVector    *nextDestination,
-                                                     DVector     *aSpeed,
-                                                     DVector     *cSpeed,
+                                                     DVector    *aSpeed,
+                                                     DVector    *cSpeed,
                                                      gdouble    accTime,
                                                      gdouble    stepTime);
 
@@ -338,15 +332,15 @@ struct _DJointTrajectoryClass {
 GType               d_joint_trajectory_get_type     (void);
 
 /* Methods */
-DJointTrajectory*   d_joint_trajectory_new          (DAxes      *current_axes,
-                                                     DAxes      *control_point,
-                                                     DAxes      *move_destination,
-                                                     DSpeed     *max_speed);
+DJointTrajectory*   d_joint_trajectory_new          (DVector    *current_axes,
+                                                     DVector    *control_point,
+                                                     DVector    *move_destination,
+                                                     DVector    *max_speed);
 
-DJointTrajectory*   d_joint_trajectory_new_full     (DAxes      *current_axes,
-                                                     DAxes      *control_point,
-                                                     DAxes      *move_destination,
-                                                     DSpeed     *max_speed,
+DJointTrajectory*   d_joint_trajectory_new_full     (DVector    *current_axes,
+                                                     DVector    *control_point,
+                                                     DVector    *move_destination,
+                                                     DVector    *max_speed,
                                                      gdouble    acceleration_time,
                                                      gdouble    step_time);
 
