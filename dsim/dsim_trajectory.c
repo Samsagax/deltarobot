@@ -155,7 +155,7 @@ d_trajectory_real_has_next (DTrajectory *self)
 }
 
 static DVector*
-d_trajectory__real_get_destination (DTrajectory *self)
+d_trajectory_real_get_destination (DTrajectory  *self)
 {
     g_return_val_if_fail(D_IS_TRAJECTORY(self), NULL);
 
