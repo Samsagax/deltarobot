@@ -155,49 +155,122 @@ void                d_trajectory_control_set_output_func (DTrajectoryControl    
  * Defines a DTrajectoryInterface with methods needed for both trajectory
  * types.
  */
+//
+///* DTrajectoryInterface macros */
+//#define D_TYPE_ITRAJECTORY                  (d_itrajectory_get_type ())
+//#define D_ITRAJECTORY(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), D_TYPE_ITRAJECTORY, DITrajectory))
+//#define D_IS_ITRAJECTORY(obj)               (G_TYPE_CHECK_INSTANCE_TYPE ((obj), D_TYPE_ITRAJECTORY))
+//#define D_ITRAJECTORY_GET_INTERFACE(inst)   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), D_TYPE_ITRAJECTORY, DITrajectoryInterface))
+//
+///* Interface structures */
+//typedef struct _DITrajectory            DITrajectory;  /* Dummy instance */
+//
+//typedef struct _DITrajectoryInterface   DITrajectoryInterface;
+//struct _DITrajectoryInterface {
+//    GTypeInterface  parent;
+//
+//    /* interface methods */
+//    DVector*        (*get_destination)  (DITrajectory   *self);
+//    gboolean        (*has_next)         (DITrajectory   *self);
+//    DVector*        (*next)             (DITrajectory   *self);
+//    gdouble         (*get_step_time)    (DITrajectory   *self);
+//};
+//
+///* Interface constants */
+//#define D_IT_DEFAULT_ACC_TIME 0.2
+//#define D_IT_DEFAULT_STEP_TIME  0.01
+//
+///* Interface get type */
+//GType       d_itrajectory_get_type          (void);
 
-/* DTrajectoryInterface macros */
-#define D_TYPE_ITRAJECTORY                  (d_itrajectory_get_type ())
-#define D_ITRAJECTORY(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), D_TYPE_ITRAJECTORY, DITrajectory))
-#define D_IS_ITRAJECTORY(obj)               (G_TYPE_CHECK_INSTANCE_TYPE ((obj), D_TYPE_ITRAJECTORY))
-#define D_ITRAJECTORY_GET_INTERFACE(inst)   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), D_TYPE_ITRAJECTORY, DITrajectoryInterface))
+/* Interface methods */
+//gboolean    d_trajectory_has_next           (DITrajectory   *self);
+//
+//DVector*    d_trajectory_next               (DITrajectory   *self);
+//
+//gdouble     d_trajectory_get_step_time      (DITrajectory   *self);
+//
+//DVector*    d_trajectory_get_destination    (DITrajectory   *self);
 
-/* Interface structures */
-typedef struct _DITrajectory            DITrajectory;  /* Dummy instance */
+/* #######################  COMMON TRAJECTORY SUPER CLASS  ############# */
+/**
+ * DTrajectory provides a single interface for trajectories. Serves as a
+ * superclass for both DLinearTrajectory and DJointTrajectory.
+ * Is intended to be a point generator by calling next() at regular step time.
+ * The algorithm used for generating points is Linear Segment with Parabolic
+ * Blends given control points. TODO:Make this algorithm overridable.
+ * The semantics of positioning vectors and speeds are defined by subclasses.
+ */
 
-typedef struct _DITrajectoryInterface   DITrajectoryInterface;
-struct _DITrajectoryInterface {
-    GTypeInterface  parent;
+/* Type macros */
+#define D_TYPE_TRAJECTORY               (d_trajectory_get_type ())
+#define D_TRAJECTORY(obj)               (G_TYPE_CHECK_INSTANCE_CAST ((obj), D_TYPE_TRAJECTORY, DTrajectory))
+#define D_IS_TRAJECTORY(obj)            (G_TYPE_CHECK_INSTANCE_TYPE ((obj), D_TYPE_TRAJECTORY))
+#define D_TRAJECTORY_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST ((klass), D_TYPE_TRAJECTORY, DTrajectoryClass))
+#define D_IS_TRAJECTORY_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE ((klass), D_TYPE_TRAJECTORY))
+#define D_TRAJECTORY_GET_CLASS(obj)     (G_TYPE_INSTANCE_GET_CLASS ((obj), D_TYPE_TRAJECTORY, DTrajectoryClass))
 
-    /* interface methods */
-    DVector*        (*get_destination)  (DITrajectory   *self);
-    gboolean        (*has_next)         (DITrajectory   *self);
-    DVector*        (*next)             (DITrajectory   *self);
-    gdouble         (*get_step_time)    (DITrajectory   *self);
+/* Instance structure of DTrajectory */
+typedef struct _DTrajectory DTrajectory;
+struct _DTrajectory {
+    GObject         parent_object;
+
+    /* private */
+    /* Time variable */
+    gdouble         time;
+
+    /* Time constants */
+    gdouble         move_time;
+    gdouble         acceleration_time;
+    gdouble         step_time;
+
+    /* Postion variable */
+    DVector         *current;
+
+    /* Destination point */
+    DVector         *destination;
+
+    /* Blend start/end speed */
+    DVector         *start_speed;
+    DVector         *end_speed;
+
+    /* Control point around the speed blend */
+    DVector         *control_point;
 };
 
-/* Interface constants */
-#define D_IT_DEFAULT_ACC_TIME 0.2
-#define D_IT_DEFAULT_STEP_TIME  0.01
+/* Class structure of DTrajectory */
+typedef struct _DTrajectoryClass DTrajectoryClass;
+struct _DTrajectoryClass {
+    GObjectClass    parent_class;
 
-/* Interface get type */
-GType       d_itrajectory_get_type          (void);
+    /* Private virtual methods */
+    void            (*interpolate_fun)  (DTrajectory    *self);
+    gdouble         (*calculate_move_time)  (DTrajectory    *self);
 
-/* Interface methods default implementations */
-DVector*    d_trajectory_get_destination    (DITrajectory   *self);
+    /* Public virtual methods */
+    DVector*        (*get_destination)  (DTrajectory    *self);
+    gboolean        (*has_next)         (DTrajectory    *self);
+    DVector*        (*next)             (DTrajectory    *self);
+    gdouble         (*get_step_time)    (DTrajectory    *self);
+};
 
-gboolean    d_trajectory_has_next           (DITrajectory   *self);
+/* Methods */
+GType       d_trajectory_get_type           (void);
 
-DVector*    d_trajectory_next               (DITrajectory   *self);
+gboolean    d_trajectory_has_next           (DTrajectory    *self);
 
-gdouble     d_trajectory_get_step_time      (DITrajectory   *self);
+DVector*    d_trajectory_next               (DTrajectory    *self);
 
-void        d_trajectory_interpolate_lspb   (DVector        *res_point,
-                                             DVector        *start_speed,
-                                             DVector        *end_speed,
-                                             DVector        *control_point,
-                                             gdouble        acceleration_time,
-                                             gdouble        time);
+gdouble     d_trajectory_get_step_time      (DTrajectory    *self);
+
+DVector*    d_trajectory_get_destination    (DTrajectory    *self);
+
+//void        d_trajectory_interpolate_lspb   (DVector        *res_point,
+//                                             DVector        *start_speed,
+//                                             DVector        *end_speed,
+//                                             DVector        *control_point,
+//                                             gdouble        acceleration_time,
+//                                             gdouble        time);
 
 /* #######################  LINEAR TRAJECTORY  ######################### */
 /*
@@ -213,8 +286,6 @@ void        d_trajectory_interpolate_lspb   (DVector        *res_point,
 #define D_LINEAR_TRAJECTORY_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST ((klass), D_TYPE_LINEAR_TRAJECTORY, DLinearTrajectoryClass))
 #define D_IS_LINEAR_TRAJECTORY_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE ((klass), D_TYPE_LINEAR_TRAJECTORY))
 #define D_LINEAR_TRAJECTORY_GET_CLASS(obj)     (G_TYPE_INSTANCE_GET_CLASS ((obj), D_TYPE_LINEAR_TRAJECTORY, DLinearTrajectoryClass))
-#define D_LINEAR_TRAJECTORY_GET_PRIVATE(obj)   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), D_TYPE_LINEAR_TRAJECTORY, DLTPrivate))
-
 
 /* Instance Structure of DLinearTrajectory */
 typedef struct _DLinearTrajectory           DLinearTrajectory;
