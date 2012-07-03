@@ -150,48 +150,6 @@ void                d_trajectory_control_set_output_func (DTrajectoryControl    
                                                      DTrajectoryOutputFunc  func,
                                                      gpointer               output_data);
 
-/* ##########################  TRAJECTORY INTERFACE  ################### */
-/*
- * Defines a DTrajectoryInterface with methods needed for both trajectory
- * types.
- */
-//
-///* DTrajectoryInterface macros */
-//#define D_TYPE_ITRAJECTORY                  (d_itrajectory_get_type ())
-//#define D_ITRAJECTORY(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), D_TYPE_ITRAJECTORY, DITrajectory))
-//#define D_IS_ITRAJECTORY(obj)               (G_TYPE_CHECK_INSTANCE_TYPE ((obj), D_TYPE_ITRAJECTORY))
-//#define D_ITRAJECTORY_GET_INTERFACE(inst)   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), D_TYPE_ITRAJECTORY, DITrajectoryInterface))
-//
-///* Interface structures */
-//typedef struct _DITrajectory            DITrajectory;  /* Dummy instance */
-//
-//typedef struct _DITrajectoryInterface   DITrajectoryInterface;
-//struct _DITrajectoryInterface {
-//    GTypeInterface  parent;
-//
-//    /* interface methods */
-//    DVector*        (*get_destination)  (DITrajectory   *self);
-//    gboolean        (*has_next)         (DITrajectory   *self);
-//    DVector*        (*next)             (DITrajectory   *self);
-//    gdouble         (*get_step_time)    (DITrajectory   *self);
-//};
-//
-///* Interface constants */
-//#define D_IT_DEFAULT_ACC_TIME 0.2
-//#define D_IT_DEFAULT_STEP_TIME  0.01
-//
-///* Interface get type */
-//GType       d_itrajectory_get_type          (void);
-
-/* Interface methods */
-//gboolean    d_trajectory_has_next           (DITrajectory   *self);
-//
-//DVector*    d_trajectory_next               (DITrajectory   *self);
-//
-//gdouble     d_trajectory_get_step_time      (DITrajectory   *self);
-//
-//DVector*    d_trajectory_get_destination    (DITrajectory   *self);
-
 /* #######################  COMMON TRAJECTORY SUPER CLASS  ############# */
 /**
  * DTrajectory provides a single interface for trajectories. Serves as a
@@ -210,6 +168,8 @@ void                d_trajectory_control_set_output_func (DTrajectoryControl    
 #define D_IS_TRAJECTORY_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE ((klass), D_TYPE_TRAJECTORY))
 #define D_TRAJECTORY_GET_CLASS(obj)     (G_TYPE_INSTANCE_GET_CLASS ((obj), D_TYPE_TRAJECTORY, DTrajectoryClass))
 
+#define D_DEFAULT_ACC_TIME 0.2
+#define D_DEFAULT_STEP_TIME  0.01
 /* Instance structure of DTrajectory */
 typedef struct _DTrajectory DTrajectory;
 struct _DTrajectory {
@@ -347,9 +307,8 @@ DLinearTrajectory*  d_linear_trajectory_new_full    (DVector    *currentPosition
 
 /* #######################  JOINT TRAJECTORY  ########################## */
 /*
- * DJointTrajectory implements DITrajectory Interface
- *
- * Creates a new robot trajectory in the joint angles space.
+ * DJointTrajectory subclass of DTrajectory. Positions and speeds are given in
+ * the axes space.
  */
 
 /* Type DJointTrajectory macros */
@@ -359,55 +318,32 @@ DLinearTrajectory*  d_linear_trajectory_new_full    (DVector    *currentPosition
 #define D_JOINT_TRAJECTORY_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST ((klass), D_TYPE_JOINT_TRAJECTORY, DJointTrajectoryClass))
 #define D_IS_JOINT_TRAJECTORY_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE ((klass), D_TYPE_JOINT_TRAJECTORY))
 #define D_JOINT_TRAJECTORY_GET_CLASS(obj)     (G_TYPE_INSTANCE_GET_CLASS ((obj), D_TYPE_JOINT_TRAJECTORY, DJointTrajectoryClass))
-#define D_JOINT_TRAJECTORY_GET_PRIVATE(obj)   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), D_TYPE_JOINT_TRAJECTORY, DJTPrivate))
 
 /* Instance Structure of DJointTrajectory */
 typedef struct _DJointTrajectory           DJointTrajectory;
 struct _DJointTrajectory {
-    GObject         parent_instance;
-
-    /* private */
-    /* Instant position */
-    DVector     *current_axes;
-
-    /* Current destination */
-    DVector     *move_destination;
-
-    /* Start and end speeds (end_speed = max_speed) */
-    DVector     *start_speed;
-    DVector     *end_speed;
-
-    /* Control point (current destination) */
-    DVector     *control_point;
-
-    /* Time constants for this movement */
-    gdouble     acceleration_time;
-    gdouble     step_time;
-    gdouble     move_time;
-
-    /* Segment time counter (starts at -accTime) */
-    gdouble     time;
+    DTrajectory         parent_instance;
 };
 
 /* Class Structure of DJointTrajectory */
 typedef struct _DJointTrajectoryClass DJointTrajectoryClass;
 struct _DJointTrajectoryClass {
-    GObjectClass        parent_class;
+    DTrajectoryClass    parent_class;
 };
 
 /* Register DJointTrajectory type */
 GType               d_joint_trajectory_get_type     (void);
 
 /* Methods */
-DJointTrajectory*   d_joint_trajectory_new          (DVector    *current_axes,
-                                                     DVector    *control_point,
-                                                     DVector    *move_destination,
-                                                     DVector    *max_speed);
+DJointTrajectory*   d_joint_trajectory_new          (DAxes      *current_axes,
+                                                     DAxes      *control_point,
+                                                     DAxes      *move_destination,
+                                                     DSpeed     *max_speed);
 
-DJointTrajectory*   d_joint_trajectory_new_full     (DVector    *current_axes,
-                                                     DVector    *control_point,
-                                                     DVector    *move_destination,
-                                                     DVector    *max_speed,
+DJointTrajectory*   d_joint_trajectory_new_full     (DAxes      *current_axes,
+                                                     DAxes      *control_point,
+                                                     DAxes      *move_destination,
+                                                     DSpeed     *max_speed,
                                                      gdouble    acceleration_time,
                                                      gdouble    step_time);
 
