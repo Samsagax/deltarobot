@@ -106,7 +106,7 @@ d_vector_new (size_t lenght)
     DVector *v;
     v = g_object_new(D_TYPE_VECTOR, NULL);
     gsl_vector *vector = gsl_vector_calloc(lenght);
-    d_vector_set_gsl_vector(v, vector);
+    D_VECTOR_GET_CLASS(v)->set_gsl_vector(v, vector);
     return v;
 }
 
