@@ -49,19 +49,24 @@ struct _DVector {
 typedef struct _DVectorClass DVectorClass;
 struct _DVectorClass {
     GObjectClass    parent_class;
+
+    /* Public virtual Methods */
+    DVector*    (*clone)            (DVector *src);
+
+    /* Private virtual methods */
+    void        (*set_gsl_vector)   (DVector *self, gsl_vector *vector);
 };
 
 /* Returns GType associated with this object type */
 GType       d_vector_get_type      (void);
 
-/* Create new instance */
+/* Methods */
 DVector*    d_vector_new            (size_t     size);
 
-DVector*    d_vector_new_gsl        (gsl_vector *vector);
+DVector*    d_vector_new_with_gsl   (gsl_vector *vector);
 
 DVector*    d_vector_clone          (DVector    *src);
 
-/* Methods */
 gdouble     d_vector_get            (DVector    *self,
                                      size_t     i);
 

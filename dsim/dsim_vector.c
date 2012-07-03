@@ -36,6 +36,11 @@ static void     d_vector_finalize       (GObject        *obj);
 static void     d_vector_set_gsl_vector (DVector        *self,
                                          gsl_vector     *vector);
 
+static DVector* d_vector_real_clone     (DVector        *src);
+
+static void     d_vector_real_set_gsl_vector (DVector        *self,
+                                         gsl_vector     *vector);
+
 /* GType register */
 G_DEFINE_TYPE (DVector, d_vector, G_TYPE_OBJECT);
 
@@ -45,6 +50,9 @@ d_vector_class_init(DVectorClass* klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
     gobject_class->dispose = d_vector_dispose;
     gobject_class->finalize = d_vector_finalize;
+
+    klass->clone = d_vector_real_clone;
+    klass->set_gsl_vector = d_vector_real_set_gsl_vector;
 }
 
 static void
@@ -72,9 +80,18 @@ d_vector_finalize (GObject *gobject)
     G_OBJECT_CLASS(d_vector_parent_class)->finalize(gobject);
 }
 
+static DVector*
+d_vector_real_clone (DVector    *src)
+{
+    DVector *dest;
+    dest = d_vector_new (src->vector->size);
+    gsl_vector_memcpy(dest->vector, src->vector);
+    return dest;
+}
+
 static void
-d_vector_set_gsl_vector (DVector    *self,
-                         gsl_vector *vector)
+d_vector_real_set_gsl_vector (DVector       *self,
+                              gsl_vector    *vector)
 {
     if (self->vector) {
         gsl_vector_free(self->vector);
@@ -83,7 +100,6 @@ d_vector_set_gsl_vector (DVector    *self,
 }
 
 /* Public API */
-
 DVector*
 d_vector_new (size_t lenght)
 {
@@ -94,14 +110,12 @@ d_vector_new (size_t lenght)
     return v;
 }
 
-
 DVector*
 d_vector_clone (DVector    *src)
 {
-    DVector *dest;
-    dest = d_vector_new (src->vector->size);
-    gsl_vector_memcpy(dest->vector, src->vector);
-    return dest;
+    g_return_val_if_fail(D_IS_VECTOR(src), NULL);
+    DVectorClass *vector_class = D_VECTOR_GET_CLASS(src);
+    return vector_class->clone(src);
 }
 
 gdouble
