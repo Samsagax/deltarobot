@@ -14,9 +14,8 @@ sources = \
 	dsim_speed.c \
 	dsim_geometry.c \
 	dsim_solver.c \
-	dsim_trajectory_interface.c \
+	dsim_trajectory.c \
 	dsim_trajectory_joint.c \
-	dsim_trajectory_linear.c \
 	dsim_trajectory_command.c \
 	dsim_trajectory_control.c 
 
