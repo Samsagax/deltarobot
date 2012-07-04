@@ -151,8 +151,8 @@ show_about (void)
 }
 
 static void
-d_trajectory_viewport_link (DVector     *axes,
-                            gpointer    *data)
+d_trajectory_viewport_link_joint (DVector   *axes,
+                                  gpointer  *data)
 {
     g_return_if_fail(D_IS_VIEWPORT(data));
     DViewport *viewport = D_VIEWPORT(data);
@@ -168,6 +168,20 @@ d_trajectory_viewport_link (DVector     *axes,
     g_object_unref(pos);
 }
 
+static void
+d_trajectory_viewport_link_linear (DVector  *pos,
+                                   gpointer *data)
+{
+    g_return_if_fail(D_IS_VIEWPORT(data));
+    DViewport *viewport = D_VIEWPORT(data);
+
+    g_message("Current Pos: %f, %f, %f",
+                d_vector_get(pos, 0),
+                d_vector_get(pos, 1),
+                d_vector_get(pos, 2));
+
+    d_viewport_set_pos(viewport, pos);
+}
 /*
  * Create main window
  */
@@ -191,7 +205,8 @@ create_main_window (void)
     */
     viewport = d_viewport_new_with_pos(robot, pos);
     d_viewport_set_scene_center_xyz(D_VIEWPORT(viewport), 0.0, 0.0, 30.0);
-    d_trajectory_control_set_joint_out_fun(trajcontrol, d_trajectory_viewport_link, viewport);
+    d_trajectory_control_set_joint_out_fun(trajcontrol, d_trajectory_viewport_link_joint, viewport);
+    d_trajectory_control_set_linear_out_fun(trajcontrol, d_trajectory_viewport_link_linear, viewport);
 
     /*
      * Create the controls
