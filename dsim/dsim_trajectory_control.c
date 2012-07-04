@@ -206,22 +206,6 @@ d_trajectory_control_main_loop (gpointer    *trajectory_control)
     g_return_val_if_fail(D_IS_TRAJECTORY_CONTROL(trajectory_control), NULL);
     DTrajectoryControl *self = D_TRAJECTORY_CONTROL(trajectory_control);
 
-    g_message("d_trajectory_control_main_loop: Starting dispatcher loop");
-    /* Hardcoded orders */
-    DVector *dest = d_pos_new_full(0.0, 0.0, 60.0);
-    DVector *home = d_pos_new_full(0.0, 0.0, 40.0);
-    DTrajectoryCommand *move1 = d_trajectory_command_new(OT_MOVEL, dest);
-    DTrajectoryCommand *move2 = d_trajectory_command_new(OT_MOVEL, home);
-    d_trajectory_control_push_order(self, move1);
-    d_trajectory_control_push_order(self, move1);
-    d_trajectory_control_push_order(self, move2);
-    d_trajectory_control_push_order(self, move2);
-    g_object_unref(move1);
-    g_object_unref(move2);
-    g_object_unref(dest);
-    g_object_unref(home);
-
-    g_message("d_trajectory_control_main_loop: Start waiting for orders");
     /* Start waiting for orders */
     while(!self->exit_flag) {
         /* Wait until order is available with a 2 second timeout */
@@ -229,7 +213,6 @@ d_trajectory_control_main_loop (gpointer    *trajectory_control)
         while(!order) {
             order = g_async_queue_timeout_pop(self->orders, 2.0 * G_TIME_SPAN_SECOND);
         }
-        g_message("d_trajectory_control_main_loop: Order recieved");
         /* Process the order */
         DTrajectory *trajectory;
         DCommandType type = order->command_type;
