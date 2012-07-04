@@ -130,7 +130,8 @@ d_trajectory_control_init (DTrajectoryControl   *self)
     self->current_position = d_pos_new();
     self->current_destination = d_pos_new();
 
-    self->max_speed = d_speed_new_full(G_PI/4.0, G_PI/4.0, G_PI/4.0);
+    self->joint_speed = d_speed_new_full(G_PI/4.0, G_PI/4.0, G_PI/4.0);
+    self->linear_speed = d_speed_new_full(20.0, 20.0, 20.0);
 
     self->linear_out_fun = d_trajectory_control_default_output;
     self->linear_out_data = NULL;
@@ -157,6 +158,14 @@ d_trajectory_control_dispose (GObject   *obj)
     if (self->geometry) {
         g_object_unref(self->geometry);
         self->geometry = NULL;
+    }
+    if (self->joint_speed) {
+        g_object_unref(self->joint_speed);
+        self->joint_speed = NULL;
+    }
+    if (self->linear_speed) {
+        g_object_unref(self->linear_speed);
+        self->linear_speed = NULL;
     }
     if (self->current_position) {
         g_object_unref(self->current_position);
@@ -199,7 +208,7 @@ d_trajectory_control_main_loop (gpointer    *trajectory_control)
 
     g_message("d_trajectory_control_main_loop: Starting dispatcher loop");
     /* Hardcoded orders */
-    DVector *dest = d_pos_new_full(G_PI/4.0, G_PI/4.0, 40.0 + G_PI/4.0);
+    DVector *dest = d_pos_new_full(0.0, 0.0, 60.0);
     DVector *home = d_pos_new_full(0.0, 0.0, 40.0);
     DTrajectoryCommand *move1 = d_trajectory_command_new(OT_MOVEL, dest);
     DTrajectoryCommand *move2 = d_trajectory_command_new(OT_MOVEL, home);
@@ -292,7 +301,7 @@ d_trajectory_control_prepare_trajectory (DTrajectoryControl     *self,
                                     self->current_position_axes,
                                     self->current_destination_axes,
                                     destination,
-                                    self->max_speed,
+                                    self->joint_speed,
                                     self->accelTime,
                                     self->stepTime));
             break;
@@ -302,7 +311,7 @@ d_trajectory_control_prepare_trajectory (DTrajectoryControl     *self,
                                     self->current_position,
                                     self->current_destination,
                                     destination,
-                                    self->max_speed,
+                                    self->linear_speed,
                                     self->accelTime,
                                     self->stepTime));
             break;

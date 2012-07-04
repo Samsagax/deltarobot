@@ -112,7 +112,10 @@ struct _DTrajectoryControl {
     gdouble         decelTime;      /* Set equal to accelTime for now */
 
     /* Max Speed in the axes space */
-    DVector         *max_speed;
+    DVector         *joint_speed;
+
+    /* Speed in the cartesian space */
+    DVector         *linear_speed;
 
     /* Step time for trajectory, used for timers */
     gdouble         stepTime;
