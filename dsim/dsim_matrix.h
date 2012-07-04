@@ -26,9 +26,9 @@
 #define  DSIM_MATRIX_INC
 
 #include <glib-object.h>
-#include <math.h>
-#include <dsim/dsim_vector.h>
 #include <gsl/gsl_matrix.h>
+#include <gsl/gsl_blas.h>
+#include <dsim/dsim_vector.h>
 
 /* Type macros */
 #define D_TYPE_MATRIX             (d_matrix_get_type ())
@@ -43,48 +43,57 @@ typedef struct _DMatrix DMatrix;
 struct _DMatrix {
     GObject         parent_instance;
 
-    gsl_matrix      *matrix
+    /* private */
+    gsl_matrix      *matrix;
 };
 
 /* Class Structure of DMatrix */
 typedef struct _DMatrixClass DMatrixClass;
 struct _DMatrixClass {
     GObjectClass    parent_class;
+
+    /* Public virtual Methods */
+    DMatrix*    (*clone)            (DMatrix *src);
+
+    /* Private virtual methods */
+    void        (*set_gsl_matrix)   (DMatrix *self, gsl_matrix *matrix);
 };
 
 /* Returns GType associated with this object type */
 GType       d_matrix_get_type       (void);
 
-/* Create new instance */
-DMatrix*    d_matrix_new            (size_t     rows,
-                                     size_t     columns);
+DMatrix*    d_matrix_new            (guint      size1,
+                                     guint      size2);
 
-/* Methods */
-DMatrix*    d_matrix_memcpy         (DMatrix    *dest,
-                                     DMatrix    *src);
+DMatrix*    d_matrix_new_with_gsl   (gsl_matrix *matrix);
+
+DMatrix*    d_matrix_clone          (DMatrix    *src);
 
 gdouble     d_matrix_get            (DMatrix    *self,
-                                     size_t     i,
-                                     size_t     j);
+                                     guint      i,
+                                     guint      j);
 
-void        d_matrix_set            (DMatrix   *self,
-                                     size_t     i,
-                                     size_t     j,
+void        d_matrix_set            (DMatrix    *self,
+                                     guint      i,
+                                     guint      j,
                                      gdouble    x);
 
-DMatrix*    d_matrix_sub            (DMatrix   *a,
-                                     DMatrix   *b);
+gint        d_matrix_length         (DMatrix    *self,
+                                     gint       dim);
 
-DMatrix*    d_matrix_add            (DMatrix   *a,
-                                     DMatrix   *b);
+DMatrix*    d_matrix_sub            (DMatrix    *self,
+                                     DMatrix    *b);
 
-DMatrix*    d_matrix_mul            (DMatrix   *a,
-                                     DMatrix   *b);
+DMatrix*    d_matrix_add            (DMatrix    *self,
+                                     DMatrix    *b);
 
-DMatrix*    d_matrix_scalar_mul     (DMatrix   *self,
+DMatrix*    d_matrix_mul            (DMatrix    *a,
+                                     DMatrix    *b);
+
+DVector*    d_matrix_vector_mul     (DMatrix    *self,
+                                     DVector    *v);
+
+DMatrix*    d_matrix_scalar_mul     (DMatrix    *self,
                                      gdouble    a);
-
-DVector*    d_matrix_vector_mul     (DMatrix   *self,
-                                     DVector   *v);
 
 #endif   /* ----- #ifndef DSIM_MATRIX_INC  ----- */

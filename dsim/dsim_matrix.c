@@ -36,6 +36,8 @@ static void     d_matrix_finalize       (GObject        *obj);
 static void     d_matrix_set_gsl_matrix (DMatrix        *self,
                                          gsl_matrix     *m);
 
+static DMatrix* d_matrix_real_clone     (DMatrix        *src);
+
 /* Register Type */
 G_DEFINE_TYPE(DMatrix, d_matrix, G_TYPE_OBJECT);
 
@@ -46,6 +48,8 @@ d_matrix_class_init (DMatrixClass *klass)
 
     gobjclass->dispose = d_matrix_dispose;
     gobjclass->finalize = d_matrix_finalize;
+
+    klass->clone = d_matrix_real_clone;
 }
 
 static void
@@ -83,11 +87,19 @@ d_matrix_set_gsl_matrix (DMatrix    *self,
     self->matrix = m;
 }
 
-/* Public API */
+static DMatrix*
+d_matrix_real_clone (DMatrix    *src)
+{
+    DMatrix* dest;
+    dest = d_matrix_new(src->matrix->size1, src->matrix->size2);
+    gsl_matrix_memcpy(dest->matrix, src->matrix);
+    return dest;
+}
 
+/* Public API */
 DMatrix*
-d_matrix_new (size_t    rows,
-              size_t    columns)
+d_matrix_new (guint rows,
+              guint columns)
 {
     DMatrix* m;
     m = g_object_new (D_TYPE_MATRIX, NULL);
@@ -96,25 +108,23 @@ d_matrix_new (size_t    rows,
 }
 
 DMatrix*
-d_matrix_memcpy (DMatrix    *dest,
-                 DMatrix    *src)
+d_matrix_clone (DMatrix *src)
 {
-    gsl_matrix_memcpy(dest->matrix, src->matrix);
-    return dest;
+    return D_MATRIX_GET_CLASS(src)->clone(src);
 }
 
 gdouble
 d_matrix_get (DMatrix   *self,
-              size_t    i,
-              size_t    j)
+              guint     i,
+              guint     j)
 {
     return gsl_matrix_get(self->matrix, i, j);
 }
 
 void
 d_matrix_set (DMatrix   *self,
-              size_t    i,
-              size_t    j,
+              guint     i,
+              guint     j,
               gdouble   x)
 {
     gsl_matrix_set(self->matrix, i, j, x);
