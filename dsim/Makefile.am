@@ -9,6 +9,7 @@ AM_CFLAGS = -std=gnu99
 sources = \
 	dsim.h \
 	dsim_vector.c \
+	dsim_matrix.c \
 	dsim_pos.c \
 	dsim_axes.c \
 	dsim_speed.c \
