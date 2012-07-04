@@ -59,9 +59,9 @@ d_trajectory_command_dispose (GObject   *obj)
     DTrajectoryCommand *self = D_TRAJECTORY_COMMAND(obj);
 
     switch (self->command_type) {
+        case OT_MOVEL:
         case OT_MOVEJ:
             if (self->data) {
-                g_message("d_trajectory_command_dispose: unref OT_MOVEJ command data");
                 g_object_unref(self->data);
                 self->data = NULL;
             }
