@@ -105,7 +105,7 @@ d_linear_trajectory_new_full (DVector   *current_pos,
 
     parent->start_speed = d_vector_clone(control_point);
     d_vector_sub(parent->start_speed, current_pos);
-    d_vector_scalar_mul(D_VECTOR(parent->start_speed), 1.0 / acceleration_time);
+    d_vector_scalar_mul(parent->start_speed, 1.0 / acceleration_time);
 
     DVector *displacement = d_vector_clone(move_destination);
     d_vector_sub(displacement, control_point);
@@ -116,7 +116,7 @@ d_linear_trajectory_new_full (DVector   *current_pos,
 
     parent->end_speed = d_speed_new_from_displacement(displacement, parent->move_time);
 
-    parent->control_point = d_vector_clone(D_VECTOR(control_point));
+    parent->control_point = d_vector_clone(control_point);
 
     parent->step_time = step_time;
 
