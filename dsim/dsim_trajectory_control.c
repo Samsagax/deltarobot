@@ -125,11 +125,12 @@ d_trajectory_control_init (DTrajectoryControl   *self)
     self->orders = g_async_queue_new();
 
     self->geometry = d_geometry_new(30.0, 50.0, 25.0, 10.0);
-    self->current_position = d_pos_new();
-    self->current_destination = d_pos_new();
     self->current_position_axes = d_axes_new();
     self->current_destination_axes = d_axes_new();
-    self->max_speed = d_speed_new_full(G_PI/8.0, G_PI/8.0, G_PI/8.0);
+    self->current_position = d_pos_new();
+    self->current_destination = d_pos_new();
+
+    self->max_speed = d_speed_new_full(G_PI/4.0, G_PI/4.0, G_PI/4.0);
 
     self->linear_out_fun = d_trajectory_control_default_output;
     self->linear_out_data = NULL;
@@ -139,7 +140,6 @@ d_trajectory_control_init (DTrajectoryControl   *self)
     self->accelTime = 0.1;
     self->decelTime = 0.1;
     self->stepTime = 0.05;
-    g_message("d_trajectory_control_init finished");
 }
 
 static void
@@ -199,10 +199,10 @@ d_trajectory_control_main_loop (gpointer    *trajectory_control)
 
     g_message("d_trajectory_control_main_loop: Starting dispatcher loop");
     /* Hardcoded orders */
-    DVector *dest = d_axes_new_full(G_PI/4.0, G_PI/4.0, G_PI/4.0);
-    DVector *home = d_axes_new_full(0.0, 0.0, 0.0);
-    DTrajectoryCommand *move1 = d_trajectory_command_new(OT_MOVEJ, dest);
-    DTrajectoryCommand *move2 = d_trajectory_command_new(OT_MOVEJ, home);
+    DVector *dest = d_pos_new_full(G_PI/4.0, G_PI/4.0, 40.0 + G_PI/4.0);
+    DVector *home = d_pos_new_full(0.0, 0.0, 40.0);
+    DTrajectoryCommand *move1 = d_trajectory_command_new(OT_MOVEL, dest);
+    DTrajectoryCommand *move2 = d_trajectory_command_new(OT_MOVEL, home);
     d_trajectory_control_push_order(self, move1);
     d_trajectory_control_push_order(self, move1);
     d_trajectory_control_push_order(self, move2);
@@ -398,7 +398,7 @@ d_trajectory_control_set_current_position (DTrajectoryControl   *self,
     }
     self->current_position = g_object_ref(pos);
     d_solver_solve_inverse(self->geometry,
-                           pos,
+                           self->current_position,
                            self->current_position_axes,
                            NULL);
 }
@@ -414,7 +414,7 @@ d_trajectory_control_set_current_position_axes (DTrajectoryControl  *self,
     }
     self->current_position_axes = g_object_ref(axes);
     d_solver_solve_direct(self->geometry,
-                          axes,
+                          self->current_position_axes,
                           self->current_position);
 }
 
@@ -432,9 +432,16 @@ d_trajectory_control_default_output (DVector    *position,
 DTrajectoryControl*
 d_trajectory_control_new (void)
 {
-    DTrajectoryControl *dtc;
-    dtc = g_object_new(D_TYPE_TRAJECTORY_CONTROL, NULL);
-    return dtc;
+    DTrajectoryControl *self;
+    DVector *home_axes;
+
+    home_axes = d_axes_new();
+    self = g_object_new(D_TYPE_TRAJECTORY_CONTROL, NULL);
+
+    d_trajectory_control_set_current_position_axes(self, home_axes);
+    d_trajectory_control_set_current_destination_axes(self, home_axes);
+
+    return self;
 }
 
 void
