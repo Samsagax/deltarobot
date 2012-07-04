@@ -23,6 +23,7 @@
  */
 
 #include <gdk/gdkkeysyms.h>
+#include <dsim/dsim.h>
 #include "dviewer_viewport.h"
 
 /* Global variables */
@@ -33,8 +34,10 @@ static DPos                 *pos;
 
 /* Joint motion */
 static GtkWidget            *go_button_joint;
+static GtkWidget            *go_button_linear;
 static GtkWidget            *fine_check;
 static GtkWidget            *axis_controls[3];
+static GtkWidget            *pos_controls[3];
 
 /* Forward declarations */
 static GtkWidget*   create_menu_bar (GtkWidget *window);
@@ -43,6 +46,7 @@ static void         create_main_window (void);
 static gboolean     key_handler (GtkWidget *widget, GdkEventKey *event, gpointer data);
 static void         increment_pos (DPos *pos, gdouble dx, gdouble dy, gdouble dz);
 static void         go_button_joint_clicked (GtkButton *button, gpointer data);
+static void         go_button_linear_clicked (GtkButton *button, gpointer data);
 
 /*
  * Handle key pressed on main window
@@ -121,6 +125,27 @@ go_button_joint_clicked (GtkButton  *button,
     }
 
     g_object_unref(axes);
+    g_object_unref(cmd);
+}
+
+static void
+go_button_linear_clicked (GtkButton *button,
+                          gpointer  data)
+{
+    DTrajectoryCommand *cmd;
+    DVector *pos;
+
+    pos = d_pos_new();
+    for (int i = 0; i < d_vector_length(pos); i++) {
+        d_vector_set (pos, i, gtk_spin_button_get_value(pos_controls[i]));
+    }
+    cmd = d_trajectory_command_new(OT_MOVEL, pos);
+    d_trajectory_control_push_order(trajcontrol, cmd);
+    if (gtk_toggle_button_get_active(fine_check)) {
+        d_trajectory_control_push_order(trajcontrol, cmd);
+    }
+
+    g_object_unref(pos);
     g_object_unref(cmd);
 }
 
@@ -282,19 +307,28 @@ create_controls (void)
     /*
      * Table with spinbuttons
      */
-    guint rows = 1;
-    guint columns = 6;
-    table = gtk_table_new(rows, columns, TRUE);
+    guint rows = 2;
+    guint columns = 8;
+    table = gtk_table_new(rows, columns, FALSE);
 
     GtkWidget *axis_labels[] = {
         gtk_label_new("Axis 1:"),
         gtk_label_new("Axis 2:"),
-        gtk_label_new("Axis 3:"),
+        gtk_label_new("Axis 3:")
+    };
+    GtkWidget *pos_labels[] = {
+        gtk_label_new("Pos X:"),
+        gtk_label_new("Pos Y:"),
+        gtk_label_new("Pos Z:")
     };
 
     axis_controls[0] = gtk_spin_button_new_with_range(-G_PI/8.0, G_PI/2.0, G_PI/180.0);
     axis_controls[1] = gtk_spin_button_new_with_range(-G_PI/8.0, G_PI/2.0, G_PI/180.0);
     axis_controls[2] = gtk_spin_button_new_with_range(-G_PI/8.0, G_PI/2.0, G_PI/180.0);
+
+    pos_controls[0] = gtk_spin_button_new_with_range(-50.0, 50.0, 1.0);
+    pos_controls[1] = gtk_spin_button_new_with_range(-50.0, 50.0, 1.0);
+    pos_controls[2] = gtk_spin_button_new_with_range(20.0, 70.0, 1.0);
 
     for (int i = 0; i < 3; i++) {
         gtk_table_attach_defaults(GTK_TABLE(table),
@@ -305,31 +339,49 @@ create_controls (void)
                                   axis_controls[i],
                                   2*i+1, 2*i+2,
                                   0, 1);
+        gtk_table_attach_defaults(GTK_TABLE(table),
+                                  pos_labels[i],
+                                  2*i, 2*i+1,
+                                  1, 2);
+        gtk_table_attach_defaults(GTK_TABLE(table),
+                                  pos_controls[i],
+                                  2*i+1, 2*i+2,
+                                  1, 2);
     }
 
     /*
      * Fine trajectory check
      */
     fine_check = gtk_toggle_button_new_with_label("Fine");
+    gtk_table_attach_defaults(GTK_TABLE(table),
+                                fine_check,
+                                6, 7,
+                                0, 2);
 
     /*
-     * Go! Button
+     * Go! Buttons
      */
     go_button_joint = gtk_button_new_with_label("GO!");
     g_signal_connect(G_OBJECT(go_button_joint),
                      "clicked",
                      G_CALLBACK(go_button_joint_clicked),
                      NULL);
+    go_button_linear = gtk_button_new_with_label("GO!");
+    g_signal_connect(G_OBJECT(go_button_linear),
+                     "clicked",
+                     G_CALLBACK(go_button_linear_clicked),
+                     NULL);
 
-    /*
-     * Horizontal Box
-     */
-    hbox = gtk_hbox_new(FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(hbox), fine_check, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(hbox), go_button_joint, FALSE, FALSE, 0);
+    gtk_table_attach_defaults(GTK_TABLE(table),
+                                go_button_joint,
+                                7, 8,
+                                0, 1);
+    gtk_table_attach_defaults(GTK_TABLE(table),
+                                go_button_linear,
+                                7, 8,
+                                1, 2);
 
-    return hbox;
+    return table;
 }
 
 /*
