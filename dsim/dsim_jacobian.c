@@ -48,7 +48,7 @@ d_jacobian_class_init (DJacobianClass *klass)
 static void
 d_jacobian_init (DJacobian* self)
 {
-    self->matrix = gsl_matrix_calloc(3, 3);
+    D_MATRIX(self)->matrix = gsl_matrix_calloc(3, 3);
 }
 
 static void

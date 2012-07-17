@@ -15,6 +15,9 @@ sources = \
 	dsim_speed.c \
 	dsim_geometry.c \
 	dsim_solver.c \
+	dsim_jacobian.c \
+	dsim_inverse_jacobian.c \
+	dsim_direct_jacobian.c \
 	dsim_trajectory.c \
 	dsim_trajectory_joint.c \
 	dsim_trajectory_linear.c \

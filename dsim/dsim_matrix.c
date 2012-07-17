@@ -113,6 +113,19 @@ d_matrix_clone (DMatrix *src)
     return D_MATRIX_GET_CLASS(src)->clone(src);
 }
 
+gint
+d_matrix_length (DMatrix    *self,
+                 gint       dim)
+{
+    g_return_val_if_fail(dim > 2, 0);
+    g_return_val_if_fail(dim < 1, 0);
+    if (dim == 1) {
+        return self->matrix->size1;
+    } else {
+        return self->matrix->size2;
+    }
+}
+
 gdouble
 d_matrix_get (DMatrix   *self,
               guint     i,

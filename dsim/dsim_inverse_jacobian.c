@@ -30,7 +30,7 @@ static void     d_inverse_jacobian_dispose          (GObject        *obj);
 static void     d_inverse_jacobian_finalize         (GObject        *obj);
 
 /* GType register */
-G_DEFINE_TYPE (DInverseInverseJacobian, d_inverse_inverse_jacobian, D_TYPE_INVERSE_JACOBIAN);
+G_DEFINE_TYPE (DInverseJacobian, d_inverse_jacobian, D_TYPE_JACOBIAN);
 
 /* Implementation internals */
 static void
@@ -62,16 +62,16 @@ d_inverse_jacobian_finalize (GObject *gobject)
 }
 
 static void
-d_inverse_jacobian_set_ext_axes (DInverseJacobian   *self
+d_inverse_jacobian_set_ext_axes (DInverseJacobian   *self,
                                  DExtAxes           *ext_axes)
 {
-    for (int i = 0, i < d_matrix_length(D_MATRIX(self), 1), i++) {
+    for (int i = 0; i < d_matrix_length(D_MATRIX(self), 1); i++) {
         gdouble t[] = {
             d_ext_axes_get(ext_axes, i, 0),
             d_ext_axes_get(ext_axes, i, 1),
             d_ext_axes_get(ext_axes, i, 2)
         };
-        for (int k = 0, k < d_matrix_length(D_MATRIX(self), 2), k++) {
+        for (int k = 0; k < d_matrix_length(D_MATRIX(self), 2); k++) {
             if (i == k) {
                 gdouble j = sin(t[1]) * sin (t[2]);
                 d_matrix_set(D_MATRIX(self), i, k, j);

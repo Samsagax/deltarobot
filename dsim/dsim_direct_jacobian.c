@@ -34,7 +34,7 @@ G_DEFINE_TYPE (DDirectJacobian, d_direct_jacobian, D_TYPE_JACOBIAN);
 
 /* Implementation internals */
 static void
-d_direct_jacobian_class_init (DJacobianClass *klass)
+d_direct_jacobian_class_init (DDirectJacobianClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
     gobject_class->dispose = d_direct_jacobian_dispose;
@@ -42,7 +42,7 @@ d_direct_jacobian_class_init (DJacobianClass *klass)
 }
 
 static void
-d_direct_jacobian_init (DJacobian* self)
+d_direct_jacobian_init (DDirectJacobian* self)
 {
 }
 
@@ -64,7 +64,7 @@ static void
 d_direct_jacobian_set_ext_axes (DDirectJacobian  *self,
                                 DExtAxes         *ext_axes)
 {
-    for (int i = 0, i < d_matrix_length(D_MATRIX(self), 1), i++) {
+    for (int i = 0; i < d_matrix_length(D_MATRIX(self), 1); i++) {
         gdouble phi = i * G_PI * 120.0 / 180.0;
         gdouble t[] = {
             d_ext_axes_get(ext_axes, i, 0),
@@ -76,7 +76,7 @@ d_direct_jacobian_set_ext_axes (DDirectJacobian  *self,
             cos(t[0] + t[1]) * sin(t[2]) * sin(phi) + cos(t[2]) * cos(phi),
             sin(t[0] + t[1]) * sin(t[2])
         };
-        for (int k = 0, k < d_matrix_length(D_MATRIX(self), 2), k++) {
+        for (int k = 0; k < d_matrix_length(D_MATRIX(self), 2); k++) {
             d_matrix_set(D_MATRIX(self), i, k, j[k]);
         }
     }
