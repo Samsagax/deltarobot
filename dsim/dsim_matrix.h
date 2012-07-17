@@ -96,4 +96,6 @@ DVector*    d_matrix_vector_mul     (DMatrix    *self,
 DMatrix*    d_matrix_scalar_mul     (DMatrix    *self,
                                      gdouble    a);
 
+gdouble     d_matrix_determinant    (DMatrix    *self);
+
 #endif   /* ----- #ifndef DSIM_MATRIX_INC  ----- */

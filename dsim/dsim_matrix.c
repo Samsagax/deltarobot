@@ -173,3 +173,9 @@ d_matrix_vector_mul (DMatrix    *self,
     gsl_blas_dgemv(CblasNoTrans, 1.0, self->matrix, v->vector, 0.0, a->vector);
     return a;
 }
+
+gdouble
+d_matrix_determinant (DMatrix   *self)
+{
+    g_error("d_matrix_determinant not yet implemented");
+}
