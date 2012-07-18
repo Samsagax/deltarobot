@@ -190,5 +190,20 @@ d_matrix_vector_mul (DMatrix    *self,
 gdouble
 d_matrix_determinant (DMatrix   *self)
 {
-    g_error("d_matrix_determinant not yet implemented");
+    gsl_matrix *ludecomp;
+    gsl_permutation *perm;
+    gint signum;
+    gdouble det = 0.0;
+
+    ludecomp = gsl_matrix_alloc(self->matrix->size1, self->matrix->size2);
+    gsl_matrix_memcpy(ludecomp, self->matrix);
+    perm = gsl_permutation_calloc(ludecomp->size1);
+
+    gsl_linalg_LU_decomp(ludecomp, perm, &signum);
+    det = gsl_linalg_LU_det(ludecomp, signum);
+
+    gsl_matrix_free(ludecomp);
+    gsl_permutation_free(perm);
+
+    return det;
 }
