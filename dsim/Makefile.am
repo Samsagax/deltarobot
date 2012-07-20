@@ -18,6 +18,7 @@ sources = \
 	dsim_jacobian.c \
 	dsim_inverse_jacobian.c \
 	dsim_direct_jacobian.c \
+	dsim_controller.c \
 	dsim_trajectory.c \
 	dsim_trajectory_joint.c \
 	dsim_trajectory_linear.c \
