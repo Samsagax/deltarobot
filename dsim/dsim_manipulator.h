@@ -29,8 +29,10 @@
 
 #include <glib-object.h>
 #include <dsim/dsim_geometry.h>
+#include <dsim/dsim_dynamic_spec.h>
 #include <dsim/dsim_vector.h>
 #include <dsim/dsim_axes.h>
+#include <dsim/dsim_speed.h>
 
 /* Type macros */
 #define D_TYPE_MANIPULATOR             (d_manipulator_get_type ())
@@ -45,8 +47,13 @@ typedef struct _DManipulator DManipulator;
 struct _DManipulator {
     GObject         parent_instance;
 
-    /* Torques in the axes */
+    /* This manipulator physical parameters */
+    DGeometry       *geometry;
+    DDynamicSpec    *dynamic_params;
+
+    /* Torques in the axes force in tool point */
     DVector         *torque;
+    DVector         *force;
 
     /* Axes for the manipulator's motors */
     DAxes           *axes;
@@ -70,21 +77,23 @@ struct _DManipulatorClass {
 };
 
 /* Methods */
-GType       d_manipulator_get_type      (void);
+GType           d_manipulator_get_type      (void);
 
+DManipulator*   d_manipulator_new           (DGeometry      *geometry,
+                                             DDynamicSpec   *dynamic_params);
 
-gdouble     d_manipulator_get_axis      (DManipulator   *self,
-                                         gint           axis);
+gdouble         d_manipulator_get_axis      (DManipulator   *self,
+                                             gint           axis);
 
-void        d_manipulator_set_axis      (DManipulator   *self,
-                                         gint           axis,
-                                         gdouble        angle);
+void            d_manipulator_set_axis      (DManipulator   *self,
+                                             gint           axis,
+                                             gdouble        angle);
 
-DVector*    d_manipulator_get_axes      (DManipulator   *self);
+DVector*        d_manipulator_get_axes      (DManipulator   *self);
 
-void        d_manipulator_set_axes      (DManipulator   *self,
-                                         DVector        *axes);
+void            d_manipulator_set_axes      (DManipulator   *self,
+                                             DVector        *axes);
 
-DVector*    d_manipulator_get_speed     (DManipulator   *self);
+DVector*        d_manipulator_get_speed     (DManipulator   *self);
 
 #endif   /* ----- #ifndef DSIM_MANIPULATOR_INC  ----- */
