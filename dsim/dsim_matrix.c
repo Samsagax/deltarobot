@@ -207,3 +207,20 @@ d_matrix_determinant (DMatrix   *self)
 
     return det;
 }
+
+DMatrix*
+d_matrix_inverse (DMatrix   *self)
+{
+    gls_permutation *p = gsl_permutation_alloc(d_matrix_length(self, 0));
+    gsl_matrix *lu_decomp = gsl_matrix_alloc(self->matrix->size1, self->matrix->size2);
+    gsl_matrix_memcpy(lu_decomp, self->matrix);
+    int sign;
+
+    gsl_linalg_LU_decomp(lu_decomp, p, &sign);
+    gsl_linalg_LU_invert(lu_decomp, p, self->matrix);
+
+    gsl_permutation_free(p);
+    gsl_matrix_free(lu_decomp);
+
+    return self;
+}
