@@ -256,6 +256,129 @@ d_dynamic_model_get_theta_inertia (DDynamicModel     *self)
     return m_p;
 }
 
+static DMatrix*
+d_dynamic_model_get_model_inertia (DMatrix  *i_q,
+                                   DMatrix  *m_p,
+                                   DMatrix  *direct_jacobian,
+                                   DMatrix  *inverse_jacobian)
+{
+    DMatrix *inverse_j_p = d_matrix_clone (direct_jacobian);
+    d_matrix_inverse(inverse_j_p);
+
+    DMatrix *ii = d_matrix_new(3, 3);
+
+    gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0,
+                    inverse_jacobian->matrix, inverse_j_p->matrix,
+                    0.0, ii->matrix);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
+                    ii->matrix, m_p->matrix,
+                    0.0, ii->matrix);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
+                    ii->matrix, inverse_j_p->matrix,
+                    0.0, ii->matrix);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
+                    ii->matrix, inverse_jacobian->matrix,
+                    0.0, ii->matrix);
+    gsl_matrix_add(ii, i_q);
+
+    g_object_unref(inverse_j_p);
+
+    return ii;
+}
+
+static DMatrix*
+d_dynamic_model_get_model_mass (DMatrix *m_q,
+                                DMatrix *m_p,
+                                DMatrix *j_p,
+                                DMatrix *j_q)
+{
+    DMatrix *inverse_j_p = d_matrix_clone (j_p);
+    d_matrix_inverse(inverse_j_p);
+
+    DMatrix *mm = d_matrix_new(3, 3);
+
+    gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0,
+                    j_q->matrix, inverse_j_p->matrix,
+                    0.0, mm->matrix);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
+                    mm->matrix, m_p->matrix,
+                    0.0, mm->matrix);
+    gsl_matrix_add(mm, m_q);
+
+    g_object_unref(inverse_j_p);
+
+    return mm;
+}
+
+static DMatrix*
+d_dynamic_model_get_model_coriolis (DMatrix *m_q,
+                                    DMatrix *m_p,
+                                    DMatrix *j_p,
+                                    DMatrix *j_p_dot,
+                                    DMatrix *j_q,
+                                    DMatrix *j_q_dot)
+{
+    DMatrix *inverse_j_p = d_matrix_clone(j_p);
+    d_matrix_inverse(inverse_j_p);
+
+    DMatrix *hh = d_matrix_new(3, 3);
+    DMatrix *term1 = d_matrix_new(3, 3);
+    DMatrix *term2 = d_matrix_new(3, 3);
+
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
+                    inverse_j_p->matrix, j_q_dot->matrix,
+                    0.0, term_1->matrix);
+
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
+                    inverse_j_p->matrix, j_p_dot->matrix,
+                    0.0, term2->matrix);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
+                    term2->matrix, inverse_j_p->matrix,
+                    0.0, term2->matrix);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
+                    term2->matrix, j_q->matrix,
+                    0.0, term2->matrix);
+
+    gsl_matrix_add(term1->matrix, term2->matrix);
+
+    gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0,
+                    j_q->matrix, inverse_j_p->matrix,
+                    0.0, hh->matrix);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
+                    hh->matrix, m_p->matrix,
+                    0.0, hh->matrix);
+
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
+                    hh->matrix, term1->matrix,
+                    0.0, hh->matrix);
+
+    g_object_unref(inverse_j_p);
+    g_object_unref(term1);
+    g_object_unref(term2);
+
+    return hh;
+}
+
+static DVector*
+d_dynamic_model_get_model_torque (DMatrix   *j_q,
+                                  DMAtrix   *j_p,
+                                  DVector   *t_q,
+                                  DVector   *q_p)
+{
+    DMatrix *inverse_j_p = d_matrix_clone(j_p);
+    d_matrix_inverse(inverse_j_p);
+
+    DMatrix *term = d_matrix_new(3, 3);
+
+    gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0,
+                    j_q->matrix, inverse_j_p->matrix,
+                    0.0, term->matrix);
+
+    DVector *tt = d_matrix_vector_mul(term, q_p);
+    d_vector_add(tt, t_q);
+
+    return tt;
+}
 
 /* Public API */
 DDynamicModel*
