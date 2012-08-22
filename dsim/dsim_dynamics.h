@@ -31,6 +31,7 @@
 #include <math.h>
 #include <dsim/dsim_matrix.h>
 #include <dsim/dsim_geometry.h>
+#include <dsim/dsim_solver.h>
 
 /* DDynamicSpec Type macros */
 #define D_TYPE_DYNAMIC_SPEC             (d_dynamic_spec_get_type ())
