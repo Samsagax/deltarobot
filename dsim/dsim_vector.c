@@ -164,7 +164,7 @@ d_vector_add (DVector   *a,
     g_return_val_if_fail(D_IS_VECTOR(b), NULL);
     g_return_val_if_fail(a->vector->size == b->vector->size, NULL);
 
-    gsl_vector_sub(a->vector, b->vector);
+    gsl_vector_add(a->vector, b->vector);
 
     return a;
 }
