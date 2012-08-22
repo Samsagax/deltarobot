@@ -27,6 +27,7 @@
 #define  DSIM_SOLVER_INC
 
 #include <glib-object.h>
+#include <math.h>
 #include <dsim/dsim_pos.h>
 #include <dsim/dsim_axes.h>
 #include <dsim/dsim_geometry.h>

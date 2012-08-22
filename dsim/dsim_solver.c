@@ -22,9 +22,6 @@
  * dsim_solver.c :
  */
 
-#include <stdlib.h>
-#include <math.h>
-#include <glib.h>
 #include "dsim_solver.h"
 
 /* Static Methods */
@@ -204,8 +201,6 @@ d_solver_solve_inverse (DGeometry   *geometry,
     }
 }
 
-
-
 /* GType Register */
 G_DEFINE_TYPE (DSolver, d_solver, G_TYPE_OBJECT);
 
@@ -217,9 +212,9 @@ d_solver_get_instance (void)
 }
 
 static GObject*
-constructor ( GType type,
-              guint n_construct_params,
-              GObjectConstructParam *construct_params )
+constructor (GType type,
+             guint n_construct_params,
+             GObjectConstructParam *construct_params )
 {
     static GObject *self = NULL;
 
@@ -230,25 +225,25 @@ constructor ( GType type,
         return (self);
     }
 
-    return g_object_ref (self);
+    return g_object_ref(self);
 }
 
 /* Destructor */
 static void
-d_solver_dispose ( GObject *object )
+d_solver_dispose (GObject *object)
 {
     G_OBJECT_CLASS (d_solver_parent_class)->dispose(object);
 }
 
 static void
-d_solver_finalize ( GObject *object )
+d_solver_finalize (GObject *object)
 {
     G_OBJECT_CLASS (d_solver_parent_class)->finalize(object);
 }
 
 /* Init class and instance */
 static void
-d_solver_class_init ( DSolverClass *klass )
+d_solver_class_init (DSolverClass *klass)
 {
     //TODO: Initialize destructors
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
@@ -258,7 +253,7 @@ d_solver_class_init ( DSolverClass *klass )
 }
 
 static void
-d_solver_init ( DSolver *self )
+d_solver_init (DSolver *self)
 {
     //TODO: Initialize members?
 }
