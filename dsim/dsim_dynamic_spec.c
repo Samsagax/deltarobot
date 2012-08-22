@@ -40,11 +40,11 @@ G_DEFINE_TYPE(DDynamicSpec, d_dynamic_spec, G_TYPE_OBJECT);
 static void
 d_dynamic_spec_init (DDynamicSpec   *self)
 {
-    self->low_arm_mass = 0.0;
-    self->low_arm_moi = 0.0;
-    self->upper_arm_mass = 0.0;
-    self->upper_arm_moi = 0.0;
-    self->platform_mass = 0.0;
+    self->low_arm_mass = 1.0;
+    self->low_arm_moi = 1.0;
+    self->upper_arm_mass = 1.0;
+    self->upper_arm_moi = 1.0;
+    self->platform_mass = 1.0;
 }
 
 static void
