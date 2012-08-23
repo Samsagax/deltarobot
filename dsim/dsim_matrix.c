@@ -117,9 +117,9 @@ gint
 d_matrix_length (DMatrix    *self,
                  gint       dim)
 {
-    g_return_val_if_fail(dim > 2, 0);
-    g_return_val_if_fail(dim < 1, 0);
-    if (dim == 1) {
+    g_return_val_if_fail(dim < 2, 0);
+    g_return_val_if_fail(dim >= 0, 0);
+    if (dim == 0) {
         return self->matrix->size1;
     } else {
         return self->matrix->size2;
