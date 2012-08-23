@@ -23,7 +23,9 @@ sources = \
 	dsim_trajectory_joint.c \
 	dsim_trajectory_linear.c \
 	dsim_trajectory_command.c \
-	dsim_trajectory_control.c 
+	dsim_trajectory_control.c \
+	dsim_dynamic_spec.c \
+	dsim_dynamic_model.c
 
 lib_LTLIBRARIES = ../lib/libdsim.la
 ___lib_libdsim_la_SOURCES = ${sources}

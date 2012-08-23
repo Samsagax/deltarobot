@@ -112,61 +112,29 @@ print_point(void *data)
     }
 }
 
+
+
 int
 main (int argc, char* argv[]) {
 
     g_type_init();
 
-    DTrajectoryControl *dtc;
-    dtc = d_trajectory_control_new();
+    DGeometry *geometry = d_geometry_new(30.0, 40.0, 10.0, 20.0);
+    DDynamicSpec *ds = d_dynamic_spec_new();
+    DVector *torque = d_vector_new(3);
+    DVector *force = d_vector_new(3);
+    DVector *gravity= d_vector_new(3);
+    DDynamicModel *model = d_dynamic_model_new(geometry, ds);
 
-    d_trajectory_control_start(dtc);
-    g_usleep(5 * G_USEC_PER_SEC);
-    d_trajectory_control_stop(dtc);
+    d_vector_set(gravity, 2, 1.0);
 
-    g_object_unref(dtc);
-//    GString     *string;
-//    DGeometry   *geometry;
-//    DVector     *ax_from;
-//    DVector     *ax_to;
-//    DVector     *speed;
-//
-//    string = g_string_new(NULL);
-//    geometry = d_geometry_new(
-//                40.0,               /* Lower Limb */
-//                50.0,               /* Upper Limb */
-//                30.0,               /* Fixed Platform */
-//                20.0);              /* Moving Platform */
-//    ax_from = d_axes_new_full(0.0, 0.0, 0.0);
-//    ax_to = d_axes_new_full(0.0, 0.0, 6.0);
-//    speed = d_speed_new_full(3.0, 3.0, 3.0);
-//
-//    g_print("FROM :     %s\n", d_vector_to_string(ax_from, string));
-//    g_print("TO:        %s\n", d_vector_to_string(ax_to, string));
-//    g_print("MAX SPEED: %s\n", d_vector_to_string(speed, string));
-//
-//    DJointTrajectory *movej = d_joint_trajectory_new_full
-//                                        (ax_from,
-//                                         ax_from,
-//                                         ax_to,
-//                                         speed,
-//                                         0.2,
-//                                         0.01);
-//
-//    for (int i = 0; i < 20; i++) {
-//        DVector* current = d_trajectory_next(D_ITRAJECTORY(movej));
-//        g_print("AT:    %s\n", d_vector_to_string(current, string));
-//        g_object_unref(current);
-//    }
-//
+    d_dynamic_model_solve_inverse_axes(model, torque, force, gravity);
 
-//    g_object_unref(movej);
-//    g_object_unref(speed);
-//    g_object_unref(geometry);
-//    g_object_unref(ax_from);
-//    g_object_unref(ax_to);
-//    g_string_free(string, TRUE);
-
-
+    g_object_unref(ds);
+    g_object_unref(geometry);
+    g_object_unref(model);
+    g_object_unref(force);
+    g_object_unref(torque);
+    g_object_unref(gravity);
     return 0;
 }
