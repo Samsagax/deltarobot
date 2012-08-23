@@ -241,7 +241,7 @@ static DMatrix*
 d_dynamic_model_get_pos_mass (DDynamicModel     *self)
 {
     DMatrix *m_p = d_matrix_new(3, 3);
-    for (int i = 0; d_matrix_length(m_p, 0); i++) {
+    for (int i = 0; i < d_matrix_length(m_p, 0); i++) {
         gdouble mass = self->dynamic_spec->platform_mass
                         + 3.0 * self->dynamic_spec->upper_arm_mass;
         d_matrix_set(m_p, i, i, mass);
@@ -254,7 +254,7 @@ static DMatrix*
 d_dynamic_model_get_theta_inertia (DDynamicModel     *self)
 {
     DMatrix *m_p = d_matrix_new(3, 3);
-    for (int i = 0; d_matrix_length(m_p, 0); i++) {
+    for (int i = 0; i < d_matrix_length(m_p, 0); i++) {
         gdouble mass = self->dynamic_spec->upper_arm_mass
                         * pow(self->geometry->a, 2.0)
                         + self->dynamic_spec->low_arm_moi;
@@ -411,7 +411,7 @@ d_dynamic_model_equation (double        t,
                           void          *params)
 {
     /* Stub */
-    g_warning("d_dynamic_model_equation is a stub!");
+//    g_warning("d_dynamic_model_equation is a stub!");
 
     GSLParams *gsl_params;
 
@@ -422,6 +422,7 @@ d_dynamic_model_equation (double        t,
     g_return_val_if_fail(D_IS_DYNAMIC_MODEL(gsl_params->model), GSL_EBADFUNC);
     g_return_val_if_fail(D_IS_VECTOR(gsl_params->torque), GSL_EBADFUNC);
     g_return_val_if_fail(D_IS_VECTOR(gsl_params->force), GSL_EBADFUNC);
+    g_return_val_if_fail(D_IS_VECTOR(gsl_params->gravity), GSL_EBADFUNC);
 
     DDynamicModel *model = gsl_params->model;
     DVector *torque = gsl_params->torque;
@@ -433,7 +434,9 @@ d_dynamic_model_equation (double        t,
     DVector *m_t;
 
     /* Matrices holding dynamic data to build above matrices */
-    DMatrix *j_p, *j_p_dot, *j_q, *j_q_dot, *m_q, *m_p, *i_q;
+    DMatrix *j_p, *j_p_dot,
+            *j_q, *j_q_dot,
+            *m_q, *m_p, *i_q;
 
     /* Speed and positions in both axes and cartesian space */
     DVector *q, *q_dot, *q_dot_dot, *p, *p_dot;
@@ -443,8 +446,8 @@ d_dynamic_model_equation (double        t,
     q = d_vector_new(3);
     q_dot = d_vector_new(3);
     for (int i = 0; i < 3; i++) {
-        d_vector_set(q_dot, i, y[i+3]);
         d_vector_set(q, i, y[i]);
+        d_vector_set(q_dot, i, y[i+3]);
     }
     p = d_vector_new(3);
     p_dot = d_vector_new(3);
@@ -472,6 +475,7 @@ d_dynamic_model_equation (double        t,
     m_m = d_dynamic_model_get_model_mass(m_q, m_p, j_p, j_q);
 
     /* Calculate acceleration */
+    /* I * d²q/dt² = T - H * dq/dt + M * g */
     DVector *q_dot_tmp = d_matrix_vector_mul(m_h, q_dot);
     DVector *g_tmp = d_matrix_vector_mul(m_m, gravity);
     d_vector_sub(m_t, q_dot_tmp);
@@ -479,9 +483,9 @@ d_dynamic_model_equation (double        t,
     q_dot_dot = d_matrix_vector_mul(d_matrix_inverse(m_i), m_t);
 
     /* Set the dydt array */
-    dydt[0] = d_vector_get(q, 0);
-    dydt[1] = d_vector_get(q, 1);
-    dydt[2] = d_vector_get(q, 2);
+    dydt[0] = d_vector_get(q_dot, 0);
+    dydt[1] = d_vector_get(q_dot, 1);
+    dydt[2] = d_vector_get(q_dot, 2);
     dydt[3] = d_vector_get(q_dot_dot, 0);
     dydt[4] = d_vector_get(q_dot_dot, 1);
     dydt[5] = d_vector_get(q_dot_dot, 2);
@@ -555,7 +559,7 @@ d_dynamic_model_solve_inverse_axes (DDynamicModel   *self,
             g_warning("driver returned %d\n", s);
             break;
         }
-        g_print("t: %.5e, q = [%.5e,%.5e,%.5e], q. = [%.5e,%.5e,%.5e]",
+        g_print("t: %.5e,\n\tq  = [%.5e,%.5e,%.5e]\n\tq. = [%.5e,%.5e,%.5e]\n",
             t, y[0], y[1], y[2], y[3], y[4], y[5]);
     }
     gsl_odeiv2_driver_free(driver);

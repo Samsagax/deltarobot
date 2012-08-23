@@ -95,4 +95,10 @@ GType           d_dynamic_model_get_type    (void);
 DDynamicModel*  d_dynamic_model_new         (DGeometry      *geometry,
                                              DDynamicSpec   *dynamic_spec);
 
+void            d_dynamic_model_solve_inverse_axes
+                                            (DDynamicModel  *self,
+                                             DVector        *torque,
+                                             DVector        *force,
+                                             DVector        *gravity);
+
 #endif   /* ----- #ifndef DSIM_DYNAMICS_INC  ----- */
