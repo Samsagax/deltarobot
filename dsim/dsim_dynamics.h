@@ -78,8 +78,50 @@ typedef struct _DDynamicModel DDynamicModel;
 struct _DDynamicModel {
     GObject         parent_instance;
 
+    /* Geometric and dynamic parameters */
     DDynamicSpec    *dynamic_spec;
     DGeometry       *geometry;
+
+    /* Position and Speed in axes space */
+    DVector         *axes;
+    DVector         *speed;
+
+    /* Force and Torque applied */
+    DVector         *force;
+    DVector         *torque;
+
+    /* Gravity acceleration */
+    DVector         *gravity;
+
+    /* Some useful singleton matrices and flags to update them */
+    DMatrix         *jacobian_p_inv;    /* Direct Jacobian Matrix */
+    DMatrix         *jacobian_p_dot;    /* Direct Jacobian Derivative */
+    DMatrix         *jacobian_q;        /* Inverse Jacobian Matrix */
+    DMatrix         *jacobian_q_dot;    /* Inverse Jacobian Derivative */
+
+    gboolean        jpi_update;
+    gboolean        jpd_update;
+    gboolean        jq_update;
+    gboolean        jqd_update;
+
+    DMatrix         *mass_axes;
+    DMatrix         *mass_pos;
+    DMatrix         *inertia_axes;
+
+    gboolean        ma_update;
+    gboolean        mp_update;
+    gboolean        ia_update;
+
+    /* Model singleton matrices and update flags */
+    DMatrix         *model_mass;
+    DMatrix         *model_coriolis;
+    DMatrix         *model_inertia_inv;
+    DVector         *model_torque;
+
+    gboolean        mm_update;
+    gboolean        mc_update;
+    gboolean        mi_update;
+    gboolean        mt_update;
 };
 
 /* Class Structure of DDynamicModel */

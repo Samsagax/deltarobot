@@ -57,6 +57,41 @@ d_dynamic_model_init (DDynamicModel   *self)
 {
     self->geometry = NULL;
     self->dynamic_spec = NULL;
+
+    self->axes = d_vector_new(3);
+    self->speed = d_vector_new(3);
+
+    self->force = d_vector_new(3);
+    self->torque = d_vector_new(3);
+    self->gravity = d_vector_new(3);
+
+    self->jacobian_p_inv = NULL;
+    self->jacobian_p_dot = NULL;
+    self->jacobian_q = NULL;
+    self->jacobian_q_dot = NULL;
+
+    self->jpd_update = TRUE;
+    self->jq_update = TRUE;
+    self->jpi_update = TRUE;
+    self->jqd_update = TRUE;
+
+    self->mass_axes = NULL;
+    self->mass_pos = NULL;
+    self->inertia_axes = NULL;
+
+    self->ma_update = TRUE;
+    self->mp_update = TRUE;
+    self->ia_update = TRUE;
+
+    self->model_mass = NULL;
+    self->model_coriolis = NULL;
+    self->model_inertia_inv = NULL;
+    self->model_torque = NULL;
+
+    self->mm_update = TRUE;
+    self->mc_update = TRUE;
+    self->mi_update = TRUE;
+    self->mt_update = TRUE;
 }
 
 static void
@@ -79,6 +114,66 @@ d_dynamic_model_dispose (GObject *gobject)
     if (self->dynamic_spec) {
         g_object_unref(self->dynamic_spec);
         self->dynamic_spec = NULL;
+    }
+    if (self->axes) {
+        g_object_unref(self->axes);
+        self->axes = NULL;
+    }
+    if (self->speed) {
+        g_object_unref(self->speed);
+        self->speed = NULL;
+    }
+    if (self->force) {
+        g_object_unref(self->force);
+        self->force = NULL;
+    }
+    if (self->gravity) {
+        g_object_unref(self->gravity);
+        self->gravity = NULL;
+    }
+    if (self->jacobian_p_inv) {
+        g_object_unref(self->jacobian_p_inv);
+        self->jacobian_p_inv = NULL;
+    }
+    if (self->jacobian_p_dot) {
+        g_object_unref(self->jacobian_p_dot);
+        self->jacobian_p_dot = NULL;
+    }
+    if (self->jacobian_q) {
+        g_object_unref(self->jacobian_q);
+        self->jacobian_q = NULL;
+    }
+    if (self->jacobian_q_dot) {
+        g_object_unref(self->jacobian_q_dot);
+        self->jacobian_q_dot = NULL;
+    }
+    if (self->mass_axes) {
+        g_object_unref(self->mass_axes);
+        self->mass_axes = NULL;
+    }
+    if (self->mass_pos) {
+        g_object_unref(self->mass_pos);
+        self->mass_pos = NULL;
+    }
+    if (self->inertia_axes) {
+        g_object_unref(self->inertia_axes);
+        self->inertia_axes = NULL;
+    }
+    if (self->model_mass) {
+        g_object_unref(self->model_mass);
+        self->model_mass = NULL;
+    }
+    if (self->model_coriolis) {
+        g_object_unref(self->model_coriolis);
+        self->model_coriolis = NULL;
+    }
+    if (self->model_inertia_inv) {
+        g_object_unref(self->model_inertia_inv);
+        self->model_inertia_inv = NULL;
+    }
+    if (self->model_torque) {
+        g_object_unref(self->model_torque);
+        self->model_torque = NULL;
     }
 
     /*  Chain Up */
