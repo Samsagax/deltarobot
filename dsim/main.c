@@ -121,20 +121,12 @@ main (int argc, char* argv[]) {
 
     DGeometry *geometry = d_geometry_new(30.0, 40.0, 10.0, 20.0);
     DDynamicSpec *ds = d_dynamic_spec_new();
-    DVector *torque = d_vector_new(3);
-    DVector *force = d_vector_new(3);
-    DVector *gravity= d_vector_new(3);
     DDynamicModel *model = d_dynamic_model_new(geometry, ds);
 
-    d_vector_set(gravity, 2, 1.0);
-
-    d_dynamic_model_solve_inverse_axes(model, torque, force, gravity);
+    d_dynamic_model_solve_inverse_axes(model);
 
     g_object_unref(ds);
     g_object_unref(geometry);
     g_object_unref(model);
-    g_object_unref(force);
-    g_object_unref(torque);
-    g_object_unref(gravity);
     return 0;
 }

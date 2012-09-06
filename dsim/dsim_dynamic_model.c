@@ -26,14 +26,6 @@
 #include "dsim_dynamics.h"
 
 /* Forward declarations */
-typedef struct _GSLParams GSLParams;
-struct _GSLParams {
-    DDynamicModel   *model;
-    DVector         *torque;
-    DVector         *force;
-    DVector         *gravity;
-};
-
 static void         d_dynamic_model_class_init      (DDynamicModelClass  *klass);
 
 static void         d_dynamic_model_init            (DDynamicModel       *self);
@@ -47,6 +39,34 @@ static void         d_dynamic_model_set_geometry    (DDynamicModel  *self,
 
 static void         d_dynamic_model_set_dynamic_spec(DDynamicModel  *self,
                                                      DDynamicSpec   *dynamic_spec);
+
+static DMatrix*     d_dynamic_model_get_direct_jacobian_dt
+                                                    (DDynamicModel  *self);
+
+static DMatrix*     d_dynamic_model_get_direct_jacobian_inv
+                                                    (DDynamicModel  *self);
+
+static DMatrix*     d_dynamic_model_get_inverse_jacobian
+                                                    (DDynamicModel  *self);
+
+static DMatrix*     d_dynamic_model_get_inverse_jacobian_dt
+                                                    (DDynamicModel  *self);
+
+static DMatrix*     d_dynamic_model_get_inertia_axes(DDynamicModel  *self);
+
+static DMatrix*     d_dynamic_model_get_mass_pos    (DDynamicModel  *self);
+
+static DMatrix*     d_dynamic_model_get_mass_axes   (DDynamicModel  *self);
+
+static DMatrix*     d_dynamic_model_get_model_inertia_inv
+                                                    (DDynamicModel  *self);
+
+static DMatrix*     d_dynamic_model_get_model_mass  (DDynamicModel  *self);
+
+static DMatrix*     d_dynamic_model_get_model_coriolis
+                                                    (DDynamicModel  *self);
+
+static DVector*     d_dynamic_model_get_model_torque(DDynamicModel  *self);
 
 /* GType Register */
 G_DEFINE_TYPE(DDynamicModel, d_dynamic_model, G_TYPE_OBJECT);
@@ -206,68 +226,70 @@ d_dynamic_model_set_geometry (DDynamicModel *self,
     self->geometry = g_object_ref(geometry);
 }
 
-static DMatrix*
-d_dynamic_model_get_inverse_jacobian_dt (DDynamicModel  *self,
-                                         DVector        *pos,
-                                         DVector        *axes,
-                                         DVector        *speed_pos,
-                                         DVector        *speed_axes)
+/*
+ * Update direct jacobian inverse matrix with current parameters
+ */
+static void
+d_dynamic_model_update_jpi (DDynamicModel   *self)
 {
-    DMatrix *j_q_dot = d_matrix_new(3, 3);
+    if (self->jacobian_p_inv == NULL) {
+        self->jacobian_p_inv = d_matrix_new(3, 3);
+    }
+
+    DVector *axes = self->axes;
+    DVector *pos = d_vector_new(3);
+    gsl_matrix *jpi = self->jacobian_p_inv->matrix;
     gdouble a = self->geometry->a;
     gdouble h = self->geometry->h;
     gdouble r = self->geometry->r;
-    for (int i = 0; i < d_matrix_length(j_q_dot, 0); i++) {
-        gdouble phi = G_PI * 120.0 / 180.0 * (double)i;
-        gdouble t = d_vector_get(axes, i);
-        gdouble t_dot = d_vector_get(speed_axes, i);
-        d_matrix_set(j_q_dot, i, i,
-                    2.0 * a * (
-                        (d_vector_get(speed_pos, 0) * cos(phi)
-                            + d_vector_get(speed_pos, 1) * sin(phi)
-                            + d_vector_get(pos,2) * t_dot) * sin(t)
-                         + ((d_vector_get(pos, 0) * cos(phi)
-                            + d_vector_get(pos, 1) * sin(phi)
-                            + h - r) * t_dot
-                            - d_vector_get(speed_pos, 2)) * cos(t)));
-    }
 
-    return j_q_dot;
+    gsl_matrix_set_all(jpi, 0);
+    d_solver_solve_direct(self->geometry, axes, pos);
+    for (int i = 0; i < jpi->size1; i++) {
+        gdouble phi = G_PI * 120.0 / 180.0 * (gdouble)i;
+        gdouble t = d_vector_get(axes, i);
+        gdouble gammax = 2.0 * (d_vector_get(pos, 0) + (h-r) * cos(phi)
+                                - a * cos(phi) * cos(t));
+        gdouble gammay = 2.0 * (d_vector_get(pos, 1) + (h-r) * sin(phi)
+                                - a * sin(phi) * cos(t));
+        gdouble gammaz = 2.0 * (d_vector_get(pos, 2) - a * sin(t));
+        gsl_matrix_set(jpi, i, 0, - gammax);
+        gsl_matrix_set(jpi, i, 1, - gammay);
+        gsl_matrix_set(jpi, i, 2, - gammaz);
+    }
+    d_matrix_inverse(self->jacobian_p_inv);
+
+    self->jpi_update = FALSE;
+
+    g_object_unref(pos);
 }
 
-static DMatrix*
-d_dynamic_model_get_inverse_jacobian (DDynamicModel *self,
-                                      DVector       *pos,
-                                      DVector       *axes)
+/*
+ * Update direct jacobian derivative matrix with current parameters
+ */
+static void
+d_dynamic_model_update_jpd (DDynamicModel   *self)
 {
-    DMatrix *j_q = d_matrix_new(3, 3);
-    gdouble a = self->geometry->a;
-    gdouble h = self->geometry->h;
-    gdouble r = self->geometry->r;
-    for (int i = 0; i < d_matrix_length(j_q, 0); i++) {
-        gdouble phi = G_PI * 120.0 / 180.0 * (double)i;
-        gdouble t = d_vector_get(axes, i);
-        d_matrix_set(j_q, i, i,
-                    2.0 * a * ((d_vector_get(pos, 0) * cos(phi)
-                                + d_vector_get(pos, 1) * sin(phi)
-                                + h - r)
-                                * sin(t)
-                                - d_vector_get(pos, 2) * cos(t)));
+    if (self->jacobian_p_dot == NULL) {
+        self->jacobian_p_dot = d_matrix_new(3, 3);
     }
 
-    return j_q;
-}
-
-static DMatrix*
-d_dynamic_model_get_direct_jacobian_dt (DDynamicModel   *self,
-                                        DVector         *axes,
-                                        DVector         *speed_pos,
-                                        DVector         *speed_axes)
-{
-    DMatrix *j_p_dot = d_matrix_new(3, 3);
+    DVector *axes = self->axes;
+    DVector *pos = d_vector_new(3);
+    DVector *speed_axes = self->speed;
+    DVector *speed_pos = d_vector_new(3);
+    DMatrix *jp_inv = d_dynamic_model_get_direct_jacobian_inv(self);
+    DMatrix *jq = d_dynamic_model_get_inverse_jacobian(self);
+    gsl_matrix *jpd = self->jacobian_p_dot->matrix;
     gdouble a = self->geometry->a;
 
-    for (int i = 0; i < d_matrix_length(j_p_dot, 0); i++) {
+    gsl_matrix_set_all(jpd, 0);
+    d_solver_solve_direct(self->geometry, axes, pos);
+    gsl_blas_dgemv(CblasNoTrans, 1.0, jq->matrix,
+                    speed_axes->vector, 0.0, speed_pos->vector);
+    gsl_blas_dgemv(CblasNoTrans, 1.0, jp_inv->matrix,
+                    speed_pos->vector, 0.0, speed_pos->vector);
+    for (int i = 0; i < jpd->size1; i++) {
         gdouble phi = G_PI * 120.0 / 180.0 * (double)i;
         gdouble t = d_vector_get(axes, i);
         gdouble t_dot = d_vector_get(speed_axes, i);
@@ -279,208 +301,410 @@ d_dynamic_model_get_direct_jacobian_dt (DDynamicModel   *self,
         gdouble gammaz_dot = 2.0 * (d_vector_get(speed_pos, 2)
                                 - a * cos(t) * t_dot);
 
-        d_matrix_set(j_p_dot, i, 0, - gammax_dot);
-        d_matrix_set(j_p_dot, i, 1, - gammay_dot);
-        d_matrix_set(j_p_dot, i, 2, - gammaz_dot);
+        gsl_matrix_set(jpd, i, 0, - gammax_dot);
+        gsl_matrix_set(jpd, i, 1, - gammay_dot);
+        gsl_matrix_set(jpd, i, 2, - gammaz_dot);
     }
 
-    return j_p_dot;
+    self->jpd_update = FALSE;
+
+    g_object_unref(speed_pos);
+    g_object_unref(pos);
 }
 
-static DMatrix*
-d_dynamic_model_get_direct_jacobian (DDynamicModel  *self,
-                                     DVector        *pos,
-                                     DVector        *axes)
+/*
+ * Update inverse jacobian matrix with current parameters
+ */
+static void
+d_dynamic_model_update_jq (DDynamicModel   *self)
 {
-    DMatrix *j_p = d_matrix_new(3, 3);
+    if (self->jacobian_q == NULL) {
+        self->jacobian_q = d_matrix_new(3, 3);
+    }
+
+    DVector *axes = self->axes;
+    DVector *pos = d_vector_new(3);
+    gsl_matrix *jq = self->jacobian_q->matrix;
     gdouble a = self->geometry->a;
     gdouble h = self->geometry->h;
     gdouble r = self->geometry->r;
-    for (int i = 0; i < d_matrix_length(j_p, 0); i++) {
+
+    gsl_matrix_set_all(jq, 0);
+    d_solver_solve_direct(self->geometry, axes, pos);
+    for (int i = 0; i < jq->size1; i++) {
         gdouble phi = G_PI * 120.0 / 180.0 * (double)i;
         gdouble t = d_vector_get(axes, i);
-        gdouble gammax = 2.0 * (d_vector_get(pos, 0) + (h-r) * cos(phi)
-                                - a * cos(phi) * cos(t));
-        gdouble gammay = 2.0 * (d_vector_get(pos, 1) + (h-r) * sin(phi)
-                                - a * sin(phi) * cos(t));
-        gdouble gammaz = 2.0 * (d_vector_get(pos, 2) - a * sin(t));
-        d_matrix_set(j_p, i, 0, - gammax);
-        d_matrix_set(j_p, i, 1, - gammay);
-        d_matrix_set(j_p, i, 2, - gammaz);
+        gsl_matrix_set(jq, i, i,
+                        2.0 * a * ((d_vector_get(pos, 0) * cos(phi)
+                                + d_vector_get(pos, 1) * sin(phi)
+                                + h - r)
+                                * sin(t)
+                                - d_vector_get(pos, 2) * cos(t)));
     }
 
-    return j_p;
+    self->jq_update = FALSE;
+
+    g_object_unref(pos);
 }
 
-static DMatrix*
-d_dynamic_model_get_theta_mass (DDynamicModel   *self,
-                                DVector         *axes)
+/*
+ * Update inverse jacobian derivative matrix with current parameters
+ */
+static void
+d_dynamic_model_update_jqd (DDynamicModel   *self)
 {
-    DMatrix *m_t = d_matrix_new(3, 3);
-    for (int i = 0; i < d_matrix_length(m_t, 0); i++) {
+    if (self->jacobian_q_dot == NULL) {
+        self->jacobian_q_dot = d_matrix_new(3, 3);
+    }
+
+    DVector *axes = self->axes;
+    DVector *pos = d_vector_new(3);
+    DVector *speed_axes = self->speed;
+    DVector *speed_pos = d_vector_new(3);
+    DMatrix *jp_inv = d_dynamic_model_get_direct_jacobian_inv(self);
+    DMatrix *jq = d_dynamic_model_get_inverse_jacobian(self);
+
+    gsl_matrix *jqd = self->jacobian_q_dot->matrix;
+    gdouble a = self->geometry->a;
+    gdouble h = self->geometry->h;
+    gdouble r = self->geometry->r;
+
+    gsl_matrix_set_all(jqd, 0);
+    d_solver_solve_direct(self->geometry, axes, pos);
+    gsl_blas_dgemv(CblasNoTrans, 1.0, jq->matrix,
+                    speed_axes->vector, 0.0, speed_pos->vector);
+    gsl_blas_dgemv(CblasNoTrans, 1.0, jp_inv->matrix,
+                    speed_pos->vector, 0.0, speed_pos->vector);
+    for (int i = 0; i < jqd->size1 ; i++) {
+        gdouble phi = G_PI * 120.0 / 180.0 * (gdouble)i;
+        gdouble t = d_vector_get(axes, i);
+        gdouble t_dot = d_vector_get(speed_axes, i);
+        gsl_matrix_set(jqd, i, i,
+                        2.0 * a * (
+                            (d_vector_get(speed_pos, 0) * cos(phi)
+                                + d_vector_get(speed_pos, 1) * sin(phi)
+                                + d_vector_get(pos,2) * t_dot) * sin(t)
+                            + ((d_vector_get(pos, 0) * cos(phi)
+                                + d_vector_get(pos, 1) * sin(phi)
+                                + h - r) * t_dot
+                                - d_vector_get(speed_pos, 2)) * cos(t)));
+    }
+
+    self->jqd_update = FALSE;
+
+    g_object_unref(speed_pos);
+    g_object_unref(pos);
+}
+
+/*
+ * Update axes mass matrix with current parameters
+ */
+static void
+d_dynamic_model_update_mass_axes (DDynamicModel *self)
+{
+    if (self->mass_axes == NULL) {
+        self->mass_axes = d_matrix_new(3, 3);
+    }
+    gsl_matrix *ma = self->mass_axes->matrix;
+    DVector *axes = self->axes;
+
+    gsl_matrix_set_all(ma, 0);
+    for (int i = 0; i < ma->size1; i++) {
         gdouble phi = G_PI * 120.0 / 180.0 * (double)i;
         gdouble t = d_vector_get(axes, i);
-        d_matrix_set(m_t, i, 0, - cos(phi) * sin(t));
-        d_matrix_set(m_t, i, 1, - sin(phi) * sin(t));
-        d_matrix_set(m_t, i, 2, cos(t));
+        gsl_matrix_set(ma, i, 0, - cos(phi) * sin(t));
+        gsl_matrix_set(ma, i, 1, - sin(phi) * sin(t));
+        gsl_matrix_set(ma, i, 2, cos(t));
     }
     gdouble mass = (self->dynamic_spec->low_arm_mass / 2.0
                     + self->dynamic_spec->upper_arm_mass)
                     * self->geometry->a;
-    d_matrix_scalar_mul(m_t, mass);
+    gsl_matrix_scale(ma, mass);
 
-    return m_t;
+    self->ma_update = FALSE;
 }
 
-static DMatrix*
-d_dynamic_model_get_pos_mass (DDynamicModel     *self)
+/*
+ * Update axes mass matrix with current parameters
+ */
+static void
+d_dynamic_model_update_mass_pos (DDynamicModel  *self)
 {
-    DMatrix *m_p = d_matrix_new(3, 3);
-    for (int i = 0; i < d_matrix_length(m_p, 0); i++) {
+    if (self->mass_pos == NULL) {
+        self->mass_pos = d_matrix_new(3, 3);
+    }
+    gsl_matrix *mp = self->mass_pos->matrix;
+
+    gsl_matrix_set_all(mp, 0);
+    for (int i = 0; i < mp->size1; i++) {
         gdouble mass = self->dynamic_spec->platform_mass
                         + 3.0 * self->dynamic_spec->upper_arm_mass;
-        d_matrix_set(m_p, i, i, mass);
+        gsl_matrix_set(mp, i, i, mass);
     }
 
-    return m_p;
+    self->mp_update = FALSE;
 }
 
-static DMatrix*
-d_dynamic_model_get_theta_inertia (DDynamicModel     *self)
+/*
+ * Update axes inertia matrix with current parameters
+ */
+static void
+d_dynamic_model_update_inertia_axes (DDynamicModel  *self)
 {
-    DMatrix *m_p = d_matrix_new(3, 3);
-    for (int i = 0; i < d_matrix_length(m_p, 0); i++) {
+    if (self->inertia_axes == NULL) {
+        self->inertia_axes = d_matrix_new(3, 3);
+    }
+    gsl_matrix *ia = self->inertia_axes->matrix;
+
+    gsl_matrix_set_all(ia, 0);
+    for (int i = 0; i < ia->size1; i++) {
         gdouble mass = self->dynamic_spec->upper_arm_mass
                         * pow(self->geometry->a, 2.0)
                         + self->dynamic_spec->low_arm_moi;
-        d_matrix_set(m_p, i, i, mass);
+        gsl_matrix_set(ia, i, i, mass);
     }
 
-    return m_p;
+    self->ia_update = FALSE;
 }
 
-static DMatrix*
-d_dynamic_model_get_model_inertia (DMatrix  *i_q,
-                                   DMatrix  *m_p,
-                                   DMatrix  *direct_jacobian,
-                                   DMatrix  *inverse_jacobian)
+/*
+ * Update model mass matrix with current parameters
+ */
+static void
+d_dynamic_model_update_model_mass (DDynamicModel    *self)
 {
-    DMatrix *inverse_j_p = d_matrix_clone (direct_jacobian);
-    d_matrix_inverse(inverse_j_p);
+    if (self->model_mass == NULL) {
+        self->model_mass = d_matrix_new(3, 3);
+    }
+    gsl_matrix *mass = self->model_mass->matrix;
+    DMatrix *jp = d_dynamic_model_get_direct_jacobian_inv(self);
+    DMatrix *jq = d_dynamic_model_get_inverse_jacobian(self);
+    DMatrix *mp = d_dynamic_model_get_mass_pos(self);
+    DMatrix *mq = d_dynamic_model_get_mass_axes(self);
 
-    DMatrix *ii = d_matrix_new(3, 3);
+    gsl_matrix_set_all(mass, 0);
 
     gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0,
-                    inverse_jacobian->matrix, inverse_j_p->matrix,
-                    0.0, ii->matrix);
+                    jq->matrix, jp->matrix, 0.0, mass);
     gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
-                    ii->matrix, m_p->matrix,
-                    0.0, ii->matrix);
-    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
-                    ii->matrix, inverse_j_p->matrix,
-                    0.0, ii->matrix);
-    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
-                    ii->matrix, inverse_jacobian->matrix,
-                    0.0, ii->matrix);
-    gsl_matrix_add(ii->matrix, i_q->matrix);
+                    mass, mp->matrix, 0.0, mass);
+    gsl_matrix_add(mass, mq->matrix);
 
-    g_object_unref(inverse_j_p);
-
-    return ii;
+    self->mm_update = FALSE;
 }
 
-static DMatrix*
-d_dynamic_model_get_model_mass (DMatrix *m_q,
-                                DMatrix *m_p,
-                                DMatrix *j_p,
-                                DMatrix *j_q)
+/*
+ * Update model inertia matrix with current parameters
+ */
+static void
+d_dynamic_model_update_model_inertia_inv (DDynamicModel *self)
 {
-    DMatrix *inverse_j_p = d_matrix_clone (j_p);
-    d_matrix_inverse(inverse_j_p);
+    if (self->model_inertia_inv == NULL) {
+        self->model_inertia_inv = d_matrix_new(3, 3);
+    }
+    gsl_matrix *inertia = self->model_inertia_inv->matrix;
+    DMatrix *jp = d_dynamic_model_get_direct_jacobian_inv(self);
+    DMatrix *jq = d_dynamic_model_get_inverse_jacobian(self);
+    DMatrix *mp = d_dynamic_model_get_mass_pos(self);
+    DMatrix *iq = d_dynamic_model_get_inertia_axes(self);
 
-    DMatrix *mm = d_matrix_new(3, 3);
-
+    gsl_matrix_set_all(inertia, 0.0);
     gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0,
-                    j_q->matrix, inverse_j_p->matrix,
-                    0.0, mm->matrix);
+                    jq->matrix, jp->matrix,
+                    0.0, inertia);
     gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
-                    mm->matrix, m_p->matrix,
-                    0.0, mm->matrix);
-    gsl_matrix_add(mm->matrix, m_q->matrix);
+                    inertia, mp->matrix,
+                    0.0, inertia);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
+                    inertia, jp->matrix,
+                    0.0, inertia);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
+                    inertia, jq->matrix,
+                    0.0, inertia);
+    gsl_matrix_add(inertia, iq->matrix);
+    d_matrix_inverse(self->model_inertia_inv);
 
-    g_object_unref(inverse_j_p);
-
-    return mm;
+    self->mi_update = FALSE;
 }
 
-static DMatrix*
-d_dynamic_model_get_model_coriolis (DMatrix *m_q,
-                                    DMatrix *m_p,
-                                    DMatrix *j_p,
-                                    DMatrix *j_p_dot,
-                                    DMatrix *j_q,
-                                    DMatrix *j_q_dot)
+/*
+ * Update model coriolis matrix with current parameters
+ */
+static void
+d_dynamic_model_update_model_coriolis (DDynamicModel   *self)
 {
-    DMatrix *inverse_j_p = d_matrix_clone(j_p);
-    d_matrix_inverse(inverse_j_p);
-
-    DMatrix *hh = d_matrix_new(3, 3);
+    if (self->model_coriolis == NULL) {
+        self->model_coriolis = d_matrix_new(3, 3);
+    }
+    gsl_matrix *coriolis = self->model_coriolis->matrix;
+    DMatrix *jp = d_dynamic_model_get_direct_jacobian_inv(self);
+    DMatrix *jq = d_dynamic_model_get_inverse_jacobian(self);
+    DMatrix *jpd = d_dynamic_model_get_direct_jacobian_dt(self);
+    DMatrix *jqd = d_dynamic_model_get_inverse_jacobian_dt(self);
+    DMatrix *mp = d_dynamic_model_get_mass_pos(self);
     DMatrix *term1 = d_matrix_new(3, 3);
     DMatrix *term2 = d_matrix_new(3, 3);
 
+    gsl_matrix_set_all(coriolis, 0.0);
     gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
-                    inverse_j_p->matrix, j_q_dot->matrix,
+                    jp->matrix, jqd->matrix,
                     0.0, term1->matrix);
-
     gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
-                    inverse_j_p->matrix, j_p_dot->matrix,
+                    jp->matrix, jpd->matrix,
                     0.0, term2->matrix);
     gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
-                    term2->matrix, inverse_j_p->matrix,
+                    term2->matrix, jp->matrix,
                     0.0, term2->matrix);
     gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
-                    term2->matrix, j_q->matrix,
+                    term2->matrix, jq->matrix,
                     0.0, term2->matrix);
-
     gsl_matrix_add(term1->matrix, term2->matrix);
-
     gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0,
-                    j_q->matrix, inverse_j_p->matrix,
-                    0.0, hh->matrix);
+                    jq->matrix, jp->matrix,
+                    0.0, coriolis);
     gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
-                    hh->matrix, m_p->matrix,
-                    0.0, hh->matrix);
-
+                    coriolis, mp->matrix,
+                    0.0, coriolis);
     gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0,
-                    hh->matrix, term1->matrix,
-                    0.0, hh->matrix);
+                    coriolis, term1->matrix,
+                    0.0, coriolis);
 
-    g_object_unref(inverse_j_p);
     g_object_unref(term1);
     g_object_unref(term2);
 
-    return hh;
+    self->mc_update = FALSE;
+}
+
+/*
+ * Update model torque vector with current parameters
+ */
+static void
+d_dynamic_model_update_model_torque (DDynamicModel  *self)
+{
+    if (self->model_torque == NULL) {
+        self->model_torque = d_vector_new(3);
+    }
+
+    gsl_vector *torque = self->model_torque->vector;
+    DVector *ff = self->force;
+    DVector *tt = self->torque;
+    DMatrix *jp = d_dynamic_model_get_direct_jacobian_inv(self);
+    DMatrix *jq = d_dynamic_model_get_inverse_jacobian(self);
+
+    gsl_vector_set_all(torque, 0.0);
+    gsl_blas_dgemv(CblasTrans, 1.0,
+                    jp->matrix, ff->vector, 0.0, torque);
+    gsl_blas_dgemv(CblasNoTrans, 1.0,
+                    jq->matrix, torque, 0.0, torque);
+    gsl_vector_add(torque, tt->vector);
+
+    self->mt_update = FALSE;
+}
+
+static DMatrix*
+d_dynamic_model_get_inverse_jacobian_dt (DDynamicModel  *self)
+{
+    if (self->jqd_update) {
+        d_dynamic_model_update_jqd(self);
+    }
+    return self->jacobian_q_dot;
+}
+
+static DMatrix*
+d_dynamic_model_get_inverse_jacobian (DDynamicModel *self)
+{
+    if (self->jq_update) {
+        d_dynamic_model_update_jq(self);
+    }
+    return self->jacobian_q;
+}
+
+static DMatrix*
+d_dynamic_model_get_direct_jacobian_dt (DDynamicModel   *self)
+{
+    if (self->jpd_update) {
+        d_dynamic_model_update_jpd(self);
+    }
+    return self->jacobian_p_dot;
+}
+
+static DMatrix*
+d_dynamic_model_get_direct_jacobian_inv (DDynamicModel  *self)
+{
+    if (self->jpi_update) {
+        d_dynamic_model_update_jpi(self);
+    }
+    return self->jacobian_p_inv;
+}
+
+static DMatrix*
+d_dynamic_model_get_inertia_axes (DDynamicModel *self)
+{
+    if (self->ia_update) {
+        d_dynamic_model_update_inertia_axes(self);
+    }
+
+    return self->inertia_axes;
+}
+
+static DMatrix*
+d_dynamic_model_get_mass_pos (DDynamicModel     *self)
+{
+    if (self->mp_update) {
+        d_dynamic_model_update_mass_pos(self);
+    }
+
+    return self->mass_pos;
+}
+
+static DMatrix*
+d_dynamic_model_get_mass_axes (DDynamicModel   *self)
+{
+    if (self->ma_update) {
+        d_dynamic_model_update_mass_axes(self);
+    }
+
+    return self->mass_axes;
+}
+
+static DMatrix*
+d_dynamic_model_get_model_inertia_inv (DDynamicModel    *self)
+{
+    if (self->mi_update) {
+        d_dynamic_model_update_model_inertia_inv(self);
+    }
+
+    return self->model_inertia_inv;
+}
+
+static DMatrix*
+d_dynamic_model_get_model_mass (DDynamicModel   *self)
+{
+    if (self->mm_update) {
+        d_dynamic_model_update_model_mass(self);
+    }
+
+    return self->model_mass;
+}
+
+static DMatrix*
+d_dynamic_model_get_model_coriolis (DDynamicModel   *self)
+{
+    if (self->mc_update) {
+        d_dynamic_model_update_model_coriolis(self);
+    }
+
+    return self->model_coriolis;
 }
 
 static DVector*
-d_dynamic_model_get_model_torque (DMatrix   *j_q,
-                                  DMatrix   *j_p,
-                                  DVector   *t_q,
-                                  DVector   *q_p)
+d_dynamic_model_get_model_torque (DDynamicModel *self)
 {
-    DMatrix *inverse_j_p = d_matrix_clone(j_p);
-    d_matrix_inverse(inverse_j_p);
+    if (self->mt_update) {
+        d_dynamic_model_update_model_torque(self);
+    }
 
-    DMatrix *term = d_matrix_new(3, 3);
-
-    gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0,
-                    j_q->matrix, inverse_j_p->matrix,
-                    0.0, term->matrix);
-
-    DVector *tt = d_matrix_vector_mul(term, q_p);
-    d_vector_add(tt, t_q);
-
-    return tt;
+    return self->model_torque;
 }
 
 /**
@@ -488,16 +712,8 @@ d_dynamic_model_get_model_torque (DMatrix   *j_q,
  * are the positions in axes-space. The remaining three elements are the
  * speeds in the axes-space.
  *
- * Parameters passed to the function in the param argument must be a  valid
- * GSLParams structure defined as:
- *
- * typedef struct _GSLParams GSLParams;
- * struct _GSLParams {
- *      DDynamicModel   *model;
- *      DVector         *torque;
- *      DVector         *force;
- *      DVector         *gravity;
- *  };
+ * Parameters passed to the function in the param argument must be a valid
+ * DDynamicModel object.
  */
 static int
 d_dynamic_model_equation (double        t,
@@ -505,77 +721,51 @@ d_dynamic_model_equation (double        t,
                           double        dydt[],
                           void          *params)
 {
-    /* Stub */
 //    g_warning("d_dynamic_model_equation is a stub!");
 
-    GSLParams *gsl_params;
-
-    /* Retrieve data from params */
-    gsl_params = params;
-
     /* Check input data for correct type */
-    g_return_val_if_fail(D_IS_DYNAMIC_MODEL(gsl_params->model), GSL_EBADFUNC);
-    g_return_val_if_fail(D_IS_VECTOR(gsl_params->torque), GSL_EBADFUNC);
-    g_return_val_if_fail(D_IS_VECTOR(gsl_params->force), GSL_EBADFUNC);
-    g_return_val_if_fail(D_IS_VECTOR(gsl_params->gravity), GSL_EBADFUNC);
+    g_return_val_if_fail(D_IS_DYNAMIC_MODEL(params), GSL_EBADFUNC);
 
-    DDynamicModel *model = gsl_params->model;
-    DVector *torque = gsl_params->torque;
-    DVector *force = gsl_params->force;
-    DVector *gravity = gsl_params->gravity;
+    DDynamicModel *model = D_DYNAMIC_MODEL(params);
 
     /* Matrices holding the coefficients on the model differential equation */
-    DMatrix *m_i, *m_h, *m_m;
-    DVector *m_t;
+    DMatrix *mi, *mh, *mm;
+    DVector *mt;
 
-    /* Matrices holding dynamic data to build above matrices */
-    DMatrix *j_p, *j_p_dot,
-            *j_q, *j_q_dot,
-            *m_q, *m_p, *i_q;
+    /* Speed and positions in axes space */
+    DVector *q, *q_dot, *q_dot_dot;
 
-    /* Speed and positions in both axes and cartesian space */
-    DVector *q, *q_dot, *q_dot_dot, *p, *p_dot;
-
-    /* Where the magic happens. Get position and speed in both spaces.
-     * Fill in the dynamic data */
+    /* Fill the axes position and speed to request an update in the model */
     q = d_vector_new(3);
     q_dot = d_vector_new(3);
     for (int i = 0; i < 3; i++) {
         d_vector_set(q, i, y[i]);
         d_vector_set(q_dot, i, y[i+3]);
     }
-    p = d_vector_new(3);
-    p_dot = d_vector_new(3);
-    d_solver_solve_direct(model->geometry, q, p);
-    j_p = d_dynamic_model_get_direct_jacobian(model, p, q);
-    j_q = d_dynamic_model_get_inverse_jacobian(model, p, q);
-    DMatrix *inv_j_p = d_matrix_clone(j_p);
-    d_matrix_inverse(inv_j_p);
-    gsl_blas_dgemv(CblasNoTrans, 1.0,
-                    j_q->matrix, q_dot->vector,
-                     0.0, p_dot->vector);
-    gsl_blas_dgemv(CblasNoTrans, 1.0,
-                    inv_j_p->matrix, p_dot->vector,
-                    0.0, p_dot->vector);
-    j_p_dot = d_dynamic_model_get_direct_jacobian_dt(model, q, p_dot, q_dot);
-    j_q_dot = d_dynamic_model_get_inverse_jacobian_dt(model, p, q, p_dot, q_dot);
-    m_q = d_dynamic_model_get_theta_mass(model, q);
-    m_p = d_dynamic_model_get_pos_mass(model);
-    i_q = d_dynamic_model_get_theta_inertia(model);
+    d_dynamic_model_set_axes(model, q);
+    d_dynamic_model_set_speed(model, q_dot);
 
     /* Fill model matrices */
-    m_i = d_dynamic_model_get_model_inertia(i_q, m_p, j_p, j_q);
-    m_t = d_dynamic_model_get_model_torque(j_q, j_p, torque, force);
-    m_h = d_dynamic_model_get_model_coriolis(m_q, m_p, j_p, j_p_dot, j_q, j_q_dot);
-    m_m = d_dynamic_model_get_model_mass(m_q, m_p, j_p, j_q);
+    mt = d_dynamic_model_get_model_torque(model);
+    mi = d_dynamic_model_get_model_inertia_inv(model);
+    mh = d_dynamic_model_get_model_coriolis(model);
+    mm = d_dynamic_model_get_model_mass(model);
 
     /* Calculate acceleration */
-    /* I * d²q/dt² = T - H * dq/dt + M * g */
-    DVector *q_dot_tmp = d_matrix_vector_mul(m_h, q_dot);
-    DVector *g_tmp = d_matrix_vector_mul(m_m, gravity);
-    d_vector_sub(m_t, q_dot_tmp);
-    d_vector_add(m_t, g_tmp);
-    q_dot_dot = d_matrix_vector_mul(d_matrix_inverse(m_i), m_t);
+    /* d²q/dt² = I⁻¹ ( T - H * dq/dt + M * g ) */
+    q_dot_dot = d_vector_new(3);
+    gsl_vector *v_q_dot_dot = q_dot_dot->vector;
+    gsl_vector *v_q_dot = q_dot->vector;
+    gsl_vector *v_g = model->gravity->vector;
+    gsl_vector *v_mt = mt->vector;
+    gsl_matrix *m_mi = mi->matrix;
+    gsl_matrix *m_mh = mh->matrix;
+    gsl_matrix *m_mm = mm->matrix;
+
+    gsl_blas_dgemv(CblasNoTrans, 1.0, m_mm, v_g, 0.0, v_q_dot_dot);
+    gsl_blas_dgemv(CblasNoTrans, -1.0, m_mh, v_q_dot, 1.0, v_q_dot_dot);
+    gsl_vector_add(v_q_dot_dot, v_mt);
+    gsl_blas_dgemv(CblasNoTrans, 1.0, m_mi, v_q_dot_dot, 0.0, v_q_dot_dot);
 
     /* Set the dydt array */
     dydt[0] = d_vector_get(q_dot, 0);
@@ -586,25 +776,9 @@ d_dynamic_model_equation (double        t,
     dydt[5] = d_vector_get(q_dot_dot, 2);
 
     /* Free resources allocated during this step */
-    g_object_unref(q_dot_tmp);
-    g_object_unref(g_tmp);
-    g_object_unref(q_dot_dot);
     g_object_unref(q);
     g_object_unref(q_dot);
-    g_object_unref(p);
-    g_object_unref(p_dot);
-    g_object_unref(m_t);
-    g_object_unref(m_m);
-    g_object_unref(m_h);
-    g_object_unref(m_i);
-    g_object_unref(j_p);
-    g_object_unref(j_p_dot);
-    g_object_unref(j_q);
-    g_object_unref(j_q_dot);
-    g_object_unref(m_p);
-    g_object_unref(m_q);
-    g_object_unref(i_q);
-    g_object_unref(inv_j_p);
+    g_object_unref(q_dot_dot);
 
     return GSL_SUCCESS;
 }
@@ -623,38 +797,71 @@ d_dynamic_model_new (DGeometry      *geometry,
 }
 
 void
-d_dynamic_model_solve_inverse_axes (DDynamicModel   *self,
-                                    DVector         *torque,
-                                    DVector         *force,
-                                    DVector         *gravity)
+d_dynamic_model_set_axes (DDynamicModel *self,
+                          DVector       *axes)
+{
+    if (self->axes) {
+        g_object_unref(self->axes);
+    }
+    self->axes = g_object_ref(axes);
+    self->jpi_update = TRUE;
+    self->jpd_update = TRUE;
+    self->jq_update = TRUE;
+    self->jqd_update = TRUE;
+    self->ma_update = TRUE;
+    self->mp_update = TRUE;
+    self->ia_update = TRUE;
+    self->mm_update = TRUE;
+    self->mc_update = TRUE;
+    self->mi_update = TRUE;
+    self->mt_update = TRUE;
+}
+
+void
+d_dynamic_model_set_speed (DDynamicModel    *self,
+                           DVector          *speed)
+{
+    if (self->speed) {
+        g_object_unref(self->speed);
+    }
+    self->speed = g_object_ref(speed);
+    self->jpi_update = TRUE;
+    self->jpd_update = TRUE;
+    self->jq_update = TRUE;
+    self->jqd_update = TRUE;
+    self->ma_update = TRUE;
+    self->mp_update = TRUE;
+    self->ia_update = TRUE;
+    self->mm_update = TRUE;
+    self->mc_update = TRUE;
+    self->mi_update = TRUE;
+    self->mt_update = TRUE;
+}
+
+void
+d_dynamic_model_solve_inverse_axes (DDynamicModel   *self)
 {
     g_warning("d_dynamic_model_solve_inverse_axes is a stub!");
-    GSLParams params = {
-        self,
-        torque,
-        force,
-        gravity
-    };
     gsl_odeiv2_system sys = {
         d_dynamic_model_equation,
         NULL,
         6,
-        &params
+        self
     };
     gsl_odeiv2_driver *driver = gsl_odeiv2_driver_alloc_y_new(&sys,
                                         gsl_odeiv2_step_rk4,
                                         1e-3, 1e-8, 1e-8);
     gdouble t = 0.0;
-    gdouble y[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    gdouble y[6] = {1.0, 1.0, 1.0, 0.0, 0.0, 0.0};
     int s;
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 100; i++) {
         s = gsl_odeiv2_driver_apply_fixed_step(driver, &t, 1e-3, 1000, y);
 
         if (s != GSL_SUCCESS) {
             g_warning("driver returned %d\n", s);
             break;
         }
-        g_print("t: %.5e,\n\tq  = [%.5e,%.5e,%.5e]\n\tq. = [%.5e,%.5e,%.5e]\n",
+        g_print("t: %2.5f,\n\tq  = [%2.5f,%2.5f,%2.5f]\n\tq. = [%2.5f,%2.5f,%2.5f]\n",
             t, y[0], y[1], y[2], y[3], y[4], y[5]);
     }
     gsl_odeiv2_driver_free(driver);
