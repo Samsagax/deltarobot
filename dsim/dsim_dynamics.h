@@ -139,8 +139,24 @@ DDynamicModel*  d_dynamic_model_new         (DGeometry      *geometry,
 
 void            d_dynamic_model_set_axes    (DDynamicModel  *self,
                                              DVector        *axes);
+
+DVector*        d_dynamic_model_get_axes    (DDynamicModel  *self);
+
 void            d_dynamic_model_set_speed   (DDynamicModel  *self,
                                              DVector        *speed);
+
+DVector*        d_dynamic_model_get_speed   (DDynamicModel  *self);
+
+void            d_dynamic_model_set_force   (DDynamicModel  *self,
+                                             DVector        *force);
+
+DVector*        d_dynamic_model_get_force   (DDynamicModel  *self);
+
+void            d_dynamic_model_set_torque  (DDynamicModel  *self,
+                                             DVector        *torque);
+
+DVector*        d_dynamic_model_get_torque  (DDynamicModel  *self);
+
 void            d_dynamic_model_solve_inverse_axes
                                             (DDynamicModel  *self);
 

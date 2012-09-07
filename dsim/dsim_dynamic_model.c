@@ -721,8 +721,6 @@ d_dynamic_model_equation (double        t,
                           double        dydt[],
                           void          *params)
 {
-//    g_warning("d_dynamic_model_equation is a stub!");
-
     /* Check input data for correct type */
     g_return_val_if_fail(D_IS_DYNAMIC_MODEL(params), GSL_EBADFUNC);
 
@@ -796,6 +794,12 @@ d_dynamic_model_new (DGeometry      *geometry,
     return dm;
 }
 
+DVector*
+d_dynamic_model_get_axes (DDynamicModel *self)
+{
+    return self->axes;
+}
+
 void
 d_dynamic_model_set_axes (DDynamicModel *self,
                           DVector       *axes)
@@ -817,6 +821,12 @@ d_dynamic_model_set_axes (DDynamicModel *self,
     self->mt_update = TRUE;
 }
 
+DVector*
+d_dynamic_model_get_speed (DDynamicModel    *self)
+{
+    return self->speed;
+}
+
 void
 d_dynamic_model_set_speed (DDynamicModel    *self,
                            DVector          *speed)
@@ -835,6 +845,40 @@ d_dynamic_model_set_speed (DDynamicModel    *self,
     self->mm_update = TRUE;
     self->mc_update = TRUE;
     self->mi_update = TRUE;
+    self->mt_update = TRUE;
+}
+
+DVector*
+d_dynamic_model_get_force (DDynamicModel    *self)
+{
+    return self->force;
+}
+
+void
+d_dynamic_model_set_force (DDynamicModel    *self,
+                           DVector          *force)
+{
+    if (self->force) {
+        g_object_unref(self->force);
+    }
+    self->force = g_object_ref(force);
+    self->mt_update = TRUE;
+}
+
+DVector*
+d_dynamic_model_get_torque (DDynamicModel   *self)
+{
+    return self->torque;
+}
+
+void
+d_dynamic_model_set_torque (DDynamicModel   *self,
+                            DVector         *torque)
+{
+    if (self->torque) {
+        g_object_unref(self->torque);
+    }
+    self->torque = g_object_ref(torque);
     self->mt_update = TRUE;
 }
 
