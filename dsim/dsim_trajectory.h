@@ -93,9 +93,6 @@ struct _DTrajectoryControl {
     /* Geometry of the manipulator */
     DGeometry       *geometry;
 
-    /* List of destinations */
-    GAsyncQueue     *orders;
-
     /* Absolute positions in work space */
     gsl_vector      *current_destination;
     gsl_vector      *current_position;
@@ -117,9 +114,13 @@ struct _DTrajectoryControl {
     /* Step time for trajectory, used for timers */
     gdouble         stepTime;
 
-    /* Thread control */
+    /* List of orders*/
+    GAsyncQueue     *orders;
+
+    /* Main loop thread control */
     gboolean        exit_flag;
-    GThread         *main_loop;
+    GThread         *main_loop_thread;
+    GMainLoop       *main_loop;
 
     /* Output function */
     DTrajectoryOutputFunc   joint_out_fun;

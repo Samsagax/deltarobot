@@ -28,10 +28,19 @@
 //#include <time.h>
 
 #define D_NANOS_PER_SEC 1000000000
+#define D_MILIS_PER_SEC 1000
 
 /* Local variables */
+G_LOCK_DEFINE(control_constructor);
 static GMutex   timer_mutex;
 static GCond    wakeup_cond;
+
+typedef struct _DAsyncSource DAsyncSource;
+struct _DAsyncSource {
+    GSource             source;
+    DTrajectoryControl  *control;
+};
+
 
 /* Forward declarations */
 static void     d_trajectory_control_class_init
@@ -97,12 +106,15 @@ d_trajectory_control_constructor (GType                 type,
 {
     static GObject *self = NULL;
 
+    G_LOCK(control_constructor);
     if (!self) {
         self = G_OBJECT_CLASS(d_trajectory_control_parent_class)
                 ->constructor(type, n_construct_params, construct_params);
         g_object_add_weak_pointer(self, (gpointer) &self);
+        G_UNLOCK(control_constructor);
         return self;
     }
+    G_UNLOCK(control_constructor);
     return g_object_ref(self);
 }
 
@@ -120,6 +132,7 @@ static void
 d_trajectory_control_init (DTrajectoryControl   *self)
 {
     self->exit_flag = FALSE;
+    self->main_loop_thread = NULL;
     self->main_loop = NULL;
 
     self->orders = g_async_queue_new();
@@ -150,8 +163,12 @@ d_trajectory_control_dispose (GObject   *obj)
 {
     DTrajectoryControl *self = D_TRAJECTORY_CONTROL(obj);
 
-    if (self->main_loop) {
+    if (self->main_loop_thread) {
         d_trajectory_control_stop(self);
+    }
+    if (self->main_loop) {
+        g_object_unref(self->main_loop);
+        self->main_loop = NULL;
     }
     if (self->orders) {
         g_async_queue_unref(self->orders);
@@ -202,65 +219,113 @@ d_trajectory_control_notify_timer (int signal)
     g_cond_signal(&wakeup_cond);
 }
 
+static gboolean
+d_trajectory_control_prepare (GSource   *source,
+                              gint      *timeout)
+{
+    DAsyncSource *orders = (DAsyncSource*) source;
+    *timeout = -1;
+    //TODO: add mutex for exit_flag?
+    gboolean prepared = g_async_queue_length(orders->control->orders) > 0 || orders->control->exit_flag;
+    return prepared;
+}
+
+static gboolean
+d_trajectory_control_check (GSource *source)
+{
+    DAsyncSource *orders = (DAsyncSource*) source;
+    gboolean prepared = g_async_queue_length(orders->control->orders) > 0 || orders->control->exit_flag;
+    return prepared;
+}
+
+static gboolean
+d_trajectory_control_dispatch (GSource      *source,
+                               GSourceFunc  callback,
+                               gpointer     user_data)
+{
+    DAsyncSource *orders = (DAsyncSource*) source;
+    if (orders->control->exit_flag) {
+        g_main_loop_quit(orders->control->main_loop);
+        return FALSE;
+    }
+    DTrajectoryCommand *order = g_async_queue_pop(orders->control->orders);
+    DTrajectoryControl *self = orders->control;
+
+    /* Process the order */
+    DTrajectory *trajectory;
+    DCommandType type = order->command_type;
+    switch (type) {
+        case OT_MOVEJ:
+            {
+                DVector *destination = D_VECTOR(order->data);
+                trajectory = d_trajectory_control_prepare_trajectory(self,
+                                                        destination,
+                                                        type);
+                d_trajectory_control_set_current_destination_axes (self,
+                                                  destination);
+                d_trajectory_control_execute_trajectory(self,
+                                                    trajectory,
+                                                    type);
+                g_object_unref(trajectory);
+            }
+            break;
+        case OT_MOVEL:
+            {
+                DVector *destination = D_VECTOR(order->data);
+                trajectory = d_trajectory_control_prepare_trajectory(self,
+                                                destination,
+                                                type);
+                d_trajectory_control_set_current_destination (self,
+                                                destination);
+                d_trajectory_control_execute_trajectory(self,
+                                                trajectory,
+                                                type);
+                g_object_unref(trajectory);
+            }
+            break;
+        case OT_WAIT:
+            g_warning("d_trajectory_control_main_loop: no OT_WAIT command, implement!");
+            break;
+        case OT_END:
+            orders->control->exit_flag = TRUE;
+            break;
+        default:
+            g_error("Unknown command type: %i", order->command_type);
+
+    }
+    return TRUE;
+}
+
 static gpointer
 d_trajectory_control_main_loop (gpointer    *trajectory_control)
 {
     g_return_val_if_fail(D_IS_TRAJECTORY_CONTROL(trajectory_control), NULL);
     DTrajectoryControl *self = D_TRAJECTORY_CONTROL(trajectory_control);
 
-    /* Start waiting for orders */
-    while(!self->exit_flag) {
-        /* Wait until order is available with a 2 second timeout */
-        DTrajectoryCommand *order = NULL;
-        while(!order) {
-            order = g_async_queue_timeout_pop(self->orders, 2.0 * G_TIME_SPAN_SECOND);
-        }
-        /* Process the order */
-        DTrajectory *trajectory;
-        DCommandType type = order->command_type;
-        switch (type) {
-            case OT_MOVEJ:
-                {
-                    gsl_vector *destination = (gsl_vector*)(order->data);
-                    trajectory = d_trajectory_control_prepare_trajectory(self,
-                                                    destination,
-                                                    type);
-                    d_trajectory_control_set_current_destination_axes (self,
-                                                    destination);
-                    d_trajectory_control_execute_trajectory(self,
-                                                    trajectory,
-                                                    type);
-                    g_object_unref(trajectory);
-                }
-                break;
-            case OT_MOVEL:
-                {
-                    gsl_vector *destination = (gsl_vector*)(order->data);
-                    trajectory = d_trajectory_control_prepare_trajectory(self,
-                                                    destination,
-                                                    type);
-                    d_trajectory_control_set_current_destination (self,
-                                                    destination);
-                    d_trajectory_control_execute_trajectory(self,
-                                                    trajectory,
-                                                    type);
-                    g_object_unref(trajectory);
-                }
-                break;
-            case OT_WAIT:
-                g_warning("d_trajectory_control_main_loop: no OT_WAIT command, implement!");
-                break;
-            case OT_END:
-                self->exit_flag = TRUE;
-                break;
-            default:
-                g_error("Unknown command type: %i", order->command_type);
-        }
-        if (order) {
-            g_object_unref(order);
-            order = NULL;
-        }
+    //TODO: /* Set main context for this main loop */
+
+    GMainContext *context;
+    if (!self->main_loop) {
+        context = g_main_context_new();
+        self->main_loop = g_main_loop_new(context, FALSE);
+        g_main_context_unref(context);
+        GSourceFuncs async_funcs = {
+            d_trajectory_control_prepare,
+            d_trajectory_control_check,
+            d_trajectory_control_dispatch,
+            NULL,
+        };
+        GSource *async_orders = g_source_new(&async_funcs, sizeof(DAsyncSource));
+        DAsyncSource *async_source = (DAsyncSource*) async_orders;
+        async_source->control = self;
+
+        g_source_attach(async_orders, context);
+
+
+        g_object_unref(async_orders);
     }
+
+    g_main_loop_run(self->main_loop);
     g_thread_exit(NULL);
 }
 
@@ -429,7 +494,7 @@ d_trajectory_control_start (DTrajectoryControl  *self)
 {
     g_return_if_fail(D_IS_TRAJECTORY_CONTROL(self));
 
-    self->main_loop = g_thread_new("control_main",
+    self->main_loop_thread = g_thread_new("control_main",
                         (GThreadFunc)d_trajectory_control_main_loop, self);
 }
 
@@ -451,6 +516,7 @@ d_trajectory_control_push_order (DTrajectoryControl *self,
     g_return_if_fail(D_IS_TRAJECTORY_COMMAND(order));
 
     g_async_queue_push(self->orders, g_object_ref(order));
+    g_main_context_wakeup(g_main_loop_get_context(self->main_loop));
 }
 
 void
