@@ -123,10 +123,18 @@ main (int argc, char* argv[]) {
     DDynamicSpec *ds = d_dynamic_spec_new();
     DDynamicModel *model = d_dynamic_model_new(geometry, ds);
 
+    DVector *g = d_vector_new(3);
+    d_vector_set(g, 2, 10.0);
+    DVector *t0 = d_axes_new_full(1.0, 1.0, 1.0);
+
+    d_dynamic_model_set_axes(model, t0);
+    d_dynamic_model_set_gravity(model, g);
     d_dynamic_model_solve_inverse_axes(model);
 
     g_object_unref(ds);
     g_object_unref(geometry);
     g_object_unref(model);
+    g_object_unref(g);
+    g_object_unref(t0);
     return 0;
 }
