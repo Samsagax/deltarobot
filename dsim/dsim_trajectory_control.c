@@ -167,7 +167,7 @@ d_trajectory_control_dispose (GObject   *obj)
         d_trajectory_control_stop(self);
     }
     if (self->main_loop) {
-        g_object_unref(self->main_loop);
+        g_main_loop_unref(self->main_loop);
         self->main_loop = NULL;
     }
     if (self->orders) {
@@ -321,11 +321,15 @@ d_trajectory_control_main_loop (gpointer    *trajectory_control)
 
         g_source_attach(async_orders, context);
 
-
-        g_object_unref(async_orders);
+        g_source_unref(async_orders);
     }
 
     g_main_loop_run(self->main_loop);
+
+    g_main_loop_unref(self->main_loop);
+    self->main_loop = NULL;
+    g_message("d_trajectory_control_main_loop: Exit");
+
     g_thread_exit(NULL);
 }
 
@@ -503,7 +507,6 @@ d_trajectory_control_stop (DTrajectoryControl   *self)
 {
     if (self->main_loop) {
         d_trajectory_control_push_order(self, d_trajectory_command_new(OT_END, NULL));
-        self->exit_flag = TRUE;
         g_thread_join(self->main_loop);
         self->main_loop = NULL;
     }
@@ -516,7 +519,9 @@ d_trajectory_control_push_order (DTrajectoryControl *self,
     g_return_if_fail(D_IS_TRAJECTORY_COMMAND(order));
 
     g_async_queue_push(self->orders, g_object_ref(order));
-    g_main_context_wakeup(g_main_loop_get_context(self->main_loop));
+    if (self->main_loop && g_main_loop_is_running(self->main_loop)) {
+        g_main_context_wakeup(g_main_loop_get_context(self->main_loop));
+    }
 }
 
 void
