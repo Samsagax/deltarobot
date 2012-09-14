@@ -929,7 +929,14 @@ d_dynamic_model_solve_inverse_axes (DDynamicModel   *self)
                                         gsl_odeiv2_step_rk4,
                                         1e-3, 1e-8, 1e-8);
     gdouble t = 0.0;
-    gdouble y[6] = {1.0, 1.0, 1.0, 0.0, 0.0, 0.0};
+    gdouble y[6] = {
+        d_vector_get(self->axes, 0),
+        d_vector_get(self->axes, 1),
+        d_vector_get(self->axes, 2),
+        d_vector_get(self->speed, 0),
+        d_vector_get(self->speed, 1),
+        d_vector_get(self->speed, 2)
+    };
     int s;
     for (int i = 0; i < 100; i++) {
         s = gsl_odeiv2_driver_apply_fixed_step(driver, &t, 1e-3, 1000, y);
