@@ -203,7 +203,7 @@ d_dynamic_model_dispose (GObject *gobject)
 static void
 d_dynamic_model_finalize (GObject *gobject)
 {
-    G_OBJECT_CLASS (d_dynamic_model_parent_class)->finalize (gobject);
+    G_OBJECT_CLASS (d_dynamic_model_parent_class)->finalize(gobject);
 }
 
 static void
@@ -880,6 +880,22 @@ d_dynamic_model_set_torque (DDynamicModel   *self,
     }
     self->torque = g_object_ref(torque);
     self->mt_update = TRUE;
+}
+
+DVector*
+d_dynamic_model_get_gravity (DDynamicModel  *self)
+{
+    return self->gravity;
+}
+
+void
+d_dynamic_model_set_gravity (DDynamicModel  *self,
+                             DVector        *gravity)
+{
+    if (self->gravity) {
+        g_object_unref(self->gravity);
+    }
+    self->gravity = g_object_ref(gravity);
 }
 
 void

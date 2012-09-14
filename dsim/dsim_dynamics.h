@@ -157,6 +157,11 @@ void            d_dynamic_model_set_torque  (DDynamicModel  *self,
 
 DVector*        d_dynamic_model_get_torque  (DDynamicModel  *self);
 
+void            d_dynamic_model_set_gravity (DDynamicModel  *self,
+                                             DVector        *gravity);
+
+DVector*        d_dynamic_model_get_gravity (DDynamicModel  *self);
+
 void            d_dynamic_model_solve_inverse_axes
                                             (DDynamicModel  *self);
 
