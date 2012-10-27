@@ -129,8 +129,22 @@ main (int argc, char* argv[]) {
 
     d_dynamic_model_set_axes(model, t0);
     d_dynamic_model_set_gravity(model, g);
-    d_dynamic_model_solve_inverse_axes(model);
+    gdouble time = 0.0;
 
+    for (int i=0; i < 100; i++) {
+        time += 0.01;
+        d_dynamic_model_solve_inverse(model, 0.01);
+        DVector *t = d_dynamic_model_get_axes(model);
+        DVector *t_dot = d_dynamic_model_get_speed(model);
+        g_print("t: %2.5f,\n\tq  = [%2.5f,%2.5f,%2.5f]\n\tq. = [%2.5f,%2.5f,%2.5f]\n",
+            time,
+            d_vector_get(t, 0),
+            d_vector_get(t, 1),
+            d_vector_get(t, 2),
+            d_vector_get(t_dot, 0),
+            d_vector_get(t_dot, 1),
+            d_vector_get(t_dot, 2));
+    }
     g_object_unref(ds);
     g_object_unref(geometry);
     g_object_unref(model);

@@ -916,9 +916,9 @@ d_dynamic_model_set_gravity (DDynamicModel  *self,
 }
 
 void
-d_dynamic_model_solve_inverse_axes (DDynamicModel   *self)
+d_dynamic_model_solve_inverse (DDynamicModel    *self,
+                               gdouble          interval)
 {
-    g_warning("d_dynamic_model_solve_inverse_axes is a stub!");
     gsl_odeiv2_system sys = {
         d_dynamic_model_equation,
         NULL,
@@ -937,17 +937,28 @@ d_dynamic_model_solve_inverse_axes (DDynamicModel   *self)
         d_vector_get(self->speed, 1),
         d_vector_get(self->speed, 2)
     };
-    int s;
-    for (int i = 0; i < 10000; i++) {
-        gdouble ti = t + 1e-3;
-        s = gsl_odeiv2_driver_apply(driver, &t, ti, y);
-
-        if (s != GSL_SUCCESS) {
-            g_warning("driver returned %d\n", s);
-            break;
-        }
-        g_print("t: %2.5f,\n\tq  = [%2.5f,%2.5f,%2.5f]\n\tq. = [%2.5f,%2.5f,%2.5f]\n",
-            t, y[0], y[1], y[2], y[3], y[4], y[5]);
+    int s = gsl_odeiv2_driver_apply(driver, &t, interval, y);
+    if (s != GSL_SUCCESS) {
+        g_warning("driver returned %d\n", s);
+        //TODO: Error handling
     }
     gsl_odeiv2_driver_free(driver);
+}
+
+void
+d_dynamic_model_apply_force (DDynamicModel  *self,
+                             DVector        *force,
+                             gdouble        interval)
+{
+    d_dynamic_model_set_force (self, force);
+    d_dynamic_model_solve_inverse(self, interval);
+}
+
+void
+d_dynamic_model_apply_torque (DDynamicModel *self,
+                              DVector       *torque,
+                              gdouble       interval)
+{
+    d_dynamic_model_set_torque (self, torque);
+    d_dynamic_model_solve_inverse(self, interval);
 }

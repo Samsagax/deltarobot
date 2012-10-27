@@ -162,7 +162,16 @@ void            d_dynamic_model_set_gravity (DDynamicModel  *self,
 
 DVector*        d_dynamic_model_get_gravity (DDynamicModel  *self);
 
-void            d_dynamic_model_solve_inverse_axes
-                                            (DDynamicModel  *self);
+void            d_dynamic_model_solve_inverse
+                                            (DDynamicModel  *self,
+                                             gdouble        interval);
+
+void            d_dynamic_model_apply_force (DDynamicModel  *self,
+                                             DVector        *force,
+                                             gdouble        interval);
+
+void            d_dynamic_model_apply_torque(DDynamicModel  *self,
+                                             DVector        *torque,
+                                             gdouble        interval);
 
 #endif   /* ----- #ifndef DSIM_DYNAMICS_INC  ----- */
