@@ -47,6 +47,8 @@ static gboolean     key_handler (GtkWidget *widget, GdkEventKey *event, gpointer
 static void         increment_pos (DPos *pos, gdouble dx, gdouble dy, gdouble dz);
 static void         go_button_joint_clicked (GtkButton *button, gpointer data);
 static void         go_button_linear_clicked (GtkButton *button, gpointer data);
+static void         sync_spinners_axes(DVector *pos);
+static void         sync_spinners_pos(DVector *axes);
 
 /*
  * Handle key pressed on main window
@@ -108,6 +110,30 @@ key_handler (GtkWidget      *widget,
 }
 
 static void
+sync_spinners_axes(DVector *pos)
+{
+    DVector *axes = d_axes_new();
+    d_solver_solve_inverse(robot, pos, axes, NULL);
+    for (int i=0; i < d_vector_length(pos); i++) {
+        gtk_spin_button_set_value(axis_controls[i],
+                d_vector_get(axes, i));
+    }
+    g_object_unref(axes);
+}
+
+static void
+sync_spinners_pos(DVector *axes)
+{
+    DVector *pos = d_pos_new();
+    d_solver_solve_direct(robot, axes, pos);
+    for (int i=0; i < d_vector_length(axes); i++) {
+        gtk_spin_button_set_value(pos_controls[i],
+                d_vector_get(pos, i));
+    }
+    g_object_unref(pos);
+}
+
+static void
 go_button_joint_clicked (GtkButton  *button,
                          gpointer   data)
 {
@@ -123,6 +149,7 @@ go_button_joint_clicked (GtkButton  *button,
     if (gtk_toggle_button_get_active(fine_check)) {
         d_trajectory_control_push_order(trajcontrol, cmd);
     }
+    sync_spinners_pos(axes);
 
     g_object_unref(axes);
     g_object_unref(cmd);
@@ -144,6 +171,7 @@ go_button_linear_clicked (GtkButton *button,
     if (gtk_toggle_button_get_active(fine_check)) {
         d_trajectory_control_push_order(trajcontrol, cmd);
     }
+    sync_spinners_axes(pos);
 
     g_object_unref(pos);
     g_object_unref(cmd);
@@ -207,6 +235,7 @@ d_trajectory_viewport_link_linear (DVector  *pos,
 
     d_viewport_set_pos(viewport, pos);
 }
+
 /*
  * Create main window
  */
@@ -384,6 +413,20 @@ create_controls (void)
     return table;
 }
 
+static void
+setup_robot (void)
+{
+    robot = d_geometry_new(30.0, 50.0, 25.0, 10.0);
+    pos   = D_POS(d_pos_new_full(0.0, 0.0, 50.0));
+
+    /*
+     * Trajectory control
+     */
+    trajcontrol = d_trajectory_control_new();
+
+    d_trajectory_control_start(trajcontrol);
+}
+
 /*
  * Main function
  */
@@ -396,13 +439,7 @@ main(int argc, char* argv[])
     gtk_init(&argc, &argv);
     gtk_gl_init(&argc, &argv);
 
-    robot = d_geometry_new(30.0, 50.0, 25.0, 10.0);
-    pos   = D_POS(d_pos_new_full(0.0, 0.0, 50.0));
-
-    /*
-     * Trajectory control
-     */
-    trajcontrol = d_trajectory_control_new();
+    setup_robot();
 
     /*
      * Create the window and show it
@@ -410,7 +447,6 @@ main(int argc, char* argv[])
     create_main_window();
     gtk_widget_show_all(main_window);
 
-    d_trajectory_control_start(trajcontrol);
 
     /* Start program main loop */
     gtk_main();
