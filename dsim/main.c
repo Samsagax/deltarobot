@@ -18,101 +18,7 @@
  * along with PROJECTNAME. If not, see <http://www.gnu.org/licenses/>.
  */
 
-//#include <unistd.h>
-//#include <stdio.h>
-#include <signal.h>
-#include <time.h>
-
 #include "dsim.h"
-
-#define NANOS_PER_SEC 1000000000;
-
-GMutex tic_mutex;
-GCond tic_cond;
-GMutex end_mutex;
-GCond end_cond;
-
-static gchar*
-d_vector_to_string (DVector *v,
-                    GString *s)
-{
-    g_string_printf(s,
-                    "[ %f ; %f ; %f ]",
-                    d_vector_get(v, 0),
-                    d_vector_get(v, 1),
-                    d_vector_get(v, 2));
-    return s->str;
-}
-static void
-print_time(int sig)
-{
-    printf("Timer triggered\n");
-    g_cond_signal(&tic_cond);
-}
-
-static void
-timed_trajectory (gpointer  data)
-{
-    g_return_if_fail(D_IS_TRAJECTORY(data));
-
-    DTrajectory *traj = D_TRAJECTORY(data);
-
-    timer_t timerid;
-    struct itimerspec value;
-    struct sigevent event;
-
-    value.it_value.tv_sec = 0;
-    value.it_value.tv_nsec = d_trajectory_get_step_time(traj) * NANOS_PER_SEC;
-    value.it_interval.tv_sec = 0;
-    value.it_interval.tv_nsec = d_trajectory_get_step_time(traj) * NANOS_PER_SEC;
-
-    event.sigev_notify = SIGEV_THREAD;
-    event.sigev_notify_attributes = NULL;
-//    event.sigev_signo = SIGALRM;
-    event.sigev_notify_function = (void*)print_time;
-
-    timer_create(CLOCK_REALTIME, &event, &timerid);
-    timer_settime(timerid, 0, &value, NULL);
-
-    GString *string = g_string_new(NULL);
-
-    while (d_trajectory_has_next(traj)) {
-        g_mutex_lock(&tic_mutex);
-        g_cond_wait(&tic_cond, &tic_mutex);
-        g_mutex_unlock(&tic_mutex);
-        DVector* current = d_trajectory_next(traj);
-        g_print("AT:    %s\n", d_vector_to_string(current, string));
-        g_object_unref(current);
-    }
-//
-//    for (int i = 0; i < 10; i++) {
-//        g_mutex_lock(&tic_mutex);
-//        g_cond_wait(&tic_cond, &tic_mutex);
-//        g_print("Doing stuff\n");
-//        g_usleep(G_USEC_PER_SEC*0.01);
-//        g_mutex_unlock(&tic_mutex);
-//        g_print("Stuff done\n");
-//    }
-    timer_delete(timerid);
-    g_thread_exit(NULL);
-}
-
-static void
-print_point(void *data)
-{
-    while (1) {
-        g_mutex_lock(&end_mutex);
-        gint64 end_time = g_get_monotonic_time() + 0.2 * G_TIME_SPAN_SECOND;
-        if (g_cond_wait_until(&end_cond, &end_mutex, end_time)) {
-            g_mutex_unlock(&end_mutex);
-            g_thread_exit(NULL);
-        }
-        g_print(".");
-        g_mutex_unlock(&end_mutex);
-    }
-}
-
-
 
 int
 main (int argc, char* argv[]) {
@@ -121,7 +27,8 @@ main (int argc, char* argv[]) {
 
     DGeometry *geometry = d_geometry_new(30.0, 40.0, 10.0, 20.0);
     DDynamicSpec *ds = d_dynamic_spec_new();
-    DDynamicModel *model = d_dynamic_model_new(geometry, ds);
+    DManipulator *manipulator = d_manipulator_new(geometry, ds);
+    DDynamicModel *model = d_dynamic_model_new(manipulator);
 
     DVector *g = d_vector_new(3);
     d_vector_set(g, 2, 10.0);
@@ -150,5 +57,6 @@ main (int argc, char* argv[]) {
     g_object_unref(model);
     g_object_unref(g);
     g_object_unref(t0);
+    g_object_unref(manipulator);
     return 0;
 }

@@ -24,6 +24,7 @@ sources = \
 	dsim_trajectory_linear.c \
 	dsim_trajectory_command.c \
 	dsim_trajectory_control.c \
+	dsim_manipulator.c \
 	dsim_dynamic_spec.c \
 	dsim_dynamic_model.c
 

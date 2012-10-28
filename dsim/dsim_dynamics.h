@@ -48,17 +48,11 @@ typedef struct _DDynamicModel DDynamicModel;
 struct _DDynamicModel {
     GObject         parent_instance;
 
-    /* Geometric and dynamic parameters */
-    DDynamicSpec    *dynamic_spec;
-    DGeometry       *geometry;
+    /* Manipulator Asociated with this Dynamic Model */
+    DManipulator    *manipulator;
 
-    /* Position and Speed in axes space */
-    DVector         *axes;
-    DVector         *speed;
-
-    /* Force and Torque applied */
+    /* Force applied */
     DVector         *force;
-    DVector         *torque;
 
     /* Gravity acceleration */
     DVector         *gravity;
@@ -104,8 +98,7 @@ struct _DDynamicModelClass {
 GType           d_dynamic_model_get_type    (void);
 
 /* Methods */
-DDynamicModel*  d_dynamic_model_new         (DGeometry      *geometry,
-                                             DDynamicSpec   *dynamic_spec);
+DDynamicModel*  d_dynamic_model_new         (DManipulator   *manipulator);
 
 void            d_dynamic_model_set_axes    (DDynamicModel  *self,
                                              DVector        *axes);

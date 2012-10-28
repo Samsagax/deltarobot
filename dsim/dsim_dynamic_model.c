@@ -75,14 +75,9 @@ G_DEFINE_TYPE(DDynamicModel, d_dynamic_model, G_TYPE_OBJECT);
 static void
 d_dynamic_model_init (DDynamicModel   *self)
 {
-    self->geometry = NULL;
-    self->dynamic_spec = NULL;
-
-    self->axes = d_vector_new(3);
-    self->speed = d_vector_new(3);
+    self->manipulator = NULL;
 
     self->force = d_vector_new(3);
-    self->torque = d_vector_new(3);
     self->gravity = d_vector_new(3);
 
     self->jacobian_p_inv = NULL;
@@ -127,21 +122,9 @@ d_dynamic_model_dispose (GObject *gobject)
 {
     DDynamicModel *self = D_DYNAMIC_MODEL(gobject);
 
-    if (self->geometry) {
-        g_object_unref(self->geometry);
-        self->geometry = NULL;
-    }
-    if (self->dynamic_spec) {
-        g_object_unref(self->dynamic_spec);
-        self->dynamic_spec = NULL;
-    }
-    if (self->axes) {
-        g_object_unref(self->axes);
-        self->axes = NULL;
-    }
-    if (self->speed) {
-        g_object_unref(self->speed);
-        self->speed = NULL;
+    if (self->manipulator) {
+        g_object_unref(self->manipulator);
+        self->manipulator = NULL;
     }
     if (self->force) {
         g_object_unref(self->force);
@@ -207,23 +190,13 @@ d_dynamic_model_finalize (GObject *gobject)
 }
 
 static void
-d_dynamic_model_set_dynamic_spec (DDynamicModel *self,
-                                  DDynamicSpec  *dynamic_spec)
+d_dynamic_model_set_manipulator (DDynamicModel  *self,
+                                 DManipulator   *manipulator)
 {
-    if (self->dynamic_spec) {
-        g_object_unref(self->dynamic_spec);
+    if (self->manipulator) {
+        g_object_unref(self->manipulator);
     }
-    self->dynamic_spec = g_object_ref(dynamic_spec);
-}
-
-static void
-d_dynamic_model_set_geometry (DDynamicModel *self,
-                              DGeometry     *geometry)
-{
-    if (self->geometry) {
-        g_object_unref(self->geometry);
-    }
-    self->geometry = g_object_ref(geometry);
+    self->manipulator = g_object_ref(manipulator);
 }
 
 /*
@@ -236,15 +209,16 @@ d_dynamic_model_update_jpi (DDynamicModel   *self)
         self->jacobian_p_inv = d_matrix_new(3, 3);
     }
 
-    DVector *axes = self->axes;
+    DVector *axes = d_manipulator_get_axes(self->manipulator);
     DVector *pos = d_vector_new(3);
     gsl_matrix *jpi = self->jacobian_p_inv->matrix;
-    gdouble a = self->geometry->a;
-    gdouble h = self->geometry->h;
-    gdouble r = self->geometry->r;
+    DGeometry *geometry = d_manipulator_get_geometry(self->manipulator);
+    gdouble a = geometry->a;
+    gdouble h = geometry->h;
+    gdouble r = geometry->r;
 
     gsl_matrix_set_all(jpi, 0);
-    d_solver_solve_direct(self->geometry, axes, pos);
+    d_solver_solve_direct(geometry, axes, pos);
     for (int i = 0; i < jpi->size1; i++) {
         gdouble phi = G_PI * 120.0 / 180.0 * (gdouble)i;
         gdouble t = d_vector_get(axes, i);
@@ -274,18 +248,19 @@ d_dynamic_model_update_jpd (DDynamicModel   *self)
         self->jacobian_p_dot = d_matrix_new(3, 3);
     }
 
-    DVector *axes = self->axes;
+    DVector *axes = d_manipulator_get_axes(self->manipulator);
     DVector *pos = d_vector_new(3);
-    DVector *speed_axes = self->speed;
+    DVector *speed_axes = d_manipulator_get_speed(self->manipulator);
     DVector *speed_pos = d_vector_new(3);
+    DGeometry *geometry = d_manipulator_get_geometry(self->manipulator);
     DMatrix *jp_inv = d_dynamic_model_get_direct_jacobian_inv(self);
     DMatrix *jq = d_dynamic_model_get_inverse_jacobian(self);
     gsl_matrix *jpd = self->jacobian_p_dot->matrix;
-    gdouble a = self->geometry->a;
+    gdouble a = geometry->a;
     gsl_vector *temp = gsl_vector_calloc(3);
 
     gsl_matrix_set_all(jpd, 0);
-    d_solver_solve_direct(self->geometry, axes, pos);
+    d_solver_solve_direct(geometry, axes, pos);
     gsl_blas_dgemv(CblasNoTrans, 1.0, jq->matrix,
                     speed_axes->vector, 0.0, temp);
     gsl_blas_dgemv(CblasNoTrans, 1.0, jp_inv->matrix,
@@ -324,15 +299,16 @@ d_dynamic_model_update_jq (DDynamicModel   *self)
         self->jacobian_q = d_matrix_new(3, 3);
     }
 
-    DVector *axes = self->axes;
+    DVector *axes = d_manipulator_get_axes(self->manipulator);
     DVector *pos = d_vector_new(3);
     gsl_matrix *jq = self->jacobian_q->matrix;
-    gdouble a = self->geometry->a;
-    gdouble h = self->geometry->h;
-    gdouble r = self->geometry->r;
+    DGeometry* geometry = d_manipulator_get_geometry(self->manipulator);
+    gdouble a = geometry->a;
+    gdouble h = geometry->h;
+    gdouble r = geometry->r;
 
     gsl_matrix_set_all(jq, 0);
-    d_solver_solve_direct(self->geometry, axes, pos);
+    d_solver_solve_direct(geometry, axes, pos);
     for (int i = 0; i < jq->size1; i++) {
         gdouble phi = G_PI * 120.0 / 180.0 * (double)i;
         gdouble t = d_vector_get(axes, i);
@@ -359,21 +335,22 @@ d_dynamic_model_update_jqd (DDynamicModel   *self)
         self->jacobian_q_dot = d_matrix_new(3, 3);
     }
 
-    DVector *axes = self->axes;
+    DVector *axes = d_manipulator_get_axes(self->manipulator);
     DVector *pos = d_vector_new(3);
-    DVector *speed_axes = self->speed;
+    DVector *speed_axes = d_manipulator_get_speed(self->manipulator);
     DVector *speed_pos = d_vector_new(3);
+    DGeometry *geometry = d_manipulator_get_geometry(self->manipulator);
     DMatrix *jp_inv = d_dynamic_model_get_direct_jacobian_inv(self);
     DMatrix *jq = d_dynamic_model_get_inverse_jacobian(self);
 
     gsl_matrix *jqd = self->jacobian_q_dot->matrix;
-    gdouble a = self->geometry->a;
-    gdouble h = self->geometry->h;
-    gdouble r = self->geometry->r;
+    gdouble a = geometry->a;
+    gdouble h = geometry->h;
+    gdouble r = geometry->r;
     gsl_vector *temp = gsl_vector_calloc(3);
 
     gsl_matrix_set_all(jqd, 0);
-    d_solver_solve_direct(self->geometry, axes, pos);
+    d_solver_solve_direct(geometry, axes, pos);
     gsl_blas_dgemv(CblasNoTrans, 1.0, jq->matrix,
                     speed_axes->vector, 0.0, temp);
     gsl_blas_dgemv(CblasNoTrans, 1.0, jp_inv->matrix,
@@ -410,7 +387,7 @@ d_dynamic_model_update_mass_axes (DDynamicModel *self)
         self->mass_axes = d_matrix_new(3, 3);
     }
     gsl_matrix *ma = self->mass_axes->matrix;
-    DVector *axes = self->axes;
+    DVector *axes = d_manipulator_get_axes(self->manipulator);
 
     gsl_matrix_set_all(ma, 0);
     for (int i = 0; i < ma->size1; i++) {
@@ -420,9 +397,9 @@ d_dynamic_model_update_mass_axes (DDynamicModel *self)
         gsl_matrix_set(ma, i, 1, - sin(phi) * sin(t));
         gsl_matrix_set(ma, i, 2, cos(t));
     }
-    gdouble mass = (self->dynamic_spec->low_arm_mass / 2.0
-                    + self->dynamic_spec->upper_arm_mass)
-                    * self->geometry->a;
+    gdouble mass = (self->manipulator->dynamic_params->low_arm_mass / 2.0
+                    + self->manipulator->dynamic_params->upper_arm_mass)
+                    * self->manipulator->geometry->a;
     gsl_matrix_scale(ma, mass);
 
     self->ma_update = FALSE;
@@ -441,8 +418,8 @@ d_dynamic_model_update_mass_pos (DDynamicModel  *self)
 
     gsl_matrix_set_all(mp, 0);
     for (int i = 0; i < mp->size1; i++) {
-        gdouble mass = self->dynamic_spec->platform_mass
-                        + 3.0 * self->dynamic_spec->upper_arm_mass;
+        gdouble mass = self->manipulator->dynamic_params->platform_mass
+                        + 3.0 * self->manipulator->dynamic_params->upper_arm_mass;
         gsl_matrix_set(mp, i, i, mass);
     }
 
@@ -462,9 +439,9 @@ d_dynamic_model_update_inertia_axes (DDynamicModel  *self)
 
     gsl_matrix_set_all(ia, 0);
     for (int i = 0; i < ia->size1; i++) {
-        gdouble mass = self->dynamic_spec->upper_arm_mass
-                        * pow(self->geometry->a, 2.0)
-                        + self->dynamic_spec->low_arm_moi;
+        gdouble mass = self->manipulator->dynamic_params->upper_arm_mass
+                        * pow(self->manipulator->geometry->a, 2.0)
+                        + self->manipulator->dynamic_params->low_arm_moi;
         gsl_matrix_set(ia, i, i, mass);
     }
 
@@ -599,7 +576,7 @@ d_dynamic_model_update_model_torque (DDynamicModel  *self)
 
     gsl_vector *torque = self->model_torque->vector;
     DVector *ff = self->force;
-    DVector *tt = self->torque;
+    DVector *tt = d_manipulator_get_torque(self->manipulator);
     DMatrix *jp = d_dynamic_model_get_direct_jacobian_inv(self);
     DMatrix *jq = d_dynamic_model_get_inverse_jacobian(self);
     gsl_vector *temp = gsl_vector_calloc(3);
@@ -800,13 +777,11 @@ d_dynamic_model_equation (double        t,
 
 /* Public API */
 DDynamicModel*
-d_dynamic_model_new (DGeometry      *geometry,
-                     DDynamicSpec   *dynamic_spec)
+d_dynamic_model_new (DManipulator   *manipulator)
 {
     DDynamicModel *dm = g_object_new(D_TYPE_DYNAMIC_MODEL, NULL);
 
-    d_dynamic_model_set_geometry(dm, geometry);
-    d_dynamic_model_set_dynamic_spec(dm, dynamic_spec);
+    d_dynamic_model_set_manipulator(dm, manipulator);
 
     return dm;
 }
@@ -814,17 +789,14 @@ d_dynamic_model_new (DGeometry      *geometry,
 DVector*
 d_dynamic_model_get_axes (DDynamicModel *self)
 {
-    return self->axes;
+    return d_manipulator_get_axes(self->manipulator);
 }
 
 void
 d_dynamic_model_set_axes (DDynamicModel *self,
                           DVector       *axes)
 {
-    if (self->axes) {
-        g_object_unref(self->axes);
-    }
-    self->axes = g_object_ref(axes);
+    d_manipulator_set_axes(self->manipulator, axes);
     self->jpi_update = TRUE;
     self->jpd_update = TRUE;
     self->jq_update = TRUE;
@@ -841,17 +813,14 @@ d_dynamic_model_set_axes (DDynamicModel *self,
 DVector*
 d_dynamic_model_get_speed (DDynamicModel    *self)
 {
-    return self->speed;
+    return d_manipulator_get_speed(self->manipulator);
 }
 
 void
 d_dynamic_model_set_speed (DDynamicModel    *self,
                            DVector          *speed)
 {
-    if (self->speed) {
-        g_object_unref(self->speed);
-    }
-    self->speed = g_object_ref(speed);
+    d_manipulator_set_speed(self->manipulator, speed);
     self->jpi_update = TRUE;
     self->jpd_update = TRUE;
     self->jq_update = TRUE;
@@ -885,17 +854,14 @@ d_dynamic_model_set_force (DDynamicModel    *self,
 DVector*
 d_dynamic_model_get_torque (DDynamicModel   *self)
 {
-    return self->torque;
+    return d_manipulator_get_torque(self->manipulator);
 }
 
 void
 d_dynamic_model_set_torque (DDynamicModel   *self,
                             DVector         *torque)
 {
-    if (self->torque) {
-        g_object_unref(self->torque);
-    }
-    self->torque = g_object_ref(torque);
+    d_manipulator_set_torque(self->manipulator, torque);
     self->mt_update = TRUE;
 }
 
@@ -930,12 +896,12 @@ d_dynamic_model_solve_inverse (DDynamicModel    *self,
                                         1e-5, 1e-6, 1e-6);
     gdouble t = 0.0;
     gdouble y[6] = {
-        d_vector_get(self->axes, 0),
-        d_vector_get(self->axes, 1),
-        d_vector_get(self->axes, 2),
-        d_vector_get(self->speed, 0),
-        d_vector_get(self->speed, 1),
-        d_vector_get(self->speed, 2)
+        d_vector_get(d_manipulator_get_axes(self->manipulator), 0),
+        d_vector_get(d_manipulator_get_axes(self->manipulator), 1),
+        d_vector_get(d_manipulator_get_axes(self->manipulator), 2),
+        d_vector_get(d_manipulator_get_speed(self->manipulator), 0),
+        d_vector_get(d_manipulator_get_speed(self->manipulator), 1),
+        d_vector_get(d_manipulator_get_speed(self->manipulator), 2)
     };
     int s = gsl_odeiv2_driver_apply(driver, &t, interval, y);
     if (s != GSL_SUCCESS) {
