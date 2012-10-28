@@ -51,9 +51,8 @@ struct _DManipulator {
     DGeometry       *geometry;
     DDynamicSpec    *dynamic_params;
 
-    /* Torques in the axes force in tool point */
+    /* Torques in the axes */
     DVector         *torque;
-    DVector         *force;
 
     /* Axes for the manipulator's motors */
     DAxes           *axes;
@@ -66,14 +65,6 @@ struct _DManipulator {
 typedef struct _DManipulatorClass DManipulatorClass;
 struct _DManipulatorClass {
     GObjectClass    parent_class;
-
-    /* Virtual methods */
-    DVector*    (*get_axes)             (DManipulator *self);
-    void        (*set_axes)             (DManipulator *self, DVector *axes);
-    void        (*set_torque)           (DManipulator *self, DVector *torque);
-    DVector*    (*get_speed)            (DManipulator *self);
-
-    void        (*trans_func)           (DVector *torque, DVector *axes, DVector *speed);
 };
 
 /* Methods */
@@ -95,5 +86,18 @@ void            d_manipulator_set_axes      (DManipulator   *self,
                                              DVector        *axes);
 
 DVector*        d_manipulator_get_speed     (DManipulator   *self);
+
+void            d_manipulator_set_speed     (DManipulator   *self,
+                                             DVector        *speed);
+
+void            d_manipulator_set_torque    (DManipulator   *self,
+                                             DVector        *torque);
+
+DVector*        d_manipulator_get_torque    (DManipulator   *self);
+
+DDynamicSpec*   d_manipulator_get_dynamic_spec
+                                            (DManipulator   *self);
+
+DGeometry*      d_manipulator_get_geometry  (DManipulator   *self);
 
 #endif   /* ----- #ifndef DSIM_MANIPULATOR_INC  ----- */

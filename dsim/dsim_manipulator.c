@@ -42,10 +42,9 @@ d_manipulator_init (DManipulator   *self)
 {
     self->geometry = NULL;
     self->dynamic_params = NULL;
-    self->torque = NULL;
-    self->force = NULL;
-    self->axes = NULL;
-    self->speed = NULL;
+    self->torque = d_vector_new(3);
+    self->axes = d_axes_new();
+    self->speed = d_speed_new();
 }
 
 static void
@@ -72,10 +71,6 @@ d_manipulator_dispose (GObject *gobject)
     if (self->torque) {
         g_object_unref(self->torque);
         self->torque = NULL;
-    }
-    if (self->force) {
-        g_object_unref(self->force);
-        self->force = NULL;
     }
     if (self->axes) {
         g_object_unref(self->axes);
@@ -129,5 +124,82 @@ d_manipulator_new (DGeometry    *geometry,
     d_manipulator_set_dynamic_spec(dm, dynamic_params);
 
     return dm;
+}
+
+gdouble
+d_manipulator_get_axis (DManipulator    *self,
+                        gint            axis)
+{
+    return d_vector_get(d_manipulator_get_axes(self), axis);
+}
+
+void
+d_manipulator_set_axis (DManipulator    *self,
+                        gint            axis,
+                        gdouble         angle)
+{
+    d_vector_set(d_manipulator_get_axes(self),
+            axis,
+            angle);
+}
+
+DVector*
+d_manipulator_get_axes (DManipulator    *self)
+{
+    return self->axes;
+}
+
+void
+d_manipulator_set_axes (DManipulator    *self,
+                        DVector         *axes)
+{
+    if (self->axes) {
+        g_object_unref(self->axes);
+    }
+    self->axes = g_object_ref(axes);
+}
+
+DVector*
+d_manipulator_get_speed (DManipulator   *self)
+{
+    return self->speed;
+}
+
+void
+d_manipulator_set_speed (DManipulator   *self,
+                         DVector        *speed)
+{
+    if (self->speed) {
+        g_object_unref(self->speed);
+    }
+    self->speed = g_object_ref(speed);
+}
+
+DVector*
+d_manipulator_get_torque (DManipulator  *self)
+{
+    return self->torque;
+}
+
+void
+d_manipulator_set_torque (DManipulator  *self,
+                          DVector       *torque)
+{
+    if (self->torque) {
+        g_object_unref(self->torque);
+    }
+    self->torque = g_object_ref(torque);
+}
+
+DDynamicSpec*
+d_manipulator_get_dynamic_spec (DManipulator    *self)
+{
+    return self->dynamic_params;
+}
+
+DGeometry*
+d_manipulator_get_geometry (DManipulator    *self)
+{
+    return self->geometry;
 }
 
