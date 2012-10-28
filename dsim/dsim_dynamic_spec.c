@@ -22,7 +22,7 @@
  * dsim_dynamic_spec.c :
  */
 
-#include "dsim_dynamics.h"
+#include "dsim_dynamic_spec.h"
 
 /* Forward declarations */
 static void         d_dynamic_spec_class_init   (DDynamicSpecClass  *klass);
