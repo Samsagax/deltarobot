@@ -323,7 +323,7 @@ create_menu_bar (GtkWidget  *window)
 {
     static GtkItemFactoryEntry menu_items[] = {
         { "/_File",         NULL,           NULL,           0,  "<Branch>" },
-        { "/File/_Quit",    "<control>X",   gtk_main_quit,  0,  "<StockItem>",  GTK_STOCK_QUIT },
+        { "/File/_Quit",    "<control>Q",   gtk_main_quit,  0,  "<StockItem>",  GTK_STOCK_QUIT },
         { "/_Help",         NULL,           NULL,           0,  "<Branch>" },
         { "/Help/_About",   NULL,           show_about,     0,  "<StockItem>",  GTK_STOCK_ABOUT },
     };
@@ -346,7 +346,6 @@ create_menu_bar (GtkWidget  *window)
 static GtkWidget*
 create_controls (void)
 {
-    GtkWidget *hbox;
     GtkWidget *table;
 
     /*
