@@ -24,6 +24,9 @@
 
 #include <gdk/gdkkeysyms.h>
 #include <dsim/dsim.h>
+#include <gtkdatabox.h>
+#include <gtkdatabox_lines.h>
+#include <gtkdatabox_ruler.h>
 #include "dviewer_viewport.h"
 
 /* Global variables */
@@ -38,10 +41,12 @@ static GtkWidget            *go_button_linear;
 static GtkWidget            *fine_check;
 static GtkWidget            *axis_controls[3];
 static GtkWidget            *pos_controls[3];
+static GtkDataboxGraph      *axes_graph[3];
 
 /* Forward declarations */
 static GtkWidget*   create_menu_bar (GtkWidget *window);
 static GtkWidget*   create_controls (void);
+static GtkWidget*   create_graphs (void);
 static void         create_main_window (void);
 static gboolean     key_handler (GtkWidget *widget, GdkEventKey *event, gpointer data);
 static void         increment_pos (DPos *pos, gdouble dx, gdouble dy, gdouble dz);
@@ -243,8 +248,10 @@ static void
 create_main_window (void)
 {
     GtkWidget *main_vbox;
+    GtkWidget *center_hbox;
     GtkWidget *viewport;
     GtkWidget *controls;
+    GtkWidget *graphs;
     GtkWidget *menu_bar;
 
     /*
@@ -266,6 +273,11 @@ create_main_window (void)
      * Create the controls
      */
     controls = create_controls();
+
+    /*
+     * Create graphs
+     */
+    graphs = create_graphs();
 
     /*
      * Create Menus
@@ -292,9 +304,13 @@ create_main_window (void)
 
     /* Set layout */
     main_vbox = gtk_vbox_new(FALSE, 0);
+    center_hbox = gtk_hbox_new(FALSE, 0);
+
+    gtk_box_pack_start(GTK_BOX(center_hbox), viewport, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(center_hbox), graphs, TRUE, TRUE, 0);
 
     gtk_box_pack_start(GTK_BOX(main_vbox), menu_bar, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(main_vbox), viewport, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(main_vbox), center_hbox, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(main_vbox), controls, FALSE, FALSE, 0);
     gtk_container_add(GTK_CONTAINER(main_window), main_vbox);
 }
@@ -411,6 +427,29 @@ create_controls (void)
                                 1, 2);
 
     return table;
+}
+
+static GtkWidget*
+create_graphs (void)
+{
+    GtkWidget *vbox;
+
+    GtkWidget *data_box[3];
+    GtkWidget *data_box_table[3];
+
+    /*
+     * Box the graphs verticaly
+     */
+    vbox = gtk_vbox_new(FALSE, 0);
+    for (int i=0; i < 3; i++) {
+        gtk_databox_create_box_with_scrollbars_and_rulers(
+                &data_box[i], &data_box_table[i],
+                TRUE, TRUE, TRUE, TRUE);
+        gtk_widget_set_size_request(data_box_table[i], 400, 100);
+        gtk_box_pack_start(GTK_BOX(vbox), data_box_table[i], TRUE, TRUE, 0);
+    }
+
+    return vbox;
 }
 
 static void
