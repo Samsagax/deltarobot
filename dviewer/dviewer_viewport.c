@@ -586,7 +586,7 @@ static gboolean
 d_viewport_button_press (GtkWidget      *widget,
                          GdkEventButton *event)
 {
-    g_warning("d_viewport_button_press is a stub");
+//    g_warning("d_viewport_button_press is a stub");
 
     g_return_val_if_fail (D_IS_VIEWPORT(widget), FALSE);
     g_return_val_if_fail (event != NULL, FALSE);
@@ -605,7 +605,7 @@ static gboolean
 d_viewport_button_release (GtkWidget        *widget,
                            GdkEventButton   *event)
 {
-    g_warning("d_viewport_button_release is a stub");
+//    g_warning("d_viewport_button_release is a stub");
 
     g_return_val_if_fail (D_IS_VIEWPORT(widget), FALSE);
     g_return_val_if_fail (event != NULL, FALSE);
@@ -615,9 +615,10 @@ d_viewport_button_release (GtkWidget        *widget,
         gtk_grab_remove(widget);
         self->button = 0;
 
-        GtkAllocation allocation;
-        gtk_widget_get_allocation (widget, &allocation);
-        gdk_window_invalidate_rect (gtk_widget_get_window(widget), &allocation, FALSE);
+        d_viewport_queve_redraw(self);
+//        GtkAllocation allocation;
+//        gtk_widget_get_allocation (widget, &allocation);
+//        gdk_window_invalidate_rect (gtk_widget_get_window(widget), &allocation, FALSE);
     }
 
     return FALSE;
@@ -653,9 +654,9 @@ d_viewport_trackball_rotation (DViewport    *self,
                                gint         x,
                                gint         y)
 {
-    g_warning("d_viewport_trackball_rotation is a stub");
+//    g_warning("d_viewport_trackball_rotation is a stub");
 
-    g_print("Input  coordinates: %i, %i\n", x, y);
+//    g_print("Input  coordinates: %i, %i\n", x, y);
 }
 
 static GdkGLConfig*
@@ -996,6 +997,8 @@ d_viewport_queve_redraw (DViewport  *self)
 
     GtkWidget *widget = GTK_WIDGET(self);
     if (gtk_widget_get_realized(widget)) {
-        gdk_window_invalidate_rect(widget->window, &widget->allocation, FALSE);
+        GtkAllocation allocation;
+        gtk_widget_get_allocation (widget, &allocation);
+        gdk_window_invalidate_rect(widget->window, &allocation, FALSE);
     }
 }
