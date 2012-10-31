@@ -310,12 +310,11 @@ create_main_window (void)
     gtk_container_add(GTK_CONTAINER(control_align), controls);
 
     gtk_box_pack_start(GTK_BOX(central_hbox), control_align, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(central_hbox), viewport, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(central_hbox), viewport, TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(central_hbox), graphs, FALSE, FALSE, 0);
 
     gtk_box_pack_start(GTK_BOX(main_vbox), menu_bar, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(main_vbox), central_hbox, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(main_vbox), control_align, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(main_vbox), central_hbox, TRUE, TRUE, 0);
     gtk_container_add(GTK_CONTAINER(main_window), main_vbox);
 }
 
@@ -448,7 +447,7 @@ create_graphs (void)
         gtk_databox_create_box_with_scrollbars_and_rulers(
                 &data_box[i], &data_box_table[i],
                 TRUE, TRUE, TRUE, TRUE);
-        gtk_widget_set_size_request(data_box_table[i], 400, 100);
+        gtk_widget_set_size_request(data_box_table[i], 500, 200);
         gtk_box_pack_start(GTK_BOX(vbox), data_box_table[i], TRUE, TRUE, 0);
     }
 
