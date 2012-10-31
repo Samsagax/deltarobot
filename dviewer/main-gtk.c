@@ -248,7 +248,7 @@ static void
 create_main_window (void)
 {
     GtkWidget *main_vbox;
-    GtkWidget *center_hbox;
+    GtkWidget *central_hbox;
     GtkWidget *viewport;
     GtkWidget *controls;
     GtkWidget *graphs;
@@ -304,14 +304,18 @@ create_main_window (void)
 
     /* Set layout */
     main_vbox = gtk_vbox_new(FALSE, 0);
-    center_hbox = gtk_hbox_new(FALSE, 0);
+    central_hbox = gtk_hbox_new(FALSE, 0);
+    GtkWidget *control_align = gtk_alignment_new(0, 0, 0, 0);
 
-    gtk_box_pack_start(GTK_BOX(center_hbox), viewport, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(center_hbox), graphs, TRUE, TRUE, 0);
+    gtk_container_add(GTK_CONTAINER(control_align), controls);
+
+    gtk_box_pack_start(GTK_BOX(central_hbox), control_align, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(central_hbox), viewport, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(central_hbox), graphs, FALSE, FALSE, 0);
 
     gtk_box_pack_start(GTK_BOX(main_vbox), menu_bar, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(main_vbox), center_hbox, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(main_vbox), controls, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(main_vbox), central_hbox, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(main_vbox), control_align, FALSE, FALSE, 0);
     gtk_container_add(GTK_CONTAINER(main_window), main_vbox);
 }
 
@@ -351,8 +355,8 @@ create_controls (void)
     /*
      * Table with spinbuttons
      */
-    guint rows = 2;
-    guint columns = 8;
+    guint rows = 7;
+    guint columns = 4;
     table = gtk_table_new(rows, columns, FALSE);
 
     GtkWidget *axis_labels[] = {
@@ -377,20 +381,20 @@ create_controls (void)
     for (int i = 0; i < 3; i++) {
         gtk_table_attach_defaults(GTK_TABLE(table),
                                   axis_labels[i],
-                                  2*i, 2*i+1,
-                                  0, 1);
+                                  0, 1,
+                                  i, i+1);
         gtk_table_attach_defaults(GTK_TABLE(table),
                                   axis_controls[i],
-                                  2*i+1, 2*i+2,
-                                  0, 1);
+                                  1, 2,
+                                  i, i+1);
         gtk_table_attach_defaults(GTK_TABLE(table),
                                   pos_labels[i],
-                                  2*i, 2*i+1,
-                                  1, 2);
+                                  2, 3,
+                                  i, i+1);
         gtk_table_attach_defaults(GTK_TABLE(table),
                                   pos_controls[i],
-                                  2*i+1, 2*i+2,
-                                  1, 2);
+                                  3, 4,
+                                  i, i+1);
     }
 
     /*
@@ -399,18 +403,18 @@ create_controls (void)
     fine_check = gtk_toggle_button_new_with_label("Fine");
     gtk_table_attach_defaults(GTK_TABLE(table),
                                 fine_check,
-                                6, 7,
-                                0, 2);
+                                0, 4,
+                                4, 5);
 
     /*
      * Go! Buttons
      */
-    go_button_joint = gtk_button_new_with_label("GO!");
+    go_button_joint = gtk_button_new_with_label("MoveJ");
     g_signal_connect(G_OBJECT(go_button_joint),
                      "clicked",
                      G_CALLBACK(go_button_joint_clicked),
                      NULL);
-    go_button_linear = gtk_button_new_with_label("GO!");
+    go_button_linear = gtk_button_new_with_label("MoveL");
     g_signal_connect(G_OBJECT(go_button_linear),
                      "clicked",
                      G_CALLBACK(go_button_linear_clicked),
@@ -418,12 +422,12 @@ create_controls (void)
 
     gtk_table_attach_defaults(GTK_TABLE(table),
                                 go_button_joint,
-                                7, 8,
-                                0, 1);
+                                0, 2,
+                                5, 6);
     gtk_table_attach_defaults(GTK_TABLE(table),
                                 go_button_linear,
-                                7, 8,
-                                1, 2);
+                                2, 4,
+                                5, 6);
 
     return table;
 }
