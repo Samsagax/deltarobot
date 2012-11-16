@@ -27,5 +27,5 @@ PKG_CHECK_MODULES([gsl], [gsl])
 
 AC_FUNC_ERROR_AT_LINE
 
-AC_CONFIG_FILES([Makefile dsim/Makefile dviewer/Makefile])
+AC_CONFIG_FILES([Makefile dsim/Makefile dviewer/Makefile dynviewer/Makefile])
 AC_OUTPUT
