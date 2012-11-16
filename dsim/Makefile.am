@@ -31,7 +31,3 @@ sources = \
 lib_LTLIBRARIES = ../lib/libdsim.la
 ___lib_libdsim_la_SOURCES = ${sources}
 ___lib_libdsim_la_LIBADD = ${gobject_LIBS} ${gsl_LIBS} -lm
-
-noinst_PROGRAMS = ../test/dsim
-___test_dsim_SOURCES = main.c ../lib/libdsim.la
-___test_dsim_LDADD = ../lib/libdsim.la -lm -lrt
