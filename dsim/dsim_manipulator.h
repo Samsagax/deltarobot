@@ -55,10 +55,10 @@ struct _DManipulator {
     DVector         *torque;
 
     /* Axes for the manipulator's motors */
-    DAxes           *axes;
+    DVector         *axes;
 
     /* Speed for the manipulator's motors */
-    DSpeed          *speed;
+    DVector         *speed;
 };
 
 /* Class Structure of DManipulator */
