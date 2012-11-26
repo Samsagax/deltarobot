@@ -6,7 +6,7 @@ AC_INIT([DSim], [0.1])
 AC_CONFIG_AUX_DIR([m4])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign -Wall -Werror])
-AC_CONFIG_SRCDIR([dsim/main.c])
+#AC_CONFIG_SRCDIR([dsim/main.c])
 AM_PROG_AR
 LT_INIT
 
