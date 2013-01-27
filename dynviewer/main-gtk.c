@@ -25,11 +25,29 @@
 #include <gtk/gtk.h>
 #include <dsim/dsim.h>
 #include <gtkdatabox.h>
+#include <gtkdatabox_lines.h>
 
 /* Forward declarations */
-static GtkWidget*   create_main_window      (void);
-static GtkWidget*   create_menu_bar         (GtkWidget  *window);
-static void         setup_robot             (void);
+static DDynamicModel *dynamic_model;
+static GtkWidget *interval_spin[2];
+static GtkWidget *databox;
+static GtkDataboxGraph *graph[3] = { NULL };
+
+static GtkWidget*   create_main_window          (void);
+static GtkWidget*   create_menu_bar             (GtkWidget  *window);
+static GtkWidget*   create_controls             (void);
+static void         setup_robot                 (void);
+static void         calculate_button_callback   (GtkButton  *button,
+                                                 GdkEvent   *event,
+                                                 gpointer   user_data);
+
+static gfloat *theta_data[3] = { NULL, NULL, NULL };
+static gfloat *time_data = NULL;
+static gfloat *theta_dot_data[3] = { NULL, NULL, NULL };
+
+static GdkColor red = {0, 65535, 0, 0};
+static GdkColor green = {0, 0, 65535, 0};
+static GdkColor blue = {0, 0, 0, 65535};
 
 /*
  * Create menu bar
@@ -56,6 +74,150 @@ create_menu_bar (GtkWidget  *window)
 }
 
 /*
+ * Calculate button callback
+ */
+static void
+calculate_button_callback (GtkButton    *button,
+                           GdkEvent     *event,
+                           gpointer     user_data)
+{
+    DVector *axes = NULL;
+    DVector *speed = NULL;
+    gdouble time = 0.0;
+    gdouble interval = 0.0;
+    gdouble step = 0.0;
+    gint len;
+
+    interval = gtk_spin_button_get_value(GTK_SPIN_BUTTON(interval_spin[0]));
+    step = gtk_spin_button_get_value(GTK_SPIN_BUTTON(interval_spin[1]));
+
+    if (step > interval) {
+        g_warning("Time step is larger than interval");
+        return;
+    }
+
+    g_print("Interval: %f\n", interval);
+    g_print("Time step: %f\n", step);
+    g_print("Processing...\n");
+
+    /* Clear all graphs */
+    gtk_databox_graph_remove_all(GTK_DATABOX(databox));
+
+//    len = ceil(interval / step) + 1;
+//    for (int i = 0; i < 3; i++) {
+//        if (theta_data[i]) {
+//            g_free(theta_data[i]);
+//        }
+//        theta_data[i] = g_new0(gfloat, len);
+//        if (theta_dot_data[i]){
+//            g_free(theta_dot_data[i]);
+//        }
+//        theta_dot_data[i] = g_new0(gfloat, len);
+//    }
+//    if (time_data) {
+//        g_free(time_data);
+//    }
+//    time_data = g_new0(gfloat, len);
+//    gint j = 0;
+
+    while (time <= interval) {
+        axes = d_dynamic_model_get_axes(dynamic_model);
+        speed = d_dynamic_model_get_speed(dynamic_model);
+//        for (int i = 0; i < 3; i++) {
+//            theta_data[i][j] = d_vector_get(axes, i);
+//            theta_dot_data[i][j] = d_vector_get(speed, i);
+//        }
+//        time_data[j] = time;
+
+        g_print("t = %f, [%f, %f, %f]\n",
+                time,
+                d_vector_get(axes, 0),
+                d_vector_get(axes, 1),
+                d_vector_get(axes, 2));
+
+        d_dynamic_model_solve_inverse(dynamic_model, step);
+        time += step;
+//        j++;
+    }
+
+    g_print("Plotting data...\n");
+
+    /* Add them one clolor each */
+//    GdkColor colors[3] = {
+//        red,
+//        green,
+//        blue
+//    };
+//    for (int i = 0; i < 3; i++) {
+//        if (graph[i]) {
+//            g_object_unref(graph[i]);
+//        }
+//        graph[i] = gtk_databox_lines_new(len,
+//                    time_data,
+//                    theta_data[i],
+//                    &colors[i],
+//                    1.0);
+//        gtk_databox_graph_add(GTK_DATABOX(databox), graph[i]);
+//    }
+//    gtk_databox_auto_rescale(GTK_DATABOX(databox), 0.1);
+    g_print("Done\n");
+
+    return;
+}
+
+static GtkWidget*
+create_controls (void)
+{
+    GtkWidget *controls_table;
+
+    /*
+     * Create container table
+     */
+    controls_table = gtk_table_new(3, 2, FALSE);
+
+    /*
+     * Spinners with labels
+     */
+    GtkWidget *label[2];
+
+    label[0] = gtk_label_new("Intervalo (s):");
+    interval_spin[0] = gtk_spin_button_new_with_range(0.1, 1000.0, 0.001);
+    gtk_table_attach_defaults(GTK_TABLE(controls_table),
+                              label[0],
+                              0, 1,
+                              0, 1);
+    gtk_table_attach_defaults(GTK_TABLE(controls_table),
+                              interval_spin[0],
+                              1, 2,
+                              0, 1);
+    label[1] = gtk_label_new("Muestreo (s):");
+    interval_spin[1] = gtk_spin_button_new_with_range(0.001, 10.0, 0.001);
+    gtk_table_attach_defaults(GTK_TABLE(controls_table),
+                              label[1],
+                              0, 1,
+                              1, 2);
+    gtk_table_attach_defaults(GTK_TABLE(controls_table),
+                              interval_spin[1],
+                              1, 2,
+                              1, 2);
+
+
+    GtkWidget *calculate_button;
+    calculate_button = gtk_button_new_with_label("Calcular");
+    gtk_table_attach_defaults(GTK_TABLE(controls_table),
+                              calculate_button,
+                              0, 2,
+                              2, 3);
+    g_signal_connect(G_OBJECT(calculate_button),
+                              "button-press-event",
+                              G_CALLBACK(calculate_button_callback),
+                              NULL);
+
+    return controls_table;
+}
+
+
+/*
  * Create the main application window
  */
 static GtkWidget*
@@ -65,7 +227,7 @@ create_main_window (void)
     GtkWidget *menu_bar;
     GtkWidget *main_vbox;
     GtkWidget *box_table;
-    GtkWidget *data_box;
+    GtkWidget *controls_table;
 
     /*
      * Top-level window
@@ -93,15 +255,71 @@ create_main_window (void)
     /*
      * Create graphs
      */
-    gtk_databox_create_box_with_scrollbars_and_rulers(&data_box,
+    gtk_databox_create_box_with_scrollbars_and_rulers(&databox,
                                                         &box_table,
                                                         TRUE,
                                                         TRUE,
                                                         TRUE,
                                                         TRUE);
+    gtk_widget_set_size_request(box_table, 600, 400);
     gtk_box_pack_start(GTK_BOX(main_vbox), box_table, TRUE, TRUE, 0);
 
+    /*
+     * Create controls
+     */
+    controls_table = create_controls();
+    gtk_box_pack_start(GTK_BOX(main_vbox), controls_table, FALSE, FALSE, 0);
+
+
+
     return main_window;
+}
+
+static void
+setup_robot (void)
+{
+    DManipulator *manipulator;
+    DGeometry *geometry;
+    DDynamicSpec *dynamic_spec;
+    DVector *gravity;
+    DVector *home;
+    DVector *stop;
+    DVector *torque;
+
+    g_print("Setting up robot simulator... ");
+    dynamic_spec = d_dynamic_spec_new();
+    geometry = d_geometry_new(30.0, 50.0, 25.0, 10.0);
+    manipulator = d_manipulator_new(geometry, dynamic_spec);
+
+    gravity = d_vector_new(3);
+    d_vector_set(gravity, 0, 0.0);
+    d_vector_set(gravity, 1, 0.0);
+    d_vector_set(gravity, 2, 9.806);
+
+    torque = d_vector_new(3);
+    d_vector_set(torque, 0, 0.0);
+    d_vector_set(torque, 1, 0.0);
+    d_vector_set(torque, 2, 0.0);
+
+    home = d_axes_new_full(1.0, 1.0, 1.0);
+
+    stop = d_speed_new_full(0.0, 0.0, 0.0);
+
+    dynamic_model = d_dynamic_model_new(manipulator);
+    d_dynamic_model_set_axes(dynamic_model, home);
+    d_dynamic_model_set_gravity(dynamic_model, gravity);
+    d_dynamic_model_set_speed(dynamic_model, stop);
+    d_dynamic_model_set_torque(dynamic_model, torque);
+
+    g_object_unref(geometry);
+    g_object_unref(dynamic_spec);
+    g_object_unref(manipulator);
+    g_object_unref(gravity);
+    g_object_unref(home);
+    g_object_unref(stop);
+    g_object_unref(torque);
+
+    g_print("HECHO\n");
 }
 
 gint
@@ -114,7 +332,7 @@ main (gint argc, gchar* argv[])
      */
     gtk_init(&argc, &argv);
 
-    //setup_robot();
+    setup_robot();
 
     /*
      * Create main window and show it
@@ -126,6 +344,13 @@ main (gint argc, gchar* argv[])
      * Start program main loop
      */
     gtk_main();
+
+    g_object_unref(dynamic_model);
+    for(int i = 0; i < 3; i++) {
+        g_free(theta_data[i]);
+        g_free(theta_dot_data[i]);
+    }
+    g_free(time_data);
 
     return 0;
 }
