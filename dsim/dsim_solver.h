@@ -60,16 +60,16 @@ DSolver*    d_solver_get_instance   (void);
 
 /* Methods */
 void        d_solver_solve_direct       (DGeometry  *geometry,
-                                         DVector    *axes,
-                                         DVector    *pos);
+                                         gsl_vector *axes,
+                                         gsl_vector *pos);
 
 void        d_solver_solve_direct_with_ext_axes (DGeometry *geometry,
-                                         DExtAxes   *extaxes,
-                                         DVector    *pos);
+                                         gsl_matrix   *extaxes,
+                                         gsl_vector   *pos);
 
 void        d_solver_solve_inverse      (DGeometry  *geometry,
-                                         DVector    *pos,
-                                         DVector    *axes,
-                                         DExtAxes   *extaxes);
+                                         gsl_vector *pos,
+                                         gsl_vector *axes,
+                                         gsl_matrix *extaxes);
 
 #endif   /* ----- #ifndef DSIM_SOLVER_INC  ----- */

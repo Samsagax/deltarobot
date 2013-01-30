@@ -27,12 +27,12 @@
 /* Static Methods */
 void
 d_solver_solve_direct (DGeometry    *geometry,
-                       DVector      *axes,
-                       DVector      *pos)
+                       gsl_vector   *axes,
+                       gsl_vector   *pos)
 {
     g_return_if_fail(D_IS_GEOMETRY(geometry));
-    g_return_if_fail(D_IS_VECTOR(axes));
-    g_return_if_fail(D_IS_VECTOR(pos));
+    g_return_if_fail(axes != NULL);
+    g_return_if_fail(pos != NULL);
 
     //TODO: Checkear que los centros no sean colineales
     //TODO: Use GError for non-reachable positions
@@ -42,9 +42,9 @@ d_solver_solve_direct (DGeometry    *geometry,
         int i;
         for(i = 0; i < 3; i++) {
             gdouble phi = ((gdouble)i) * G_PI * 2.0 / 3.0;
-            gdouble bx = geometry->r + geometry->a * cos(d_vector_get(axes, i)) - geometry->h;
+            gdouble bx = geometry->r + geometry->a * cos(gsl_vector_get(axes, i)) - geometry->h;
             gdouble by = 0.0;
-            gdouble bz = geometry->a * sin(d_vector_get(axes,i));
+            gdouble bz = geometry->a * sin(gsl_vector_get(axes,i));
 
             pb[i][0] = bx * cos(phi) - by * sin(phi);
             pb[i][1] = by * cos(phi) + bx * sin(phi);
@@ -88,21 +88,21 @@ d_solver_solve_direct (DGeometry    *geometry,
         g_warning("Unreachable point");
         return;
     }
-    d_vector_set(pos, 2, ((-k1 + sqrt(disc))) / (2.0 * k2));
-    d_vector_set(pos, 1, l[3]/l[0] + l[4]/l[0] * d_vector_get(pos, 2));
-    d_vector_set(pos, 0, l[1]/l[0] + l[2]/l[0] * d_vector_get(pos, 2));
+    gsl_vector_set(pos, 2, ((-k1 + sqrt(disc))) / (2.0 * k2));
+    gsl_vector_set(pos, 1, l[3]/l[0] + l[4]/l[0] * gsl_vector_get(pos, 2));
+    gsl_vector_set(pos, 0, l[1]/l[0] + l[2]/l[0] * gsl_vector_get(pos, 2));
 }
 
 void
 d_solver_solve_direct_with_ext_axes (DGeometry  *geometry,
-                                     DExtAxes   *extaxes,
-                                     DVector    *pos)
+                                     gsl_matrix *extaxes,
+                                     gsl_vector *pos)
 {
     g_warning("d_solve_direct_with_ext_axes is a stub");
 
     g_return_if_fail(D_IS_GEOMETRY(geometry));
-    g_return_if_fail(D_IS_EXTAXES(extaxes));
-    g_return_if_fail(D_IS_POS(pos));
+    g_return_if_fail(extaxes != NULL);
+    g_return_if_fail(pos != NULL);
 
     gdouble a = geometry->a;
     gdouble b = geometry->b;
@@ -112,39 +112,39 @@ d_solver_solve_direct_with_ext_axes (DGeometry  *geometry,
     //TODO: Assert the three equal position vectors
 
     /* Use three positions that should be the same */
-    DVector *p[3];
+    gdouble *p[3][3];
     for (int i = 0; i < 3; i++) {
         gdouble phi = ((gdouble) i) * G_PI * 2.0 / 3.0;
         gdouble ci[] = {
-            a * cos(d_ext_axes_get(extaxes, i, 0))
-                + b*sin(d_ext_axes_get(extaxes, i, 2))
-                *cos(d_ext_axes_get(extaxes, i, 0) + d_ext_axes_get(extaxes, i, 1)),
-            b * cos(d_ext_axes_get(extaxes, i, 2)),
-            a * sin(d_ext_axes_get(extaxes, i, 0))
-                + b*sin(d_ext_axes_get(extaxes, i, 2))
-                *sin(d_ext_axes_get(extaxes, i, 0) + d_ext_axes_get(extaxes, i, 1)),
+            a * cos(gsl_matrix_get(extaxes, i, 0))
+                + b*sin(gsl_matrix_get(extaxes, i, 2))
+                *cos(gsl_matrix_get(extaxes, i, 0) + gsl_matrix_get(extaxes, i, 1)),
+            b * cos(gsl_matrix_get(extaxes, i, 2)),
+            a * sin(gsl_matrix_get(extaxes, i, 0))
+                + b*sin(gsl_matrix_get(extaxes, i, 2))
+                *sin(gsl_matrix_get(extaxes, i, 0) + gsl_matrix_get(extaxes, i, 1)),
         };
         gdouble px[] = {
             (ci[0] - h + r) * cos(phi) - ci[1] * sin(phi),
             (ci[0] - h + r) * sin(phi) + ci[1] * cos(phi),
             ci[2]
         };
-        p[i] = d_pos_new_full(px[0], px[1], px[2]);
+
+        p[i][0] = px[0];
+        p[i][1] = px[1];
+        p[i][2] = px[2];
     }
 
-    d_vector_set(pos, 0, d_vector_get(p[0], 0));
-    d_vector_set(pos, 1, d_vector_get(p[0], 1));
-    d_vector_set(pos, 2, d_vector_get(p[0], 2));
-    for (int i = 0; i < 3; i++) {
-        g_object_unref(p[i]);
-    }
+    gsl_vector_set(pos, 0, gsl_vector_get(p[0], 0));
+    gsl_vector_set(pos, 1, gsl_vector_get(p[0], 1));
+    gsl_vector_set(pos, 2, gsl_vector_get(p[0], 2));
 }
 
 void
 d_solver_solve_inverse (DGeometry   *geometry,
-                        DVector     *pos,
-                        DVector     *axes,
-                        DExtAxes    *extaxes/* ,
+                        gsl_vector  *pos,
+                        gsl_vector  *axes,
+                        gsl_matrix  *extaxes/* ,
                         GError      **error*/)
 {
     gboolean extcalc = extaxes ? TRUE : FALSE;
@@ -155,9 +155,9 @@ d_solver_solve_inverse (DGeometry   *geometry,
         /* Locate point Ci */
         gdouble phi = ((gdouble) i ) * G_PI * 2.0 / 3.0;
         gdouble ci[] = {
-        d_vector_get(pos, 0) * cos(phi) + d_vector_get(pos, 1) * sin(phi) + geometry->h - geometry->r,
-        d_vector_get(pos, 1) * cos(phi) - d_vector_get(pos, 0) * sin(phi),
-        d_vector_get(pos, 2) };
+        gsl_vector_get(pos, 0) * cos(phi) + gsl_vector_get(pos, 1) * sin(phi) + geometry->h - geometry->r,
+        gsl_vector_get(pos, 1) * cos(phi) - gsl_vector_get(pos, 0) * sin(phi),
+        gsl_vector_get(pos, 2) };
 
         /* Calculate theta 3 */
         gdouble cos3 = ci[1] / geometry->b;
@@ -170,7 +170,7 @@ d_solver_solve_inverse (DGeometry   *geometry,
         gdouble sen3 = sqrt(1.0 - cos3 * cos3);
         //TODO:Add extended axes calculation
         if (extcalc) {
-            d_ext_axes_set(extaxes, i, 2, atan2(sen3, cos3));
+            gsl_matrix_set(extaxes, i, 2, atan2(sen3, cos3));
         }
 
         /* Calculate theta 2 */
@@ -183,7 +183,7 @@ d_solver_solve_inverse (DGeometry   *geometry,
         }
         gdouble sen2 = sqrt(1.0 - cos2 * cos2);
         if ( extcalc ) {
-            d_ext_axes_set(extaxes, i, 1, atan2(sen2, cos2));
+            gsl_matrix_set(extaxes, i, 1, atan2(sen2, cos2));
         }
 
         /* Calculate theta 1 */
@@ -192,12 +192,11 @@ d_solver_solve_inverse (DGeometry   *geometry,
         gdouble sen1 = ci[2] * x1 - ci[0] * x2;
         gdouble cos1 = ci[2] * x2 + ci[0] * x1;
         if ( extcalc ) {
-            d_ext_axes_set(extaxes, i, 0, atan2(sen1, cos1));
+            gsl_matrix_set(extaxes, i, 0, atan2(sen1, cos1));
         }
         if (axescalc) {
-            d_vector_set(axes, i, atan2(sen1, cos1));
+            gsl_vector_set(axes, i, atan2(sen1, cos1));
         }
-
     }
 }
 
