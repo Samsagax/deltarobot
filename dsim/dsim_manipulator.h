@@ -30,9 +30,6 @@
 #include <glib-object.h>
 #include <dsim/dsim_geometry.h>
 #include <dsim/dsim_dynamic_spec.h>
-#include <dsim/dsim_vector.h>
-#include <dsim/dsim_axes.h>
-#include <dsim/dsim_speed.h>
 
 /* Type macros */
 #define D_TYPE_MANIPULATOR             (d_manipulator_get_type ())
@@ -52,13 +49,13 @@ struct _DManipulator {
     DDynamicSpec    *dynamic_params;
 
     /* Torques in the axes */
-    DVector         *torque;
+    gsl_vector      *torque;
 
     /* Axes for the manipulator's motors */
-    DVector         *axes;
+    gsl_vector      *axes;
 
     /* Speed for the manipulator's motors */
-    DVector         *speed;
+    gsl_vector      *speed;
 };
 
 /* Class Structure of DManipulator */
@@ -76,24 +73,33 @@ DManipulator*   d_manipulator_new           (DGeometry      *geometry,
 gdouble         d_manipulator_get_axis      (DManipulator   *self,
                                              gint           axis);
 
+gsl_vector*     d_manipulator_get_axes      (DManipulator   *self);
+
 void            d_manipulator_set_axis      (DManipulator   *self,
                                              gint           axis,
                                              gdouble        angle);
 
-DVector*        d_manipulator_get_axes      (DManipulator   *self);
-
 void            d_manipulator_set_axes      (DManipulator   *self,
-                                             DVector        *axes);
+                                             gdouble        t1,
+                                             gdouble        t2,
+                                             gdouble        t3);
 
-DVector*        d_manipulator_get_speed     (DManipulator   *self);
+gdouble         d_manipulator_get_axis_speed(DManipulator   *self,
+                                             gint           axis);
+
+gsl_vector*     d_manipulator_get_speed     (DManipulator   *self);
 
 void            d_manipulator_set_speed     (DManipulator   *self,
-                                             DVector        *speed);
+                                             gdouble        t_dot_1,
+                                             gdouble        t_dot_2,
+                                             gdouble        t_dot_3);
 
 void            d_manipulator_set_torque    (DManipulator   *self,
-                                             DVector        *torque);
+                                             gdouble        t1,
+                                             gdouble        t2,
+                                             gdouble        t3);
 
-DVector*        d_manipulator_get_torque    (DManipulator   *self);
+gsl_vector*     d_manipulator_get_torque    (DManipulator   *self);
 
 DDynamicSpec*   d_manipulator_get_dynamic_spec
                                             (DManipulator   *self);
