@@ -25,11 +25,8 @@
 #ifndef  DSIM_INC
 #define  DSIM_INC
 
-#include <dsim/dsim_axes.h>
 #include <dsim/dsim_geometry.h>
-#include <dsim/dsim_pos.h>
 #include <dsim/dsim_solver.h>
-#include <dsim/dsim_vector.h>
 #include <dsim/dsim_trajectory.h>
 #include <dsim/dsim_dynamics.h>
 
