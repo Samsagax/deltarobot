@@ -29,7 +29,11 @@
 
 #include <glib-object.h>
 #include <math.h>
-#include <dsim/dsim_matrix.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_linalg.h>
+#include <gsl/gsl_blas.h>
+#include <gsl/gsl_odeiv2.h>
 #include <dsim/dsim_dynamic_spec.h>
 #include <dsim/dsim_manipulator.h>
 #include <dsim/dsim_solver.h>
@@ -45,6 +49,7 @@
 
 /* Instance Structure of DDynamicModel */
 typedef struct _DDynamicModel DDynamicModel;
+typedef struct _DDynamicModelPrivate DDynamicModelPrivate;
 struct _DDynamicModel {
     GObject         parent_instance;
 
@@ -52,40 +57,13 @@ struct _DDynamicModel {
     DManipulator    *manipulator;
 
     /* Force applied */
-    DVector         *force;
+    gsl_vector      *force;
 
     /* Gravity acceleration */
-    DVector         *gravity;
+    gsl_vector      *gravity;
 
-    /* Some useful singleton matrices and flags to update them */
-    DMatrix         *jacobian_p_inv;    /* Direct Jacobian Matrix */
-    DMatrix         *jacobian_p_dot;    /* Direct Jacobian Derivative */
-    DMatrix         *jacobian_q;        /* Inverse Jacobian Matrix */
-    DMatrix         *jacobian_q_dot;    /* Inverse Jacobian Derivative */
-
-    gboolean        jpi_update;
-    gboolean        jpd_update;
-    gboolean        jq_update;
-    gboolean        jqd_update;
-
-    DMatrix         *mass_axes;
-    DMatrix         *mass_pos;
-    DMatrix         *inertia_axes;
-
-    gboolean        ma_update;
-    gboolean        mp_update;
-    gboolean        ia_update;
-
-    /* Model singleton matrices and update flags */
-    DMatrix         *model_mass;
-    DMatrix         *model_coriolis;
-    DMatrix         *model_inertia_inv;
-    DVector         *model_torque;
-
-    gboolean        mm_update;
-    gboolean        mc_update;
-    gboolean        mi_update;
-    gboolean        mt_update;
+    /* private */
+    DDynamicModelPrivate *priv;
 };
 
 /* Class Structure of DDynamicModel */
@@ -101,40 +79,32 @@ GType           d_dynamic_model_get_type    (void);
 DDynamicModel*  d_dynamic_model_new         (DManipulator   *manipulator);
 
 void            d_dynamic_model_set_axes    (DDynamicModel  *self,
-                                             DVector        *axes);
+                                             gsl_vector     *axes);
 
-DVector*        d_dynamic_model_get_axes    (DDynamicModel  *self);
+gsl_vector*     d_dynamic_model_get_axes    (DDynamicModel  *self);
 
 void            d_dynamic_model_set_speed   (DDynamicModel  *self,
-                                             DVector        *speed);
+                                             gsl_vector     *speed);
 
-DVector*        d_dynamic_model_get_speed   (DDynamicModel  *self);
+gsl_vector*     d_dynamic_model_get_speed   (DDynamicModel  *self);
 
 void            d_dynamic_model_set_force   (DDynamicModel  *self,
-                                             DVector        *force);
+                                             gsl_vector     *force);
 
-DVector*        d_dynamic_model_get_force   (DDynamicModel  *self);
+gsl_vector*     d_dynamic_model_get_force   (DDynamicModel  *self);
 
 void            d_dynamic_model_set_torque  (DDynamicModel  *self,
-                                             DVector        *torque);
+                                             gsl_vector     *torque);
 
-DVector*        d_dynamic_model_get_torque  (DDynamicModel  *self);
+gsl_vector*     d_dynamic_model_get_torque  (DDynamicModel  *self);
 
 void            d_dynamic_model_set_gravity (DDynamicModel  *self,
-                                             DVector        *gravity);
+                                             gsl_vector     *gravity);
 
-DVector*        d_dynamic_model_get_gravity (DDynamicModel  *self);
+gsl_vector*     d_dynamic_model_get_gravity (DDynamicModel  *self);
 
 void            d_dynamic_model_solve_inverse
                                             (DDynamicModel  *self,
-                                             gdouble        interval);
-
-void            d_dynamic_model_apply_force (DDynamicModel  *self,
-                                             DVector        *force,
-                                             gdouble        interval);
-
-void            d_dynamic_model_apply_torque(DDynamicModel  *self,
-                                             DVector        *torque,
                                              gdouble        interval);
 
 #endif   /* ----- #ifndef DSIM_DYNAMICS_INC  ----- */

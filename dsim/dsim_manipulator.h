@@ -28,6 +28,7 @@
 #define  DSIM_MANIPULATOR_INC
 
 #include <glib-object.h>
+#include <gsl/gsl_vector.h>
 #include <dsim/dsim_geometry.h>
 #include <dsim/dsim_dynamic_spec.h>
 
@@ -80,9 +81,7 @@ void            d_manipulator_set_axis      (DManipulator   *self,
                                              gdouble        angle);
 
 void            d_manipulator_set_axes      (DManipulator   *self,
-                                             gdouble        t1,
-                                             gdouble        t2,
-                                             gdouble        t3);
+                                             gsl_vector     *axes);
 
 gdouble         d_manipulator_get_axis_speed(DManipulator   *self,
                                              gint           axis);
@@ -90,16 +89,12 @@ gdouble         d_manipulator_get_axis_speed(DManipulator   *self,
 gsl_vector*     d_manipulator_get_speed     (DManipulator   *self);
 
 void            d_manipulator_set_speed     (DManipulator   *self,
-                                             gdouble        t_dot_1,
-                                             gdouble        t_dot_2,
-                                             gdouble        t_dot_3);
-
-void            d_manipulator_set_torque    (DManipulator   *self,
-                                             gdouble        t1,
-                                             gdouble        t2,
-                                             gdouble        t3);
+                                             gsl_vector     *speed);
 
 gsl_vector*     d_manipulator_get_torque    (DManipulator   *self);
+
+void            d_manipulator_set_torque    (DManipulator   *self,
+                                             gsl_vector     *torque);
 
 DDynamicSpec*   d_manipulator_get_dynamic_spec
                                             (DManipulator   *self);

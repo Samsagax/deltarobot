@@ -133,6 +133,14 @@ d_manipulator_get_axis (DManipulator    *self,
     return gsl_vector_get(self->axes, axis);
 }
 
+gsl_vector*
+d_manipulator_get_axes (DManipulator    *self)
+{
+    g_return_val_if_fail(D_IS_MANIPULATOR(self), 0);
+
+    return self->axes;
+}
+
 void
 d_manipulator_set_axis (DManipulator    *self,
                         gint            axis,
@@ -147,18 +155,14 @@ d_manipulator_set_axis (DManipulator    *self,
 
 void
 d_manipulator_set_axes (DManipulator    *self,
-                        gdouble         t1,
-                        gdouble         t2,
-                        gdouble         t3)
+                        gsl_vector      *axes)
 {
     g_return_if_fail(D_IS_MANIPULATOR(self));
 
-    gsl_vector_set(self->speed, 0, t1);
-    gsl_vector_set(self->speed, 1, t2);
-    gsl_vector_set(self->speed, 2, t3);
+    gsl_vector_memcpy(self->axes, axes);
 }
 
-gdouble
+gsl_vector*
 d_manipulator_get_speed (DManipulator  *self)
 {
     g_return_val_if_fail(D_IS_MANIPULATOR(self), 0);
@@ -182,22 +186,18 @@ d_manipulator_set_axis_speed (DManipulator  *self,
                               gdouble       q_dot)
 {
     g_return_if_fail(D_IS_MANIPULATOR(self));
-    g_retunr_if_fail(axis < 3);
+    g_return_if_fail(axis < 3);
 
     gsl_vector_set(self->speed, axis, q_dot);
 }
 
 void
 d_manipulator_set_speed (DManipulator   *self,
-                         gdouble        t_dot_1,
-                         gdouble        t_dot_2,
-                         gdouble        t_dot_3)
+                         gsl_vector     *speed)
 {
     g_return_if_fail(D_IS_MANIPULATOR(self));
 
-    gsl_vector_set(self->speed, 0, t_dot_1);
-    gsl_vector_set(self->speed, 1, t_dot_2);
-    gsl_vector_set(self->speed, 2, t_dot_3);
+    gsl_vector_memcpy(self->speed, speed);
 }
 
 gsl_vector*
@@ -208,15 +208,11 @@ d_manipulator_get_torque (DManipulator  *self)
 
 void
 d_manipulator_set_torque (DManipulator  *self,
-                          gdouble       t1,
-                          gdouble       t2,
-                          gdouble       t3)
+                          gsl_vector    *torque)
 {
     g_return_if_fail(D_IS_MANIPULATOR(self));
 
-    gsl_vector_set(self->torque, 0, t1);
-    gsl_vector_set(self->torque, 1, t2);
-    gsl_vector_set(self->torque, 2, t3);
+    gsl_vector_memcpy(self->torque, torque);
 }
 
 DDynamicSpec*

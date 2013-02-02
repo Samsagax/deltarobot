@@ -28,8 +28,8 @@
 
 #include <glib-object.h>
 #include <math.h>
-#include <dsim/dsim_pos.h>
-#include <dsim/dsim_axes.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_matrix.h>
 #include <dsim/dsim_geometry.h>
 
 /* Type macros */

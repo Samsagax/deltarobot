@@ -81,8 +81,8 @@ calculate_button_callback (GtkButton    *button,
                            GdkEvent     *event,
                            gpointer     user_data)
 {
-    DVector *axes = NULL;
-    DVector *speed = NULL;
+    gsl_vector *axes = NULL;
+    gsl_vector *speed = NULL;
     gdouble time = 0.0;
     gdouble interval = 0.0;
     gdouble step = 0.0;
@@ -131,9 +131,9 @@ calculate_button_callback (GtkButton    *button,
 
         g_print("t = %f, [%f, %f, %f]\n",
                 time,
-                d_vector_get(axes, 0),
-                d_vector_get(axes, 1),
-                d_vector_get(axes, 2));
+                gsl_vector_get(axes, 0),
+                gsl_vector_get(axes, 1),
+                gsl_vector_get(axes, 2));
 
         d_dynamic_model_solve_inverse(dynamic_model, step);
         time += step;
@@ -281,29 +281,32 @@ setup_robot (void)
     DManipulator *manipulator;
     DGeometry *geometry;
     DDynamicSpec *dynamic_spec;
-    DVector *gravity;
-    DVector *home;
-    DVector *stop;
-    DVector *torque;
+    gsl_vector *gravity;
+    gsl_vector *home;
+    gsl_vector *stop;
+    gsl_vector *torque;
 
     g_print("Setting up robot simulator... ");
     dynamic_spec = d_dynamic_spec_new();
     geometry = d_geometry_new(30.0, 50.0, 25.0, 10.0);
     manipulator = d_manipulator_new(geometry, dynamic_spec);
 
-    gravity = d_vector_new(3);
-    d_vector_set(gravity, 0, 0.0);
-    d_vector_set(gravity, 1, 0.0);
-    d_vector_set(gravity, 2, 9.806);
+    gravity = gsl_vector_calloc(3);
+    gsl_vector_set(gravity, 0, 0.0);
+    gsl_vector_set(gravity, 1, 0.0);
+    gsl_vector_set(gravity, 2, 9.806);
 
-    torque = d_vector_new(3);
-    d_vector_set(torque, 0, 0.0);
-    d_vector_set(torque, 1, 0.0);
-    d_vector_set(torque, 2, 0.0);
+    torque = gsl_vector_calloc(3);
+    gsl_vector_set(torque, 0, 0.0);
+    gsl_vector_set(torque, 1, 0.0);
+    gsl_vector_set(torque, 2, 0.0);
 
-    home = d_axes_new_full(1.0, 1.0, 1.0);
+    home = gsl_vector_calloc(3);
+    gsl_vector_set(home, 0, 1.0);
+    gsl_vector_set(home, 1, 1.0);
+    gsl_vector_set(home, 2, 1.0);
 
-    stop = d_speed_new_full(0.0, 0.0, 0.0);
+    stop= gsl_vector_calloc(3);
 
     dynamic_model = d_dynamic_model_new(manipulator);
     d_dynamic_model_set_axes(dynamic_model, home);
@@ -314,10 +317,10 @@ setup_robot (void)
     g_object_unref(geometry);
     g_object_unref(dynamic_spec);
     g_object_unref(manipulator);
-    g_object_unref(gravity);
-    g_object_unref(home);
-    g_object_unref(stop);
-    g_object_unref(torque);
+    gsl_vector_free(gravity);
+    gsl_vector_free(home);
+    gsl_vector_free(stop);
+    gsl_vector_free(torque);
 
     g_print("HECHO\n");
 }

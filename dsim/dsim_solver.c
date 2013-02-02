@@ -112,7 +112,7 @@ d_solver_solve_direct_with_ext_axes (DGeometry  *geometry,
     //TODO: Assert the three equal position vectors
 
     /* Use three positions that should be the same */
-    gdouble *p[3][3];
+    gdouble p[3][3];
     for (int i = 0; i < 3; i++) {
         gdouble phi = ((gdouble) i) * G_PI * 2.0 / 3.0;
         gdouble ci[] = {
@@ -135,9 +135,9 @@ d_solver_solve_direct_with_ext_axes (DGeometry  *geometry,
         p[i][2] = px[2];
     }
 
-    gsl_vector_set(pos, 0, gsl_vector_get(p[0], 0));
-    gsl_vector_set(pos, 1, gsl_vector_get(p[0], 1));
-    gsl_vector_set(pos, 2, gsl_vector_get(p[0], 2));
+    gsl_vector_set(pos, 0, p[0][0]);
+    gsl_vector_set(pos, 1, p[0][1]);
+    gsl_vector_set(pos, 2, p[0][2]);
 }
 
 void

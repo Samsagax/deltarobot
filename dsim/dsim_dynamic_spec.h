@@ -60,5 +60,4 @@ GType       d_dynamic_spec_get_type     (void);
 /* Methods */
 DDynamicSpec*  d_dynamic_spec_new       (void);
 
-
 #endif   /* ----- #ifndef dsim_dynamic_spec_INC  ----- */
