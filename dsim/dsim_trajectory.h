@@ -87,7 +87,7 @@ DTrajectoryCommand* d_trajectory_command_new            (DCommandType   cmdt,
 #define D_IS_TRAJECTORY_CONTROL_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE ((klass), D_TYPE_TRAJECTORY_CONTROL))
 #define D_TRAJECTORY_CONTROL_GET_CLASS(obj)     (G_TYPE_INSTANCE_GET_CLASS ((obj), D_TYPE_TRAJECTORY_CONTROL, DTrajectoryControlClass))
 
-typedef void (*DTrajectoryOutputFunc) (DVector *axes, gpointer data);
+typedef void (*DTrajectoryOutputFunc) (gsl_vector *axes, gpointer data);
 
 typedef struct _DTrajectoryControl DTrajectoryControl;
 struct _DTrajectoryControl {
@@ -100,22 +100,22 @@ struct _DTrajectoryControl {
     GAsyncQueue     *orders;
 
     /* Absolute positions in work space */
-    DVector         *current_destination;
-    DVector         *current_position;
+    gsl_vector      *current_destination;
+    gsl_vector      *current_position;
 
     /* Absolute positions in axes space */
-    DVector         *current_destination_axes;
-    DVector         *current_position_axes;
+    gsl_vector      *current_destination_axes;
+    gsl_vector      *current_position_axes;
 
     /* Acceleration time for both ends */
     gdouble         accelTime;
     gdouble         decelTime;      /* Set equal to accelTime for now */
 
     /* Max Speed in the axes space */
-    DVector         *joint_speed;
+    gsl_vector      *joint_speed;
 
     /* Speed in the cartesian space */
-    DVector         *linear_speed;
+    gsl_vector      *linear_speed;
 
     /* Step time for trajectory, used for timers */
     gdouble         stepTime;
@@ -189,17 +189,17 @@ struct _DTrajectory {
     gdouble         step_time;
 
     /* Postion variable */
-    DVector         *current;
+    gsl_vector      *current;
 
     /* Destination point */
-    DVector         *destination;
+    gsl_vector      *destination;
 
     /* Blend start/end speed */
-    DVector         *start_speed;
-    DVector         *end_speed;
+    gsl_vector      *start_speed;
+    gsl_vector      *end_speed;
 
     /* Control point around the speed blend */
-    DVector         *control_point;
+    gsl_vector      *control_point;
 };
 
 /* Class structure of DTrajectory */
@@ -211,9 +211,9 @@ struct _DTrajectoryClass {
     void            (*interpolate_fun)  (DTrajectory    *self);
 
     /* Public virtual methods */
-    DVector*        (*get_destination)  (DTrajectory    *self);
+    gsl_vector*     (*get_destination)  (DTrajectory    *self);
     gboolean        (*has_next)         (DTrajectory    *self);
-    DVector*        (*next)             (DTrajectory    *self);
+    gsl_vector*     (*next)             (DTrajectory    *self);
     gdouble         (*get_step_time)    (DTrajectory    *self);
 };
 
@@ -222,14 +222,14 @@ GType       d_trajectory_get_type           (void);
 
 gboolean    d_trajectory_has_next           (DTrajectory    *self);
 
-DVector*    d_trajectory_next               (DTrajectory    *self);
+gsl_vector* d_trajectory_next               (DTrajectory    *self);
 
 gdouble     d_trajectory_get_step_time      (DTrajectory    *self);
 
-DVector*    d_trajectory_get_destination    (DTrajectory    *self);
+gsl_vector* d_trajectory_get_destination    (DTrajectory    *self);
 
-gdouble     d_trajectory_calculate_move_time(DVector        *displacement,
-                                             DVector        *speed,
+gdouble     d_trajectory_calculate_move_time(gsl_vector     *displacement,
+                                             gsl_vector     *speed,
                                              gdouble        acceleration_time);
 
 /* #######################  LINEAR TRAJECTORY  ######################### */
@@ -263,15 +263,15 @@ struct _DLinearTrajectoryClass {
 GType               d_linear_trajectory_get_type    (void);
 
 /* Methods */
-DLinearTrajectory*  d_linear_trajectory_new         (DVector    *current_pos,
-                                                     DVector    *control_point,
-                                                     DVector    *move_destination,
-                                                     DVector    *speed);
+DLinearTrajectory*  d_linear_trajectory_new         (gsl_vector *current_pos,
+                                                     gsl_vector *control_point,
+                                                     gsl_vector *move_destination,
+                                                     gsl_vector *speed);
 
-DLinearTrajectory*  d_linear_trajectory_new_full    (DVector    *current_pos,
-                                                     DVector    *control_point,
-                                                     DVector    *move_destination,
-                                                     DVector    *speed,
+DLinearTrajectory*  d_linear_trajectory_new_full    (gsl_vector *current_pos,
+                                                     gsl_vector *control_point,
+                                                     gsl_vector *move_destination,
+                                                     gsl_vector *speed,
                                                      gdouble    acceleration_time,
                                                      gdouble    step_time);
 
@@ -306,15 +306,15 @@ struct _DJointTrajectoryClass {
 GType               d_joint_trajectory_get_type     (void);
 
 /* Methods */
-DJointTrajectory*   d_joint_trajectory_new          (DVector    *current_axes,
-                                                     DVector    *control_point,
-                                                     DVector    *move_destination,
-                                                     DVector    *max_speed);
+DJointTrajectory*   d_joint_trajectory_new          (gsl_vector *current_axes,
+                                                     gsl_vector *control_point,
+                                                     gsl_vector *move_destination,
+                                                     gsl_vector *max_speed);
 
-DJointTrajectory*   d_joint_trajectory_new_full     (DVector    *current_axes,
-                                                     DVector    *control_point,
-                                                     DVector    *move_destination,
-                                                     DVector    *max_speed,
+DJointTrajectory*   d_joint_trajectory_new_full     (gsl_vector *current_axes,
+                                                     gsl_vector *control_point,
+                                                     gsl_vector *move_destination,
+                                                     gsl_vector *max_speed,
                                                      gdouble    acceleration_time,
                                                      gdouble    step_time);
 

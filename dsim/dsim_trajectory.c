@@ -43,23 +43,23 @@ d_trajectory_interpolate_fun        (DTrajectory        *self);
 static void
 d_trajectory_real_interpolate_fun   (DTrajectory        *self);
 
-static DVector*
+static gsl_vector*
 d_trajectory_real_get_destination   (DTrajectory        *self);
 
 static gboolean
 d_trajectory_real_has_next          (DTrajectory        *self);
 
-static DVector*
+static gsl_vector*
 d_trajectory_real_next              (DTrajectory        *self);
 
 static gdouble
 d_trajectory_real_get_step_time     (DTrajectory        *self);
 
 static void
-d_trajectory_interpolate_lspb       (DVector            *res_point,
-                                     DVector            *start_speed,
-                                     DVector            *end_speed,
-                                     DVector            *control_point,
+d_trajectory_interpolate_lspb       (gsl_vector         *res_point,
+                                     gsl_vector         *start_speed,
+                                     gsl_vector         *end_speed,
+                                     gsl_vector         *control_point,
                                      gdouble            acceleration_time,
                                      gdouble            time);
 
@@ -102,23 +102,23 @@ d_trajectory_dispose (GObject    *obj)
     DTrajectory *self = D_TRAJECTORY(obj);
 
     if (self->current) {
-        g_object_unref(self->current);
+        gsl_vector_free(self->current);
         self->current = NULL;
     }
     if (self->destination) {
-        g_object_unref(self->destination);
+        gsl_vector_free(self->destination);
         self->destination = NULL;
     }
     if (self->start_speed) {
-        g_object_unref(self->start_speed);
+        gsl_vector_free(self->start_speed);
         self->start_speed = NULL;
     }
     if (self->end_speed) {
-        g_object_unref(self->end_speed);
+        gsl_vector_free(self->end_speed);
         self->end_speed = NULL;
     }
     if (self->control_point) {
-        g_object_unref(self->control_point);
+        gsl_vector_free(self->control_point);
         self->control_point = NULL;
     }
 
@@ -147,7 +147,7 @@ d_trajectory_real_has_next (DTrajectory *self)
     return FALSE;
 }
 
-static DVector*
+static gsl_vector*
 d_trajectory_real_get_destination (DTrajectory  *self)
 {
     g_return_val_if_fail(D_IS_TRAJECTORY(self), NULL);
@@ -157,7 +157,7 @@ d_trajectory_real_get_destination (DTrajectory  *self)
     return traj->destination;
 }
 
-static DVector*
+static gsl_vector*
 d_trajectory_real_next (DTrajectory *self)
 {
     g_return_val_if_fail(D_IS_TRAJECTORY(self), NULL);
@@ -195,10 +195,10 @@ d_trajectory_real_interpolate_fun (DTrajectory  *self)
 }
 
 static void
-d_trajectory_interpolate_lspb (DVector  *res_point,
-                               DVector  *start_speed,
-                               DVector  *end_speed,
-                               DVector  *control_point,
+d_trajectory_interpolate_lspb (gsl_vector  *res_point,
+                               gsl_vector  *start_speed,
+                               gsl_vector  *end_speed,
+                               gsl_vector  *control_point,
                                gdouble  acceleration_time,
                                gdouble  time)
 {
@@ -213,15 +213,15 @@ d_trajectory_interpolate_lspb (DVector  *res_point,
                         / (4.0 * acceleration_time);
     }
     for (int i = 0; i < 3; i++) {
-        d_vector_set(res_point, i,
-                  d_vector_get(control_point, i)
-                + d_vector_get(end_speed, i) * fact_end
-                - d_vector_get(start_speed, i) * fact_start);
+        gsl_vector_set(res_point, i,
+                  gsl_vector_get(control_point, i)
+                + gsl_vector_get(end_speed, i) * fact_end
+                - gsl_vector_get(start_speed, i) * fact_start);
     }
 }
 
 /* Public API */
-DVector*
+gsl_vector*
 d_trajectory_get_destination (DTrajectory *self)
 {
     g_return_val_if_fail(D_IS_TRAJECTORY(self), NULL);
@@ -235,7 +235,7 @@ d_trajectory_has_next (DTrajectory *self)
     return D_TRAJECTORY_GET_CLASS(self)->has_next(self);
 }
 
-DVector*
+gsl_vector*
 d_trajectory_next (DTrajectory     *self)
 {
     g_return_val_if_fail (D_IS_TRAJECTORY(self), NULL);
@@ -250,22 +250,19 @@ d_trajectory_get_step_time (DTrajectory    *self)
 }
 
 gdouble
-d_trajectory_calculate_move_time (DVector  *displacement,
-                                  DVector  *speed,
+d_trajectory_calculate_move_time (gsl_vector  *displacement,
+                                  gsl_vector  *speed,
                                   gdouble  acceleration_time)
 {
-    g_return_val_if_fail(D_IS_SPEED(speed), 0.0);
-    g_return_val_if_fail(D_IS_VECTOR(displacement), 0.0);
-
     gdouble values[4] = {
-        abs(d_vector_get(displacement, 0) / d_vector_get(D_VECTOR(speed), 0)),
-        abs(d_vector_get(displacement, 1) / d_vector_get(D_VECTOR(speed), 1)),
-        abs(d_vector_get(displacement, 2) / d_vector_get(D_VECTOR(speed), 2)),
+        abs(gsl_vector_get(displacement, 0) / gsl_vector_get(speed, 0)),
+        abs(gsl_vector_get(displacement, 1) / gsl_vector_get(speed, 1)),
+        abs(gsl_vector_get(displacement, 2) / gsl_vector_get(speed, 2)),
         2.0 * acceleration_time
     };
-    g_message("displacement: %f, %f, %f", d_vector_get(displacement, 0),
-                        d_vector_get(displacement, 1),
-                        d_vector_get(displacement, 2));
+//    g_message("displacement: %f, %f, %f", gsl_vector_get(displacement, 0),
+//                        gsl_vector_get(displacement, 1),
+//                        gsl_vector_get(displacement, 2));
     gdouble max = values[0];
     {
         int i;
@@ -273,6 +270,6 @@ d_trajectory_calculate_move_time (DVector  *displacement,
             max = fmax (values[i-1], values[i]);
         }
     }
-    g_message("d_trajectory_calculate_move_time: move time: %f", max);
+//    g_message("d_trajectory_calculate_move_time: move time: %f", max);
     return max;
 }
