@@ -88,12 +88,12 @@ d_trajectory_init (DTrajectory   *self)
     self->acceleration_time = 0.0;
     self->step_time = 0.0;
 
-    self->current = NULL;
-    self->destination = NULL;
+    self->current = gsl_vector_calloc(3);
+    self->destination = gsl_vector_calloc(3);
 
-    self->start_speed = NULL;
-    self->end_speed = NULL;
-    self->control_point = NULL;
+    self->start_speed = gsl_vector_calloc(3);
+    self->end_speed = gsl_vector_calloc(3);
+    self->control_point = gsl_vector_calloc(3);
 }
 
 static void
@@ -195,12 +195,12 @@ d_trajectory_real_interpolate_fun (DTrajectory  *self)
 }
 
 static void
-d_trajectory_interpolate_lspb (gsl_vector  *res_point,
-                               gsl_vector  *start_speed,
-                               gsl_vector  *end_speed,
-                               gsl_vector  *control_point,
-                               gdouble  acceleration_time,
-                               gdouble  time)
+d_trajectory_interpolate_lspb (gsl_vector   *res_point,
+                               gsl_vector   *start_speed,
+                               gsl_vector   *end_speed,
+                               gsl_vector   *control_point,
+                               gdouble      acceleration_time,
+                               gdouble      time)
 {
     gdouble fact_end, fact_start;
     if (time > acceleration_time) {
