@@ -33,7 +33,7 @@ d_itrajectory_default_init(DITrajectoryInterface   *klass)
 }
 
 /* Public API */
-DVector*
+gsl_vector*
 d_trajectory_get_destination (DITrajectory *self)
 {
     g_return_val_if_fail(D_IS_ITRAJECTORY(self), NULL);
@@ -47,7 +47,7 @@ d_trajectory_has_next (DITrajectory *self)
     return D_ITRAJECTORY_GET_INTERFACE(self)->has_next(self);
 }
 
-DVector*
+gsl_vector*
 d_trajectory_next (DITrajectory     *self)
 {
     g_return_val_if_fail (D_IS_ITRAJECTORY(self), NULL);
@@ -62,10 +62,10 @@ d_trajectory_get_step_time (DITrajectory    *self)
 }
 
 void
-d_trajectory_interpolate_lspb (DVector  *res_point,
-                               DVector  *start_speed,
-                               DVector  *end_speed,
-                               DVector  *control_point,
+d_trajectory_interpolate_lspb (gsl_vector  *res_point,
+                               gsl_vector  *start_speed,
+                               gsl_vector  *end_speed,
+                               gsl_vector  *control_point,
                                gdouble  acceleration_time,
                                gdouble  time)
 {
@@ -80,9 +80,9 @@ d_trajectory_interpolate_lspb (DVector  *res_point,
                         / (4.0 * acceleration_time);
     }
     for (int i = 0; i < 3; i++) {
-        d_vector_set(res_point, i,
-                  d_vector_get(control_point, i)
-                + d_vector_get(end_speed, i) * fact_end
-                - d_vector_get(start_speed, i) * fact_start);
+        gsl_vector_set(res_point, i,
+                  gsl_vector_get(control_point, i)
+                + gsl_vector_get(end_speed, i) * fact_end
+                - gsl_vector_get(start_speed, i) * fact_start);
     }
 }

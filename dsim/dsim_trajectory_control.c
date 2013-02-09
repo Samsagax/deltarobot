@@ -24,8 +24,8 @@
 
 #include "dsim_trajectory.h"
 
-#include <signal.h>
-#include <time.h>
+//#include <signal.h>
+//#include <time.h>
 
 #define D_NANOS_PER_SEC 1000000000
 
@@ -56,26 +56,26 @@ static void     d_trajectory_control_notify_timer
 
 static void     d_trajectory_control_set_current_position
                         (DTrajectoryControl         *self,
-                         DVector                    *current_position);
+                         gsl_vector                    *current_position);
 
 static void     d_trajectory_control_set_current_position_axes
                         (DTrajectoryControl         *self,
-                         DVector                    *current_position_axes);
+                         gsl_vector                    *current_position_axes);
 
 static void     d_trajectory_control_set_current_destination
                         (DTrajectoryControl         *self,
-                         DVector                    *current_destination);
+                         gsl_vector                    *current_destination);
 
 static void     d_trajectory_control_set_current_destination_axes
                         (DTrajectoryControl         *self,
-                         DVector                    *current_destination_axes);
+                         gsl_vector                    *current_destination_axes);
 
 static gpointer d_trajectory_control_main_loop
                         (gpointer                   *trajectory_control);
 
 static DTrajectory* d_trajectory_control_prepare_trajectory
                         (DTrajectoryControl         *self,
-                         DVector                    *destination,
+                         gsl_vector                    *destination,
                          DCommandType               type);
 
 static void     d_trajectory_control_execute_trajectory
@@ -84,7 +84,7 @@ static void     d_trajectory_control_execute_trajectory
                          DCommandType               order_type);
 
 static void     d_trajectory_control_default_output
-                        (DVector                    *position,
+                        (gsl_vector                    *position,
                          gpointer                   output_data);
 
 /* Implementation */
@@ -125,13 +125,15 @@ d_trajectory_control_init (DTrajectoryControl   *self)
     self->orders = g_async_queue_new();
 
     self->geometry = d_geometry_new(30.0, 50.0, 25.0, 10.0);
-    self->current_position_axes = d_axes_new();
-    self->current_destination_axes = d_axes_new();
-    self->current_position = d_pos_new();
-    self->current_destination = d_pos_new();
+    self->current_position_axes = gsl_vector_calloc(3);
+    self->current_destination_axes = gsl_vector_calloc(3);
+    self->current_position = gsl_vector_calloc(3);
+    self->current_destination = gsl_vector_calloc(3);
 
-    self->joint_speed = d_speed_new_full(G_PI/4.0, G_PI/4.0, G_PI/4.0);
-    self->linear_speed = d_speed_new_full(20.0, 20.0, 20.0);
+    self->joint_speed = gsl_vector_calloc(3);
+    gsl_vector_set_all(self->joint_speed, G_PI/4.0);
+    self->linear_speed = gsl_vector_calloc(3);
+    gsl_vector_set_all(self->linear_speed, 20.0);
 
     self->linear_out_fun = d_trajectory_control_default_output;
     self->linear_out_data = NULL;
@@ -219,7 +221,7 @@ d_trajectory_control_main_loop (gpointer    *trajectory_control)
         switch (type) {
             case OT_MOVEJ:
                 {
-                    DVector *destination = D_VECTOR(order->data);
+                    gsl_vector *destination = (gsl_vector*)(order->data);
                     trajectory = d_trajectory_control_prepare_trajectory(self,
                                                     destination,
                                                     type);
@@ -233,7 +235,7 @@ d_trajectory_control_main_loop (gpointer    *trajectory_control)
                 break;
             case OT_MOVEL:
                 {
-                    DVector *destination = D_VECTOR(order->data);
+                    gsl_vector *destination = (gsl_vector*)(order->data);
                     trajectory = d_trajectory_control_prepare_trajectory(self,
                                                     destination,
                                                     type);
@@ -271,7 +273,7 @@ d_trajectory_control_execute_wait (DTrajectoryControl   *self,
 
 static DTrajectory*
 d_trajectory_control_prepare_trajectory (DTrajectoryControl     *self,
-                                         DVector                *destination,
+                                         gsl_vector             *destination,
                                          DCommandType           type)
 {
     g_message("d_trajectory_control_prepare_trajectory: Preparing trajectory");
@@ -279,7 +281,6 @@ d_trajectory_control_prepare_trajectory (DTrajectoryControl     *self,
 
     switch (type) {
         case OT_MOVEJ:
-            g_return_val_if_fail(D_IS_AXES(destination), NULL);
             traj = D_TRAJECTORY(d_joint_trajectory_new_full(
                                     self->current_position_axes,
                                     self->current_destination_axes,
@@ -289,7 +290,6 @@ d_trajectory_control_prepare_trajectory (DTrajectoryControl     *self,
                                     self->stepTime));
             break;
         case OT_MOVEL:
-            g_return_val_if_fail(D_IS_POS(destination), NULL);
             traj = D_TRAJECTORY(d_linear_trajectory_new_full(
                                     self->current_position,
                                     self->current_destination,
@@ -354,7 +354,7 @@ d_trajectory_control_execute_trajectory (DTrajectoryControl *self,
 
 static void
 d_trajectory_control_set_current_destination (DTrajectoryControl    *self,
-                                              DVector               *dest)
+                                              gsl_vector               *dest)
 {
     if (self->current_destination) {
         g_object_unref(self->current_destination);
@@ -368,7 +368,7 @@ d_trajectory_control_set_current_destination (DTrajectoryControl    *self,
 
 static void
 d_trajectory_control_set_current_destination_axes (DTrajectoryControl   *self,
-                                                   DVector              *dest_axes)
+                                                   gsl_vector              *dest_axes)
 {
     if (self->current_destination_axes) {
         g_object_unref(self->current_destination_axes);
@@ -381,7 +381,7 @@ d_trajectory_control_set_current_destination_axes (DTrajectoryControl   *self,
 
 static void
 d_trajectory_control_set_current_position (DTrajectoryControl   *self,
-                                           DVector              *pos)
+                                           gsl_vector              *pos)
 {
     /* Call the output function first so we can avoid delays */
     self->linear_out_fun(pos, self->linear_out_data);
@@ -397,7 +397,7 @@ d_trajectory_control_set_current_position (DTrajectoryControl   *self,
 
 static void
 d_trajectory_control_set_current_position_axes (DTrajectoryControl  *self,
-                                                DVector             *axes)
+                                                gsl_vector             *axes)
 {
     /* Call the output function first so we can avoid delays */
     self->joint_out_fun(axes, self->joint_out_data);
@@ -411,13 +411,13 @@ d_trajectory_control_set_current_position_axes (DTrajectoryControl  *self,
 }
 
 static void
-d_trajectory_control_default_output (DVector    *position,
+d_trajectory_control_default_output (gsl_vector    *position,
                                      gpointer   data)
 {
     g_print("Current position: %f, %f, %f\n",
-                    d_vector_get(position, 0),
-                    d_vector_get(position, 1),
-                    d_vector_get(position, 2));
+                    gsl_vector_get(position, 0),
+                    gsl_vector_get(position, 1),
+                    gsl_vector_get(position, 2));
 }
 
 /* Public API */
@@ -425,9 +425,9 @@ DTrajectoryControl*
 d_trajectory_control_new (void)
 {
     DTrajectoryControl *self;
-    DVector *home_axes;
+    gsl_vector *home_axes;
 
-    home_axes = d_axes_new();
+    home_axes = gsl_vector_calloc(3);
     self = g_object_new(D_TYPE_TRAJECTORY_CONTROL, NULL);
 
     d_trajectory_control_set_current_position_axes(self, home_axes);

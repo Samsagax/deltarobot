@@ -69,10 +69,10 @@ d_linear_trajectory_finalize (GObject   *obj)
 
 /* Public API */
 DLinearTrajectory*
-d_linear_trajectory_new (DVector    *current_pos,
-                         DVector    *control_point,
-                         DVector    *move_destination,
-                         DVector    *speed)
+d_linear_trajectory_new (gsl_vector    *current_pos,
+                         gsl_vector    *control_point,
+                         gsl_vector    *move_destination,
+                         gsl_vector    *speed)
 {
     return d_linear_trajectory_new_full (current_pos,
                                          control_point,
@@ -83,14 +83,14 @@ d_linear_trajectory_new (DVector    *current_pos,
 }
 
 DLinearTrajectory*
-d_linear_trajectory_new_full (DVector   *current_pos,
-                              DVector   *control_point,
-                              DVector   *move_destination,
-                              DVector   *speed,
+d_linear_trajectory_new_full (gsl_vector   *current_pos,
+                              gsl_vector   *control_point,
+                              gsl_vector   *move_destination,
+                              gsl_vector   *speed,
                               gdouble   acceleration_time,
                               gdouble   step_time)
 {
-    g_warning("d_linear_trajectory_new_full is a stub!");
+//    g_warning("d_linear_trajectory_new_full is a stub!");
 
     DLinearTrajectory* self;
     DTrajectory *parent;
@@ -100,27 +100,29 @@ d_linear_trajectory_new_full (DVector   *current_pos,
     parent->time = -acceleration_time;
     parent->acceleration_time = acceleration_time;
 
-    parent->current = d_vector_clone(current_pos);
-    parent->destination = d_vector_clone(move_destination);
+    gsl_vector_memcpy(parent->current, current_pos);
+    gsl_vector_memcpy(parent->destination, move_destination);
 
-    parent->start_speed = d_vector_clone(control_point);
-    d_vector_sub(parent->start_speed, current_pos);
-    d_vector_scalar_mul(parent->start_speed, 1.0 / acceleration_time);
+    gsl_vector_memcpy(parent->start_speed, control_point);
+    gsl_vector_sub(parent->start_speed, current_pos);
+    gsl_vector_scale(parent->start_speed, 1.0 / acceleration_time);
 
-    DVector *displacement = d_vector_clone(move_destination);
-    d_vector_sub(displacement, control_point);
+    gsl_vector *displacement = gsl_vector_alloc(3);
+    gsl_vector_memcpy(displacement, move_destination);
+    gsl_vector_sub(displacement, control_point);
 
     parent->move_time = d_trajectory_calculate_move_time(displacement,
                                                          speed,
                                                          acceleration_time);
 
-    parent->end_speed = d_speed_new_from_displacement(displacement, parent->move_time);
+    gsl_vector_scale(displacement, parent->move_time);
+    gsl_vector_memcpy(parent->end_speed, displacement);
 
-    parent->control_point = d_vector_clone(control_point);
+    gsl_vector_memcpy(parent->control_point, control_point);
 
     parent->step_time = step_time;
 
-    g_object_unref(displacement);
+    gsl_vector_free(displacement);
 
     return self;
 }
