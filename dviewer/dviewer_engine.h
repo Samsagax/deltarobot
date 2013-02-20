@@ -27,6 +27,8 @@
 #define  DVIEWER_ENGINE_INC
 
 #include <math.h>
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_vector.h>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -57,9 +59,9 @@ void    d_viewer_draw_arm               (GLfloat   a,
                                          GLfloat   jointDiameter);
 
 void    d_viewer_draw_robot_with_ext_axes (DGeometry    *geometry,
-                                           DExtAxes     *extaxes);
+                                           gsl_matrix   *extaxes);
 
-void    d_viewer_draw_robot_at_pos      (DGeometry *geometry,
-                                         DVector   *pos );
+void    d_viewer_draw_robot_at_pos      (DGeometry  *geometry,
+                                         gsl_vector *pos );
 
 #endif   /* ----- #ifndef DVIEWER_ENGINE_INC  ----- */

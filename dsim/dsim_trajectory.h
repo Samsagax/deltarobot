@@ -32,7 +32,7 @@
 //#include "dsim_pos.h"
 //#include "dsim_axes.h"
 //#include "dsim_speed.h"
-#include <dsim_solver.h>
+#include <dsim/dsim_solver.h>
 
 
 /* #######################  TRAJECTORY CONTROL ORDERS  #################### */

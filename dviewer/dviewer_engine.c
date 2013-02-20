@@ -312,7 +312,7 @@ d_viewer_draw_arm ( GLfloat a,
  */
 void
 d_viewer_draw_robot_with_ext_axes (DGeometry    *geometry,
-                                   DExtAxes     *extaxes)
+                                   gsl_matrix     *extaxes)
 {
     GLfloat jdiam = 3.0;
     GLfloat thick = 3.0;
@@ -335,9 +335,9 @@ d_viewer_draw_robot_with_ext_axes (DGeometry    *geometry,
             glTranslatef(geometry->r, 0.0, 0.0);
             d_viewer_draw_arm   ( geometry->a,
                                   geometry->b,
-                                  d_ext_axes_get(extaxes, i, 0),
-                                  d_ext_axes_get(extaxes, i, 1),
-                                  d_ext_axes_get(extaxes, i, 2),
+                                  gsl_matrix_get(extaxes, i, 0),
+                                  gsl_matrix_get(extaxes, i, 1),
+                                  gsl_matrix_get(extaxes, i, 2),
                                   jdiam );
             glPopMatrix();
         }
@@ -345,13 +345,13 @@ d_viewer_draw_robot_with_ext_axes (DGeometry    *geometry,
 
     // Moving platform
     glColor3f(0.0, 1.0, 0.4);
-    DVector *p = d_pos_new();
+    gsl_vector *p = gsl_vector_calloc(3);
     d_solver_solve_direct_with_ext_axes(geometry, extaxes, p);
-    glTranslatef( d_vector_get(p, 0),
-                  d_vector_get(p, 1),
-                  d_vector_get(p, 2));
+    glTranslatef(gsl_vector_get(p, 0),
+                 gsl_vector_get(p, 1),
+                 gsl_vector_get(p, 2));
     d_viewer_draw_platform(geometry->h, thick, jdiam);
-    g_object_unref(p);
+    gsl_vector_free(p);
 
     // Restore current transformation
     glPopMatrix();
@@ -360,13 +360,12 @@ d_viewer_draw_robot_with_ext_axes (DGeometry    *geometry,
 
 void
 d_viewer_draw_robot_at_pos (DGeometry   *geometry,
-                            DVector     *pos)
+                            gsl_vector     *pos)
 {
-    g_return_if_fail(D_IS_POS(pos));
     g_return_if_fail(D_IS_GEOMETRY(geometry));
 
     // First Make sure the position is reachable
-    DExtAxes    *extaxes    = d_ext_axes_new();
+    gsl_matrix    *extaxes    = gsl_matrix_calloc(3, 3);
     // TODO: Use GError for error handling!!!
 
     d_solver_solve_inverse (geometry,
