@@ -52,8 +52,8 @@ struct _DViewport {
 
     /* Robot Geometry */
     DGeometry       *geometry;
-    DExtAxes        *extaxes;
-    //DPos            *robot_pos;
+    gsl_matrix        *extaxes;
+    //gsl_vector            *robot_pos;
 
     /* Mouse button pressed or 0 */
     guint8          button;
@@ -68,13 +68,13 @@ struct _DViewport {
     GdkGLConfig     *glconfig;
 
     /* Define a sphere containing the geometry */
-    DVector         *scene_center;
+    gsl_vector         *scene_center;
     gdouble         scene_distance;
     gdouble         polar_angle;
     gdouble         azimuth_angle;
 
     /* Define position for a light */
-    //DVector         *light_position;
+    //gsl_vector         *light_position;
 
     /* Far and near clip distance */
     gdouble         near_clip;
@@ -84,11 +84,11 @@ struct _DViewport {
     gdouble         eye_angle;
 
     /* Euler view rotation angles in degrees */
-    //DVector         *view_angles;
+    //gsl_vector         *view_angles;
 
     /* Trackball for 3D rotation of camera */
     //gdouble         track_angle;
-    //DVector         *track_axis;
+    //gsl_vector         *track_axis;
 
     /* Zooming */
     //gdouble         zoom;
@@ -105,11 +105,11 @@ GType       d_viewport_get_type                 (void);
 GtkWidget*  d_viewport_new                      (DGeometry  *geometry);
 
 GtkWidget*  d_viewport_new_with_pos             (DGeometry  *geometry,
-                                                 DPos       *pos);
+                                                 gsl_vector       *pos);
 
 GtkWidget*  d_viewport_new_full                 (DGeometry  *geometry,
-                                                 DExtAxes   *extaxes,
-                                                 DVector    *scene_center,
+                                                 gsl_matrix   *extaxes,
+                                                 gsl_vector    *scene_center,
                                                  gdouble    scene_distance,
                                                  gdouble    polar_angle,
                                                  gdouble    azimuth_angle,
@@ -117,20 +117,20 @@ GtkWidget*  d_viewport_new_full                 (DGeometry  *geometry,
                                                  gdouble    far_clip,
                                                  gdouble    eye_angle);
 
-DVector *   d_viewport_get_pos                  (const DViewport    *self);
+gsl_vector *   d_viewport_get_pos                  (const DViewport    *self);
 
 void        d_viewport_set_pos                  (DViewport  *self,
-                                                 DPos       *pos);
+                                                 gsl_vector       *pos);
 
-DExtAxes*   d_viewport_get_ext_axes             (const DViewport    *self);
+gsl_matrix*   d_viewport_get_ext_axes             (const DViewport    *self);
 
 void        d_viewport_set_ext_axes             (DViewport  *self,
-                                                 DExtAxes   *extaxes);
+                                                 gsl_matrix   *extaxes);
 
-DVector *   d_viewport_get_scene_center         (const DViewport    *self);
+gsl_vector *   d_viewport_get_scene_center         (const DViewport    *self);
 
 void        d_viewport_set_scene_center         (DViewport  *self,
-                                                 DVector    *scene_center);
+                                                 gsl_vector    *scene_center);
 
 void        d_viewport_set_scene_center_xyz     (DViewport  *self,
                                                  gdouble    x,
@@ -168,7 +168,7 @@ void        d_viewport_set_eye_angle            (DViewport  *self,
                                                  gdouble    eye_angle);
 
 void        d_viewport_configure_view           (DViewport  *self,
-                                                 DVector    *scene_center,
+                                                 gsl_vector    *scene_center,
                                                  gdouble    scene_distance,
                                                  gdouble    polar_angle,
                                                  gdouble    azimuth_angle,
