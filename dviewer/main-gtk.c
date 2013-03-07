@@ -151,7 +151,6 @@ go_button_joint_clicked (GtkButton  *button,
     }
     sync_spinners_pos(axes);
 
-    gsl_vector_free(axes);
     g_object_unref(cmd);
 }
 
@@ -173,7 +172,6 @@ go_button_linear_clicked (GtkButton *button,
     }
     sync_spinners_axes(pos);
 
-    gsl_vector_free(pos);
     g_object_unref(cmd);
 }
 

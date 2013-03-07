@@ -28,10 +28,6 @@
 #include <glib-object.h>
 #include <math.h>
 #include <gsl/gsl_vector.h>
-//#include "dsim_vector.h"
-//#include "dsim_pos.h"
-//#include "dsim_axes.h"
-//#include "dsim_speed.h"
 #include <dsim/dsim_solver.h>
 
 

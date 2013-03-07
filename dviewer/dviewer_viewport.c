@@ -817,11 +817,7 @@ d_viewport_set_scene_center (DViewport  *self,
     g_return_if_fail(scene_center != NULL);
 
     if (self->scene_center != scene_center) {
-        if (self->scene_center) {
-            g_object_unref(self->scene_center);
-        }
-        self->scene_center = g_object_ref(scene_center);
-
+        gsl_vector_memcpy(self->scene_center, scene_center);
         d_viewport_queve_redraw(self);
     }
 

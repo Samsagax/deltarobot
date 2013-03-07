@@ -60,9 +60,13 @@ d_trajectory_command_dispose (GObject   *obj)
 
     switch (self->command_type) {
         case OT_MOVEL:
+            if (self->data) {
+                gsl_vector_free(self->data);
+                self->data = NULL;
+            }
         case OT_MOVEJ:
             if (self->data) {
-                g_object_unref(self->data);
+                gsl_vector_free(self->data);
                 self->data = NULL;
             }
             break;
@@ -91,7 +95,7 @@ d_trajectory_command_new (DCommandType  cmdt,
     dtc = g_object_new(D_TYPE_TRAJECTORY_COMMAND, NULL);
     dtc->command_type = cmdt;
     if (data) {
-        dtc->data = g_object_ref(data);
+        dtc->data = data;
     }
     return dtc;
 }
