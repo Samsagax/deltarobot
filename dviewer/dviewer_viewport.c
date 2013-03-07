@@ -119,7 +119,7 @@ static void
 d_viewport_init (DViewport  *self)
 {
     self->geometry = NULL;
-    self->extaxes = NULL;
+    self->extaxes = gsl_matrix_calloc(3, 3);
     self->button = 0;
     self->glconfig = d_viewport_configure_gl(FALSE);
     self->scene_center = gsl_vector_calloc(3);
@@ -771,7 +771,7 @@ d_viewport_set_ext_axes (DViewport  *self,
         d_viewport_queve_redraw(self);
     }
 
-    g_object_notify(G_OBJECT(self), "extaxes");
+//    g_object_notify(G_OBJECT(self), "extaxes");
 }
 
 gsl_matrix*

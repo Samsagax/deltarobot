@@ -30,7 +30,7 @@
 static GtkWidget            *main_window;
 static DGeometry            *robot;
 static DTrajectoryControl   *trajcontrol;
-static DPos                 *pos;
+static gsl_vector                 *pos;
 
 /* Joint motion */
 static GtkWidget            *go_button_joint;
@@ -44,11 +44,11 @@ static GtkWidget*   create_menu_bar (GtkWidget *window);
 static GtkWidget*   create_controls (void);
 static void         create_main_window (void);
 static gboolean     key_handler (GtkWidget *widget, GdkEventKey *event, gpointer data);
-static void         increment_pos (DPos *pos, gdouble dx, gdouble dy, gdouble dz);
+static void         increment_pos (gsl_vector *pos, gdouble dx, gdouble dy, gdouble dz);
 static void         go_button_joint_clicked (GtkButton *button, gpointer data);
 static void         go_button_linear_clicked (GtkButton *button, gpointer data);
-static void         sync_spinners_axes(DVector *pos);
-static void         sync_spinners_pos(DVector *axes);
+static void         sync_spinners_axes(gsl_vector *pos);
+static void         sync_spinners_pos(gsl_vector *axes);
 
 /*
  * Handle key pressed on main window
@@ -64,7 +64,7 @@ key_handler (GtkWidget      *widget,
 
     switch (event->keyval) {
         case GDK_KEY_Return:
-            gtk_button_clicked(go_button_joint);
+//            gtk_button_clicked(go_button_joint);
             break;
         case GDK_KEY_t:
             break;
@@ -110,27 +110,27 @@ key_handler (GtkWidget      *widget,
 }
 
 static void
-sync_spinners_axes(DVector *pos)
+sync_spinners_axes(gsl_vector *pos)
 {
-    DVector *axes = d_axes_new();
+    gsl_vector *axes = gsl_vector_calloc(3);
     d_solver_solve_inverse(robot, pos, axes, NULL);
-    for (int i=0; i < d_vector_length(pos); i++) {
+    for (int i=0; i < pos->size; i++) {
         gtk_spin_button_set_value(axis_controls[i],
-                d_vector_get(axes, i));
+                gsl_vector_get(axes, i));
     }
-    g_object_unref(axes);
+    gsl_vector_free(axes);
 }
 
 static void
-sync_spinners_pos(DVector *axes)
+sync_spinners_pos(gsl_vector *axes)
 {
-    DVector *pos = d_pos_new();
+    gsl_vector *pos = gsl_vector_calloc(3);
     d_solver_solve_direct(robot, axes, pos);
-    for (int i=0; i < d_vector_length(axes); i++) {
+    for (int i=0; i < axes->size; i++) {
         gtk_spin_button_set_value(pos_controls[i],
-                d_vector_get(pos, i));
+                gsl_vector_get(pos, i));
     }
-    g_object_unref(pos);
+    gsl_vector_free(pos);
 }
 
 static void
@@ -138,11 +138,11 @@ go_button_joint_clicked (GtkButton  *button,
                          gpointer   data)
 {
     DTrajectoryCommand *cmd;
-    DVector *axes;
+    gsl_vector *axes;
 
-    axes = d_axes_new();
-    for (int i = 0; i < d_vector_length(axes); i++) {
-        d_vector_set (axes, i, gtk_spin_button_get_value(axis_controls[i]));
+    axes = gsl_vector_calloc(3);
+    for (int i = 0; i < axes->size; i++) {
+        gsl_vector_set (axes, i, gtk_spin_button_get_value(axis_controls[i]));
     }
     cmd = d_trajectory_command_new(OT_MOVEJ, axes);
     d_trajectory_control_push_order(trajcontrol, cmd);
@@ -151,7 +151,7 @@ go_button_joint_clicked (GtkButton  *button,
     }
     sync_spinners_pos(axes);
 
-    g_object_unref(axes);
+    gsl_vector_free(axes);
     g_object_unref(cmd);
 }
 
@@ -160,11 +160,11 @@ go_button_linear_clicked (GtkButton *button,
                           gpointer  data)
 {
     DTrajectoryCommand *cmd;
-    DVector *pos;
+    gsl_vector *pos;
 
-    pos = d_pos_new();
-    for (int i = 0; i < d_vector_length(pos); i++) {
-        d_vector_set (pos, i, gtk_spin_button_get_value(pos_controls[i]));
+    pos = gsl_vector_calloc(3);
+    for (int i = 0; i < pos->size; i++) {
+        gsl_vector_set (pos, i, gtk_spin_button_get_value(pos_controls[i]));
     }
     cmd = d_trajectory_command_new(OT_MOVEL, pos);
     d_trajectory_control_push_order(trajcontrol, cmd);
@@ -173,23 +173,26 @@ go_button_linear_clicked (GtkButton *button,
     }
     sync_spinners_axes(pos);
 
-    g_object_unref(pos);
+    gsl_vector_free(pos);
     g_object_unref(cmd);
 }
 
 static void
-increment_pos (DPos     *pos,
+increment_pos (gsl_vector     *pos,
                gdouble  dx,
                gdouble  dy,
                gdouble  dz)
 {
-    DVector *dp;
+    gsl_vector *dp;
 
-    dp = d_pos_new_full (dx, dy, dz);
+    dp = gsl_vector_alloc(3);
+    gsl_vector_set(dp, 0, dx);
+    gsl_vector_set(dp, 1, dy);
+    gsl_vector_set(dp, 2, dz);
 
-    d_vector_add(D_VECTOR(pos), dp);
+    gsl_vector_add(pos, dp);
 
-    g_object_unref(dp);
+    gsl_vector_free(dp);
 }
 
 static void
@@ -199,39 +202,39 @@ show_about (void)
                               "title", "About DSim Viewer",
                               "program-name", "DSim Viewer",
                               "version", "0.1",
-                              "copyright", "Copyright 2012. Joaquín Ignacio Aramendía GNU GPL",
+                              "copyright", "Copyright 2012-2013. Joaquín Ignacio Aramendía GNU GPL",
                               NULL );
 }
 
 static void
-d_trajectory_viewport_link_joint (DVector   *axes,
-                                  gpointer  *data)
+d_trajectory_viewport_link_joint (gsl_vector    *axes,
+                                  gpointer      *data)
 {
     g_return_if_fail(D_IS_VIEWPORT(data));
     DViewport *viewport = D_VIEWPORT(data);
 
     g_message("Current Axes: %f, %f, %f",
-                d_vector_get(axes, 0),
-                d_vector_get(axes, 1),
-                d_vector_get(axes, 2));
-    DVector *pos = d_pos_new();
+                gsl_vector_get(axes, 0),
+                gsl_vector_get(axes, 1),
+                gsl_vector_get(axes, 2));
+    gsl_vector *pos = gsl_vector_calloc(3);
     d_solver_solve_direct(robot, axes, pos);
 
     d_viewport_set_pos(viewport, pos);
-    g_object_unref(pos);
+    gsl_vector_free(pos);
 }
 
 static void
-d_trajectory_viewport_link_linear (DVector  *pos,
-                                   gpointer *data)
+d_trajectory_viewport_link_linear (gsl_vector   *pos,
+                                   gpointer     *data)
 {
     g_return_if_fail(D_IS_VIEWPORT(data));
     DViewport *viewport = D_VIEWPORT(data);
 
     g_message("Current Pos: %f, %f, %f",
-                d_vector_get(pos, 0),
-                d_vector_get(pos, 1),
-                d_vector_get(pos, 2));
+                gsl_vector_get(pos, 0),
+                gsl_vector_get(pos, 1),
+                gsl_vector_get(pos, 2));
 
     d_viewport_set_pos(viewport, pos);
 }
@@ -260,8 +263,8 @@ create_main_window (void)
     */
     viewport = d_viewport_new_with_pos(robot, pos);
     d_viewport_set_scene_center_xyz(D_VIEWPORT(viewport), 0.0, 0.0, 30.0);
-    d_trajectory_control_set_joint_out_fun(trajcontrol, d_trajectory_viewport_link_joint, viewport);
-    d_trajectory_control_set_linear_out_fun(trajcontrol, d_trajectory_viewport_link_linear, viewport);
+//    d_trajectory_control_set_joint_out_fun(trajcontrol, d_trajectory_viewport_link_joint, viewport);
+//    d_trajectory_control_set_linear_out_fun(trajcontrol, d_trajectory_viewport_link_linear, viewport);
 
     /*
      * Create the controls
@@ -423,7 +426,8 @@ static void
 setup_robot (void)
 {
     robot = d_geometry_new(30.0, 50.0, 25.0, 10.0);
-    pos   = D_POS(d_pos_new_full(0.0, 0.0, 50.0));
+    pos   = gsl_vector_calloc(3);
+    gsl_vector_set(pos, 2, 50.0);
 
     /*
      * Trajectory control
@@ -460,7 +464,7 @@ main(int argc, char* argv[])
     d_trajectory_control_stop(trajcontrol);
     g_object_unref(trajcontrol);
     g_object_unref(robot);
-    g_object_unref(pos);
+    gsl_vector_free(pos);
 
     return 0;
 }

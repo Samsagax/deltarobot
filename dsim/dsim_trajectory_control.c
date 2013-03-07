@@ -356,10 +356,7 @@ static void
 d_trajectory_control_set_current_destination (DTrajectoryControl    *self,
                                               gsl_vector               *dest)
 {
-    if (self->current_destination) {
-        g_object_unref(self->current_destination);
-    }
-    self->current_destination = g_object_ref(dest);
+    gsl_vector_memcpy(self->current_destination, dest);
     d_solver_solve_inverse(self->geometry,
                            dest,
                            self->current_destination_axes,
@@ -370,10 +367,7 @@ static void
 d_trajectory_control_set_current_destination_axes (DTrajectoryControl   *self,
                                                    gsl_vector              *dest_axes)
 {
-    if (self->current_destination_axes) {
-        g_object_unref(self->current_destination_axes);
-    }
-    self->current_destination_axes = g_object_ref(dest_axes);
+    gsl_vector_memcpy(self->current_destination_axes, dest_axes);
     d_solver_solve_direct(self->geometry,
                           dest_axes,
                           self->current_destination);
@@ -385,10 +379,7 @@ d_trajectory_control_set_current_position (DTrajectoryControl   *self,
 {
     /* Call the output function first so we can avoid delays */
     self->linear_out_fun(pos, self->linear_out_data);
-    if (self->current_position) {
-        g_object_unref(self->current_position);
-    }
-    self->current_position = g_object_ref(pos);
+    gsl_vector_memcpy(self->current_position, pos);
     d_solver_solve_inverse(self->geometry,
                            self->current_position,
                            self->current_position_axes,
@@ -401,10 +392,7 @@ d_trajectory_control_set_current_position_axes (DTrajectoryControl  *self,
 {
     /* Call the output function first so we can avoid delays */
     self->joint_out_fun(axes, self->joint_out_data);
-    if (self->current_position_axes) {
-        g_object_unref(self->current_position_axes);
-    }
-    self->current_position_axes = g_object_ref(axes);
+    gsl_vector_memcpy(self->current_position_axes, axes);
     d_solver_solve_direct(self->geometry,
                           self->current_position_axes,
                           self->current_position);

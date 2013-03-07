@@ -308,7 +308,7 @@ d_viewer_draw_arm ( GLfloat a,
 }
 
 /*
- * Draw the entire robot at a given DPos value
+ * Draw the entire robot at a given gsl_vector value
  */
 void
 d_viewer_draw_robot_with_ext_axes (DGeometry    *geometry,
@@ -374,5 +374,5 @@ d_viewer_draw_robot_at_pos (DGeometry   *geometry,
                             extaxes);
     d_viewer_draw_robot_with_ext_axes (geometry, extaxes);
     // Release used memory
-    g_object_unref(extaxes);
+    gsl_matrix_free(extaxes);
 }
