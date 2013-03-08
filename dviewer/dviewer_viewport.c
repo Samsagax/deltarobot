@@ -820,8 +820,6 @@ d_viewport_set_scene_center (DViewport  *self,
         gsl_vector_memcpy(self->scene_center, scene_center);
         d_viewport_queve_redraw(self);
     }
-
-    g_object_notify(G_OBJECT(self), "scene-center");
 }
 
 void

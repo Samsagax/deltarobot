@@ -19,7 +19,7 @@
  */
 
 /*
- * dsim_trajectory_command.c :
+ * dsim_trajectory_command.c : Message passing protocol for DTRajectoryControl
  */
 
 #include "dsim_trajectory.h"
@@ -95,7 +95,18 @@ d_trajectory_command_new (DCommandType  cmdt,
     dtc = g_object_new(D_TYPE_TRAJECTORY_COMMAND, NULL);
     dtc->command_type = cmdt;
     if (data) {
-        dtc->data = data;
+        switch (cmdt) {
+            case OT_MOVEL:
+                dtc->data = gsl_vector_alloc(3);
+                gsl_vector_memcpy(dtc->data, data);
+                break;
+            case OT_MOVEJ:
+                dtc->data = gsl_vector_alloc(3);
+                gsl_vector_memcpy(dtc->data, data);
+                break;
+            case OT_END:
+                break;
+        }
     }
     return dtc;
 }

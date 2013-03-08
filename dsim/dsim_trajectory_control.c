@@ -162,27 +162,27 @@ d_trajectory_control_dispose (GObject   *obj)
         self->geometry = NULL;
     }
     if (self->joint_speed) {
-        g_object_unref(self->joint_speed);
+        gsl_vector_free(self->joint_speed);
         self->joint_speed = NULL;
     }
     if (self->linear_speed) {
-        g_object_unref(self->linear_speed);
+        gsl_vector_free(self->linear_speed);
         self->linear_speed = NULL;
     }
     if (self->current_position) {
-        g_object_unref(self->current_position);
+        gsl_vector_free(self->current_position);
         self->current_position = NULL;
     }
     if (self->current_destination) {
-        g_object_unref(self->current_destination);
+        gsl_vector_free(self->current_destination);
         self->current_destination = NULL;
     }
     if (self->current_position_axes) {
-        g_object_unref(self->current_position_axes);
+        gsl_vector_free(self->current_position_axes);
         self->current_position_axes = NULL;
     }
     if (self->current_destination_axes) {
-        g_object_unref(self->current_destination_axes);
+        gsl_vector_free(self->current_destination_axes);
         self->current_destination_axes = NULL;
     }
     /* Chain Up */
@@ -388,7 +388,7 @@ d_trajectory_control_set_current_position (DTrajectoryControl   *self,
 
 static void
 d_trajectory_control_set_current_position_axes (DTrajectoryControl  *self,
-                                                gsl_vector             *axes)
+                                                gsl_vector          *axes)
 {
     /* Call the output function first so we can avoid delays */
     self->joint_out_fun(axes, self->joint_out_data);
@@ -436,10 +436,12 @@ d_trajectory_control_start (DTrajectoryControl  *self)
 void
 d_trajectory_control_stop (DTrajectoryControl   *self)
 {
-    d_trajectory_control_push_order(self, d_trajectory_command_new(OT_END, NULL));
-    self->exit_flag = TRUE;
-    g_thread_join(self->main_loop);
-    self->main_loop = NULL;
+    if (self->main_loop) {
+        d_trajectory_control_push_order(self, d_trajectory_command_new(OT_END, NULL));
+        self->exit_flag = TRUE;
+        g_thread_join(self->main_loop);
+        self->main_loop = NULL;
+    }
 }
 
 void
