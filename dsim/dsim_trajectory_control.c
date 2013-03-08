@@ -257,7 +257,7 @@ d_trajectory_control_dispatch (GSource      *source,
     switch (type) {
         case OT_MOVEJ:
             {
-                DVector *destination = D_VECTOR(order->data);
+                gsl_vector *destination = (gsl_vector*)(order->data);
                 trajectory = d_trajectory_control_prepare_trajectory(self,
                                                         destination,
                                                         type);
@@ -271,7 +271,7 @@ d_trajectory_control_dispatch (GSource      *source,
             break;
         case OT_MOVEL:
             {
-                DVector *destination = D_VECTOR(order->data);
+                gsl_vector *destination = (gsl_vector*)(order->data);
                 trajectory = d_trajectory_control_prepare_trajectory(self,
                                                 destination,
                                                 type);
@@ -505,11 +505,7 @@ d_trajectory_control_start (DTrajectoryControl  *self)
 void
 d_trajectory_control_stop (DTrajectoryControl   *self)
 {
-    if (self->main_loop) {
-        d_trajectory_control_push_order(self, d_trajectory_command_new(OT_END, NULL));
-        g_thread_join(self->main_loop);
-        self->main_loop = NULL;
-    }
+    d_trajectory_control_push_order(self, d_trajectory_command_new(OT_END, NULL));
 }
 
 void
