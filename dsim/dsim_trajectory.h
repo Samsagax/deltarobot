@@ -147,7 +147,11 @@ void                d_trajectory_control_start      (DTrajectoryControl *self);
 
 void                d_trajectory_control_stop       (DTrajectoryControl *self);
 
-void                d_trajectory_control_set_output_func (DTrajectoryControl    *self,
+void                d_trajectory_control_set_joint_out_fun (DTrajectoryControl    *self,
+                                                     DTrajectoryOutputFunc  func,
+                                                     gpointer               output_data);
+
+void                d_trajectory_control_set_linear_out_fun (DTrajectoryControl    *self,
                                                      DTrajectoryOutputFunc  func,
                                                      gpointer               output_data);
 
