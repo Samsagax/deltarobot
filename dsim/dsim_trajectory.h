@@ -26,7 +26,7 @@
 #define  DSIM_TRAJ_INC
 
 #include <glib-object.h>
-#include <math.h>
+//#include <math.h>
 #include <gsl/gsl_vector.h>
 #include <dsim/dsim_solver.h>
 
@@ -47,7 +47,9 @@
 typedef enum DCommandType{
     OT_MOVEJ,
     OT_MOVEL,
+    OT_MOVEABSJ,
     OT_WAIT,
+    OT_WAITTIME,
     OT_END,
 } DCommandType;
 
@@ -139,6 +141,14 @@ struct _DTrajectoryControlClass {
 GType               d_trajectory_control_get_type   (void);
 
 DTrajectoryControl* d_trajectory_control_new        (void);
+
+void                d_trajectory_control_set_current_position_axes
+                                                    (DTrajectoryControl *self,
+                                                     gsl_vector         *axes);
+
+void                d_trajectory_control_set_current_position
+                                                    (DTrajectoryControl *self,
+                                                     gsl_vector         *pos);
 
 void                d_trajectory_control_push_order (DTrajectoryControl *self,
                                                      DTrajectoryCommand *order);

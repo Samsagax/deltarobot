@@ -63,21 +63,13 @@ static void     d_trajectory_control_finalize
 static void     d_trajectory_control_notify_timer
                         (int                        signal);
 
-static void     d_trajectory_control_set_current_position
-                        (DTrajectoryControl         *self,
-                         gsl_vector                    *current_position);
-
-static void     d_trajectory_control_set_current_position_axes
-                        (DTrajectoryControl         *self,
-                         gsl_vector                    *current_position_axes);
-
 static void     d_trajectory_control_set_current_destination
                         (DTrajectoryControl         *self,
-                         gsl_vector                    *current_destination);
+                         gsl_vector                 *current_destination);
 
 static void     d_trajectory_control_set_current_destination_axes
                         (DTrajectoryControl         *self,
-                         gsl_vector                    *current_destination_axes);
+                         gsl_vector                 *current_destination_axes);
 
 static gpointer d_trajectory_control_main_loop
                         (gpointer                   *trajectory_control);
@@ -443,31 +435,6 @@ d_trajectory_control_set_current_destination_axes (DTrajectoryControl   *self,
 }
 
 static void
-d_trajectory_control_set_current_position (DTrajectoryControl   *self,
-                                           gsl_vector              *pos)
-{
-    /* Call the output function first so we can avoid delays */
-    self->linear_out_fun(pos, self->linear_out_data);
-    gsl_vector_memcpy(self->current_position, pos);
-    d_solver_solve_inverse(self->geometry,
-                           self->current_position,
-                           self->current_position_axes,
-                           NULL);
-}
-
-static void
-d_trajectory_control_set_current_position_axes (DTrajectoryControl  *self,
-                                                gsl_vector          *axes)
-{
-    /* Call the output function first so we can avoid delays */
-    self->joint_out_fun(axes, self->joint_out_data);
-    gsl_vector_memcpy(self->current_position_axes, axes);
-    d_solver_solve_direct(self->geometry,
-                          self->current_position_axes,
-                          self->current_position);
-}
-
-static void
 d_trajectory_control_default_output (gsl_vector    *position,
                                      gpointer   data)
 {
@@ -491,6 +458,31 @@ d_trajectory_control_new (void)
     d_trajectory_control_set_current_destination_axes(self, home_axes);
 
     return self;
+}
+
+void
+d_trajectory_control_set_current_position (DTrajectoryControl   *self,
+                                           gsl_vector           *pos)
+{
+    /* Call the output function first so we can avoid delays */
+    self->linear_out_fun(pos, self->linear_out_data);
+    gsl_vector_memcpy(self->current_position, pos);
+    d_solver_solve_inverse(self->geometry,
+                           self->current_position,
+                           self->current_position_axes,
+                           NULL);
+}
+
+void
+d_trajectory_control_set_current_position_axes (DTrajectoryControl  *self,
+                                                gsl_vector          *axes)
+{
+    /* Call the output function first so we can avoid delays */
+    self->joint_out_fun(axes, self->joint_out_data);
+    gsl_vector_memcpy(self->current_position_axes, axes);
+    d_solver_solve_direct(self->geometry,
+                          self->current_position_axes,
+                          self->current_position);
 }
 
 void
