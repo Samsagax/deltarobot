@@ -59,17 +59,29 @@ GType       d_solver_get_type       (void);
 DSolver*    d_solver_get_instance   (void);
 
 /* Methods */
-void        d_solver_solve_direct       (DGeometry  *geometry,
-                                         gsl_vector *axes,
-                                         gsl_vector *pos);
+void        d_solver_solve_direct       (DGeometry          *geometry,
+                                         gsl_vector         *axes,
+                                         gsl_vector         *pos,
+                                         GError             **err);
 
-void        d_solver_solve_direct_with_ext_axes (DGeometry *geometry,
-                                         gsl_matrix   *extaxes,
-                                         gsl_vector   *pos);
+void        d_solver_solve_direct_with_ext_axes (DGeometry  *geometry,
+                                         gsl_matrix         *extaxes,
+                                         gsl_vector         *pos,
+                                         GError             **err);
 
-void        d_solver_solve_inverse      (DGeometry  *geometry,
-                                         gsl_vector *pos,
-                                         gsl_vector *axes,
-                                         gsl_matrix *extaxes);
+void        d_solver_solve_inverse      (DGeometry          *geometry,
+                                         gsl_vector         *pos,
+                                         gsl_vector         *axes,
+                                         gsl_matrix         *extaxes,
+                                         GError             **err);
+
+/* Error type for non reachable points */
+#define D_SOLVER_ERROR d_solver_error_quark ()
+
+typedef enum {
+    D_SOLVER_ERROR_FAILED
+} DSolverError;
+
+GQuark      d_solver_error_quark        (void);
 
 #endif   /* ----- #ifndef DSIM_SOLVER_INC  ----- */

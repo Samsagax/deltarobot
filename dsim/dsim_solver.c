@@ -28,14 +28,15 @@
 void
 d_solver_solve_direct (DGeometry    *geometry,
                        gsl_vector   *axes,
-                       gsl_vector   *pos)
+                       gsl_vector   *pos,
+                       GError       **err)
 {
     g_return_if_fail(D_IS_GEOMETRY(geometry));
     g_return_if_fail(axes != NULL);
     g_return_if_fail(pos != NULL);
+    g_return_if_fail(err == NULL || *err == NULL);
 
     //TODO: Checkear que los centros no sean colineales
-    //TODO: Use GError for non-reachable positions
 
     gdouble pb[3][3];
     {
@@ -85,31 +86,34 @@ d_solver_solve_direct (DGeometry    *geometry,
 
     gdouble disc = k1 * k1 - 4.0 * k2 * k0;
     if ( disc < 0.0) {
-        g_warning("Unreachable point");
+        g_set_error_literal(err,
+                D_SOLVER_ERROR,
+                D_SOLVER_ERROR_FAILED,
+                "Could not reach point in cartesian space");
         return;
     }
     gsl_vector_set(pos, 2, ((-k1 + sqrt(disc))) / (2.0 * k2));
     gsl_vector_set(pos, 1, l[3]/l[0] + l[4]/l[0] * gsl_vector_get(pos, 2));
     gsl_vector_set(pos, 0, l[1]/l[0] + l[2]/l[0] * gsl_vector_get(pos, 2));
+
+    g_assert(err == NULL || *err == NULL);
 }
 
 void
 d_solver_solve_direct_with_ext_axes (DGeometry  *geometry,
                                      gsl_matrix *extaxes,
-                                     gsl_vector *pos)
+                                     gsl_vector *pos,
+                                     GError     **err)
 {
-    g_warning("d_solve_direct_with_ext_axes is a stub");
-
     g_return_if_fail(D_IS_GEOMETRY(geometry));
     g_return_if_fail(extaxes != NULL);
     g_return_if_fail(pos != NULL);
+    g_return_if_fail(err == NULL || *err == NULL);
 
     gdouble a = geometry->a;
     gdouble b = geometry->b;
     gdouble h = geometry->h;
     gdouble r = geometry->r;
-
-    //TODO: Assert the three equal position vectors
 
     /* Use three positions that should be the same */
     gdouble p[3][3];
@@ -135,21 +139,26 @@ d_solver_solve_direct_with_ext_axes (DGeometry  *geometry,
         p[i][2] = px[2];
     }
 
+    //TODO: Assert the three equal position vectors
+
     gsl_vector_set(pos, 0, p[0][0]);
     gsl_vector_set(pos, 1, p[0][1]);
     gsl_vector_set(pos, 2, p[0][2]);
+
+    g_assert(err == NULL || *err == NULL);
 }
 
 void
 d_solver_solve_inverse (DGeometry   *geometry,
                         gsl_vector  *pos,
                         gsl_vector  *axes,
-                        gsl_matrix  *extaxes/* ,
-                        GError      **error*/)
+                        gsl_matrix  *extaxes,
+                        GError      **err)
 {
     gboolean extcalc = extaxes ? TRUE : FALSE;
     gboolean axescalc = axes ? TRUE : FALSE;
     g_return_if_fail((extcalc || axescalc));
+    g_return_if_fail(err == NULL || *err == NULL);
 
     for (int i = 0; i < 3; i++) {
         /* Locate point Ci */
@@ -164,11 +173,16 @@ d_solver_solve_inverse (DGeometry   *geometry,
 
         /* Check valid cos3 */
         if ( abs(cos3) >= 1.0 ) {
-            g_warning("Unreachable point");
+            g_set_error(err,
+                    D_SOLVER_ERROR,
+                    D_SOLVER_ERROR_FAILED,
+                    "Target [ %d, %d, %d ] is out of working space",
+                    gsl_vector_get(pos, 0),
+                    gsl_vector_get(pos, 1),
+                    gsl_vector_get(pos, 2));
             return;
         } //TODO: Add check for sen3 == 0
         gdouble sen3 = sqrt(1.0 - cos3 * cos3);
-        //TODO:Add extended axes calculation
         if (extcalc) {
             gsl_matrix_set(extaxes, i, 2, atan2(sen3, cos3));
         }
@@ -178,7 +192,13 @@ d_solver_solve_inverse (DGeometry   *geometry,
         gdouble cos2 = (cnormsq - geometry->a * geometry->a - geometry->b * geometry->b) / (2.0 * geometry->a * geometry->b * sen3);
         /* Check for valid cos2 */
         if ( abs(cos2) >= 1.0 ) {
-            g_warning("Unreachable point");
+            g_set_error(err,
+                    D_SOLVER_ERROR,
+                    D_SOLVER_ERROR_FAILED,
+                    "Target [ %d, %d, %d ] is out of working space",
+                    gsl_vector_get(pos, 0),
+                    gsl_vector_get(pos, 1),
+                    gsl_vector_get(pos, 2));
             return;
         }
         gdouble sen2 = sqrt(1.0 - cos2 * cos2);
@@ -198,6 +218,8 @@ d_solver_solve_inverse (DGeometry   *geometry,
             gsl_vector_set(axes, i, atan2(sen1, cos1));
         }
     }
+    /* No error occured */
+    g_assert(err == NULL || *err == NULL);
 }
 
 /* GType Register */
@@ -257,3 +279,9 @@ d_solver_init (DSolver *self)
     //TODO: Initialize members?
 }
 
+/* Error handling functions */
+GQuark
+d_solver_error_quark (void)
+{
+    return g_quark_from_static_string("d_solver_error_quark");
+}
