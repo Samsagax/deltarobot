@@ -307,7 +307,6 @@ d_dynamic_model_update_jpd (DDynamicModel   *self,
 {
     DDynamicModelPrivate *priv = D_DYNAMIC_MODEL_GET_PRIVATE(self);
 
-    gsl_vector *pos = gsl_vector_calloc(3);
     gsl_vector *speed_pos = gsl_vector_calloc(3);
     DGeometry *geometry = d_manipulator_get_geometry(self->manipulator);
     gsl_matrix *jp_inv = d_dynamic_model_get_direct_jacobian_inv(self, axes);
@@ -317,7 +316,6 @@ d_dynamic_model_update_jpd (DDynamicModel   *self,
     gsl_vector *temp = gsl_vector_calloc(3);
 
     gsl_matrix_set_zero(jpd);
-    d_solver_solve_direct(geometry, axes, pos);
     gsl_blas_dgemv(CblasNoTrans, 1.0, jq,
                     speed, 0.0, temp);
     gsl_blas_dgemv(CblasNoTrans, 1.0, jp_inv,
@@ -342,7 +340,6 @@ d_dynamic_model_update_jpd (DDynamicModel   *self,
     priv->jpd_update = FALSE;
 
     gsl_vector_free(speed_pos);
-    gsl_vector_free(pos);
     gsl_vector_free(temp);
 }
 
