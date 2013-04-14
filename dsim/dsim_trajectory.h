@@ -26,7 +26,6 @@
 #define  DSIM_TRAJ_INC
 
 #include <glib-object.h>
-//#include <math.h>
 #include <gsl/gsl_vector.h>
 #include <dsim/dsim_solver.h>
 
@@ -144,11 +143,13 @@ DTrajectoryControl* d_trajectory_control_new        (void);
 
 void                d_trajectory_control_set_current_position_axes
                                                     (DTrajectoryControl *self,
-                                                     gsl_vector         *axes);
+                                                     gsl_vector         *axes,
+                                                     GError             **err);
 
 void                d_trajectory_control_set_current_position
                                                     (DTrajectoryControl *self,
-                                                     gsl_vector         *pos);
+                                                     gsl_vector         *pos,
+                                                     GError             **err);
 
 void                d_trajectory_control_push_order (DTrajectoryControl *self,
                                                      DTrajectoryCommand *order);
@@ -170,8 +171,8 @@ void                d_trajectory_control_set_linear_out_fun (DTrajectoryControl 
  * DTrajectory provides a single interface for trajectories. Serves as a
  * superclass for both DLinearTrajectory and DJointTrajectory.
  * Is intended to be a point generator by calling next() at regular step time.
- * The algorithm used for generating points is Linear Segment with Parabolic
- * Blends given control points. TODO:Make this algorithm overridable.
+ * The algorithm used for generating points is defined by each subclass or
+ * use the default LSPB interpolator.
  * The semantics of positioning vectors and speeds are defined by subclasses.
  */
 

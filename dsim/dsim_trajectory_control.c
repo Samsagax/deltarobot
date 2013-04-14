@@ -65,11 +65,13 @@ static void     d_trajectory_control_notify_timer
 
 static void     d_trajectory_control_set_current_destination
                         (DTrajectoryControl         *self,
-                         gsl_vector                 *current_destination);
+                         gsl_vector                 *current_destination,
+                         GError                     **err);
 
 static void     d_trajectory_control_set_current_destination_axes
                         (DTrajectoryControl         *self,
-                         gsl_vector                 *current_destination_axes);
+                         gsl_vector                 *current_destination_axes,
+                         GError                     **err);
 
 static gpointer d_trajectory_control_main_loop
                         (gpointer                   *trajectory_control);
@@ -81,11 +83,11 @@ static DTrajectory* d_trajectory_control_prepare_trajectory
 
 static void     d_trajectory_control_execute_trajectory
                         (DTrajectoryControl         *self,
-                         DTrajectory               *traj,
+                         DTrajectory                *traj,
                          DCommandType               order_type);
 
 static void     d_trajectory_control_default_output
-                        (gsl_vector                    *position,
+                        (gsl_vector                 *position,
                          gpointer                   output_data);
 
 /* Implementation */
@@ -246,15 +248,25 @@ d_trajectory_control_dispatch (GSource      *source,
     /* Process the order */
     DTrajectory *trajectory;
     DCommandType type = order->command_type;
+    GError *err = NULL;
+
+    //TODO: Put each dispatcher in separate functions!!!
     switch (type) {
         case OT_MOVEJ:
             {
                 gsl_vector *destination = (gsl_vector*)(order->data);
+                d_trajectory_control_set_current_destination_axes (self,
+                                                  destination,
+                                                  &err);
+                if (err != NULL) {
+                    g_warning("Can't perform trajectory. Destination failed.");
+                    g_warning("%s", err->message);
+                    g_error_free(err);
+                    return TRUE;
+                }
                 trajectory = d_trajectory_control_prepare_trajectory(self,
                                                         destination,
                                                         type);
-                d_trajectory_control_set_current_destination_axes (self,
-                                                  destination);
                 d_trajectory_control_execute_trajectory(self,
                                                     trajectory,
                                                     type);
@@ -264,11 +276,18 @@ d_trajectory_control_dispatch (GSource      *source,
         case OT_MOVEL:
             {
                 gsl_vector *destination = (gsl_vector*)(order->data);
+                d_trajectory_control_set_current_destination (self,
+                                                destination,
+                                                &err);
+                if (err != NULL) {
+                    g_warning("Can't perform trajectory. Destination failed.");
+                    g_warning("%s", err->message);
+                    g_error_free(err);
+                    return TRUE;
+                }
                 trajectory = d_trajectory_control_prepare_trajectory(self,
                                                 destination,
                                                 type);
-                d_trajectory_control_set_current_destination (self,
-                                                destination);
                 d_trajectory_control_execute_trajectory(self,
                                                 trajectory,
                                                 type);
@@ -398,12 +417,13 @@ d_trajectory_control_execute_trajectory (DTrajectoryControl *self,
                 timer_delete(timerid);
                 return;
             }
+            //TODO: Add error handling
             switch (order_type) {
                 case OT_MOVEJ:
-                    d_trajectory_control_set_current_position_axes(self, d_trajectory_next(traj));
+                    d_trajectory_control_set_current_position_axes(self, d_trajectory_next(traj), NULL);
                     break;
                 case OT_MOVEL:
-                    d_trajectory_control_set_current_position(self, d_trajectory_next(traj));
+                    d_trajectory_control_set_current_position(self, d_trajectory_next(traj), NULL);
                     break;
                 default:
                     g_error("d_trajectory_control_execute_trajectory: unknown trajectory type!");
@@ -415,23 +435,65 @@ d_trajectory_control_execute_trajectory (DTrajectoryControl *self,
 
 static void
 d_trajectory_control_set_current_destination (DTrajectoryControl    *self,
-                                              gsl_vector               *dest)
+                                              gsl_vector            *dest,
+                                              GError                **err)
 {
-    gsl_vector_memcpy(self->current_destination, dest);
+    g_return_if_fail(err != NULL || *err != NULL);
+    g_return_if_fail(dest != NULL);
+
+    gsl_vector *new_dest = gsl_vector_calloc(3);
+    gsl_vector *new_dest_axes = gsl_vector_calloc(3);
+    GError *local_err = NULL;
+
+    gsl_vector_memcpy(new_dest, dest);
     d_solver_solve_inverse(self->geometry,
-                           dest,
-                           self->current_destination_axes,
-                           NULL);
+                        new_dest,
+                        new_dest_axes,
+                        NULL,
+                        &local_err);
+    if (local_err != NULL) {
+        g_propagate_error(err, local_err);
+        return;
+    }
+
+    gsl_vector_memcpy(self->current_destination, new_dest);
+    gsl_vector_memcpy(self->current_destination_axes, new_dest_axes);
+
+    gsl_vector_free(new_dest);
+    gsl_vector_free(new_dest_axes);
+
+    g_assert(err == NULL || *err == NULL);
 }
 
 static void
 d_trajectory_control_set_current_destination_axes (DTrajectoryControl   *self,
-                                                   gsl_vector              *dest_axes)
+                                                   gsl_vector           *dest_axes,
+                                                   GError               **err)
 {
-    gsl_vector_memcpy(self->current_destination_axes, dest_axes);
+    g_return_if_fail(err != NULL || *err != NULL);
+    g_return_if_fail(dest_axes != NULL);
+
+    gsl_vector *new_dest_axes = gsl_vector_calloc(3);
+    gsl_vector *new_dest = gsl_vector_calloc(3);
+    GError *local_err = NULL;
+
+    gsl_vector_memcpy(new_dest_axes, dest_axes);
     d_solver_solve_direct(self->geometry,
-                          dest_axes,
-                          self->current_destination);
+                        new_dest_axes,
+                        new_dest,
+                        &local_err);
+    if (local_err != NULL) {
+        g_propagate_error(err, local_err);
+        return;
+    }
+
+    gsl_vector_memcpy(self->current_destination, new_dest);
+    gsl_vector_memcpy(self->current_destination_axes, new_dest_axes);
+
+    gsl_vector_free(new_dest_axes);
+    gsl_vector_free(new_dest);
+
+    g_assert(err == NULL || *err == NULL);
 }
 
 static void
@@ -454,35 +516,77 @@ d_trajectory_control_new (void)
     home_axes = gsl_vector_calloc(3);
     self = g_object_new(D_TYPE_TRAJECTORY_CONTROL, NULL);
 
-    d_trajectory_control_set_current_position_axes(self, home_axes);
-    d_trajectory_control_set_current_destination_axes(self, home_axes);
+    d_trajectory_control_set_current_position_axes(self, home_axes, NULL);
+    d_trajectory_control_set_current_destination_axes(self, home_axes, NULL);
 
     return self;
 }
 
 void
 d_trajectory_control_set_current_position (DTrajectoryControl   *self,
-                                           gsl_vector           *pos)
+                                           gsl_vector           *pos,
+                                           GError               **err)
 {
-    /* Call the output function first so we can avoid delays */
-    self->linear_out_fun(pos, self->linear_out_data);
-    gsl_vector_memcpy(self->current_position, pos);
+    g_return_if_fail(err != NULL || *err != NULL);
+    g_return_if_fail(pos != NULL);
+
+    gsl_vector *new_pos = gsl_vector_calloc(3);
+    gsl_vector *new_axes = gsl_vector_calloc(3);
+    GError *local_err = NULL;
+
+    gsl_vector_memcpy(new_pos, pos);
     d_solver_solve_inverse(self->geometry,
-                           self->current_position,
-                           self->current_position_axes,
-                           NULL);
+                        new_pos,
+                        new_axes,
+                        NULL,
+                        &local_err);
+    if (local_err != NULL) {
+        g_propagate_error(err, local_err);
+        return;
+    }
+
+    /* Call the output function first so we can avoid delays */
+    self->linear_out_fun(new_pos, self->linear_out_data);
+    gsl_vector_memcpy(self->current_position, new_pos);
+    gsl_vector_memcpy(self->current_position_axes, new_axes);
+
+    gsl_vector_free(new_pos);
+    gsl_vector_free(new_axes);
+
+    g_assert(err == NULL || *err == NULL);
 }
 
 void
 d_trajectory_control_set_current_position_axes (DTrajectoryControl  *self,
-                                                gsl_vector          *axes)
+                                                gsl_vector          *axes,
+                                                GError              **err)
 {
-    /* Call the output function first so we can avoid delays */
-    self->joint_out_fun(axes, self->joint_out_data);
-    gsl_vector_memcpy(self->current_position_axes, axes);
+    g_return_if_fail(err != NULL || *err != NULL);
+    g_return_if_fail(axes != NULL);
+
+    gsl_vector *new_axes = gsl_vector_calloc(3);
+    gsl_vector *new_pos = gsl_vector_calloc(3);
+    GError *local_err = NULL;
+
+    gsl_vector_memcpy(new_axes, axes);
     d_solver_solve_direct(self->geometry,
-                          self->current_position_axes,
-                          self->current_position);
+                        new_axes,
+                        new_pos,
+                        &local_err);
+    if (local_err != NULL) {
+        g_propagate_error(err, local_err);
+        return;
+    }
+
+    /* Call the output function first so we can avoid delays */
+    self->joint_out_fun(new_axes, self->linear_out_data);
+    gsl_vector_memcpy(self->current_position, new_pos);
+    gsl_vector_memcpy(self->current_position_axes, new_axes);
+
+    gsl_vector_free(new_axes);
+    gsl_vector_free(new_pos);
+
+    g_assert(err == NULL || *err == NULL);
 }
 
 void
