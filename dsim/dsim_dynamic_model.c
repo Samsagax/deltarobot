@@ -43,20 +43,24 @@ static void         d_dynamic_model_set_dynamic_spec(DDynamicModel  *self,
 static gsl_matrix*  d_dynamic_model_get_direct_jacobian_dt
                                                     (DDynamicModel  *self,
                                                      gsl_vector     *axes,
-                                                     gsl_vector     *speed);
+                                                     gsl_vector     *speed,
+                                                     GError         **err);
 
 static gsl_matrix*  d_dynamic_model_get_direct_jacobian_inv
                                                     (DDynamicModel  *self,
-                                                     gsl_vector     *axes);
+                                                     gsl_vector     *axes,
+                                                     GError         **err);
 
 static gsl_matrix*  d_dynamic_model_get_inverse_jacobian
                                                     (DDynamicModel  *self,
-                                                     gsl_vector     *axes);
+                                                     gsl_vector     *axes,
+                                                     GError         **err);
 
 static gsl_matrix*  d_dynamic_model_get_inverse_jacobian_dt
                                                     (DDynamicModel  *self,
                                                      gsl_vector     *axes,
-                                                     gsl_vector     *speed);
+                                                     gsl_vector     *speed,
+                                                     GError         **err);
 
 static gsl_matrix*  d_dynamic_model_get_inertia_axes(DDynamicModel  *self);
 
@@ -256,11 +260,14 @@ d_dynamic_model_set_manipulator (DDynamicModel  *self,
  */
 static void
 d_dynamic_model_update_jpi (DDynamicModel   *self,
-                            gsl_vector      *axes)
+                            gsl_vector      *axes,
+                            GError          **err)
 {
+    g_return_if_fail(err == NULL || *err == NULL);
+
     DDynamicModelPrivate *priv = D_DYNAMIC_MODEL_GET_PRIVATE(self);
 
-    gsl_vector *pos = gsl_vector_calloc(3);
+    gsl_vector *pos;
     gsl_matrix *jpi = priv->jacobian_p_inv;
     DGeometry *geometry = self->manipulator->geometry;
     gdouble a = geometry->a;
@@ -268,7 +275,15 @@ d_dynamic_model_update_jpi (DDynamicModel   *self,
     gdouble r = geometry->r;
 
     gsl_matrix_set_zero(jpi);
-    d_solver_solve_direct(geometry, axes, pos);
+
+    GError *tmp_err = NULL;
+    pos = gsl_vector_calloc(3);
+    d_solver_solve_direct(geometry, axes, pos, &tmp_err);
+    if (tmp_err != NULL) {
+        g_propagate_error(err, tmp_err);
+        gsl_vector_free(pos);
+        return;
+    }
     for (int i = 0; i < jpi->size1; i++) {
         gdouble phi = G_PI * 120.0 / 180.0 * (gdouble)i;
         gdouble t = gsl_vector_get(axes, i);
@@ -293,8 +308,10 @@ d_dynamic_model_update_jpi (DDynamicModel   *self,
 
     gsl_permutation_free(p);
     gsl_matrix_free(lu_decomp);
+    gsl_vector_free(pos);
 
     priv->jpi_update = FALSE;
+    return;
 }
 
 /*
@@ -303,25 +320,45 @@ d_dynamic_model_update_jpi (DDynamicModel   *self,
 static void
 d_dynamic_model_update_jpd (DDynamicModel   *self,
                             gsl_vector      *axes,
-                            gsl_vector      *speed)
+                            gsl_vector      *speed,
+                            GError          **err)
 {
+    g_return_if_fail(err == NULL || *err == NULL);
     DDynamicModelPrivate *priv = D_DYNAMIC_MODEL_GET_PRIVATE(self);
 
-    gsl_vector *speed_pos = gsl_vector_calloc(3);
+    gsl_vector *speed_pos;
     DGeometry *geometry = d_manipulator_get_geometry(self->manipulator);
-    gsl_matrix *jp_inv = d_dynamic_model_get_direct_jacobian_inv(self, axes);
-    gsl_matrix *jq = d_dynamic_model_get_inverse_jacobian(self, axes);
+    gsl_matrix *jp_inv;
+    gsl_matrix *jq;
     gsl_matrix *jpd = priv->jacobian_p_dot;
     gdouble a = geometry->a;
-    gsl_vector *temp = gsl_vector_calloc(3);
+
+    GError *tm_error = NULL;
+    jq = d_dynamic_model_get_inverse_jacobian(self, axes, &tm_error);
+    if (tm_error != NULL) {
+        g_propagate_error(err, tm_error);
+        return;
+    }
+
+    tm_error = NULL;
+    jp_inv = d_dynamic_model_get_direct_jacobian_inv(self, axes, &tm_error);
+    if (tm_error != NULL) {
+        g_propagate_error(err, tm_error);
+        return;
+    }
+
 
     gsl_matrix_set_zero(jpd);
+    speed_pos = gsl_vector_calloc(3);
+    gsl_vector *temp = gsl_vector_calloc(3);
     gsl_blas_dgemv(CblasNoTrans, 1.0, jq,
                     speed, 0.0, temp);
     gsl_blas_dgemv(CblasNoTrans, 1.0, jp_inv,
                     temp, 0.0, speed_pos);
+    gsl_vector_free(temp);
+
     for (int i = 0; i < jpd->size1; i++) {
-        gdouble phi = G_PI * 120.0 / 180.0 * (double)i;
+        gdouble phi = G_PI * 120.0 / 180.0 * (gdouble)i;
         gdouble t = gsl_vector_get(axes, i);
         gdouble t_dot = gsl_vector_get(speed, i);
 
@@ -336,23 +373,24 @@ d_dynamic_model_update_jpd (DDynamicModel   *self,
         gsl_matrix_set(jpd, i, 1, - gammay_dot);
         gsl_matrix_set(jpd, i, 2, - gammaz_dot);
     }
+    gsl_vector_free(speed_pos);
 
     priv->jpd_update = FALSE;
-
-    gsl_vector_free(speed_pos);
-    gsl_vector_free(temp);
 }
 
 /*
- * Update inverse jacobian matrix with current parameters
+ * update inverse jacobian matrix with current parameters
  */
 static void
 d_dynamic_model_update_jq (DDynamicModel    *self,
-                           gsl_vector       *axes)
+                           gsl_vector       *axes,
+                           GError           **err)
 {
+    g_return_if_fail(err == NULL || *err ==NULL);
+
     DDynamicModelPrivate *priv = D_DYNAMIC_MODEL_GET_PRIVATE(self);
 
-    gsl_vector *pos = gsl_vector_calloc(3);
+    gsl_vector *pos;
     gsl_matrix *jq = priv->jacobian_q;
     DGeometry* geometry = d_manipulator_get_geometry(self->manipulator);
     gdouble a = geometry->a;
@@ -360,7 +398,14 @@ d_dynamic_model_update_jq (DDynamicModel    *self,
     gdouble r = geometry->r;
 
     gsl_matrix_set_zero(jq);
-    d_solver_solve_direct(geometry, axes, pos);
+    pos = gsl_vector_calloc(3);
+    GError *tmp_err = NULL;
+    d_solver_solve_direct(geometry, axes, pos, &tmp_err);
+    if (err != NULL) {
+        g_propagate_error(err, tmp_err);
+        gsl_vector_free(pos);
+        return;
+    }
     for (int i = 0; i < jq->size1; i++) {
         gdouble phi = G_PI * 120.0 / 180.0 * (double)i;
         gdouble t = gsl_vector_get(axes, i);
@@ -383,28 +428,56 @@ d_dynamic_model_update_jq (DDynamicModel    *self,
 static void
 d_dynamic_model_update_jqd (DDynamicModel   *self,
                             gsl_vector      *axes,
-                            gsl_vector      *speed)
+                            gsl_vector      *speed,
+                            GError          **err)
 {
+    g_return_if_fail(err == NULL || *err == NULL);
+
     DDynamicModelPrivate *priv = D_DYNAMIC_MODEL_GET_PRIVATE(self);
 
-    gsl_vector *pos = gsl_vector_calloc(3);
-    gsl_vector *speed_pos = gsl_vector_calloc(3);
-    DGeometry *geometry = d_manipulator_get_geometry(self->manipulator);
-    gsl_matrix *jp_inv = d_dynamic_model_get_direct_jacobian_inv(self, axes);
-    gsl_matrix *jq = d_dynamic_model_get_inverse_jacobian(self, axes);
+    gsl_vector *pos;
+    gsl_vector *speed_pos;
+    DGeometry *geometry;
+    gsl_matrix *jp_inv;
+    gsl_matrix *jq;
 
     gsl_matrix *jqd = priv->jacobian_q_dot;
-    gdouble a = geometry->a;
-    gdouble h = geometry->h;
-    gdouble r = geometry->r;
-    gsl_vector *temp = gsl_vector_calloc(3);
 
     gsl_matrix_set_zero(jqd);
-    d_solver_solve_direct(geometry, axes, pos);
+
+    GError *tmp_err = NULL;
+    jq = d_dynamic_model_get_inverse_jacobian(self, axes, &tmp_err);
+    if (tmp_err != NULL) {
+        g_propagate_error(err, tmp_err);
+        return;
+    }
+
+    tmp_err = NULL;
+    jp_inv = d_dynamic_model_get_direct_jacobian_inv(self, axes, &tmp_err);
+    if (tmp_err != NULL) {
+        g_propagate_error(err, tmp_err);
+        return;
+    }
+
+    geometry = d_manipulator_get_geometry(self->manipulator);
+    pos = gsl_vector_calloc(3);
+    tmp_err = NULL;
+    d_solver_solve_direct(geometry, axes, pos, &tmp_err);
+    if (tmp_err != NULL) {
+        gsl_vector_free(pos);
+        g_propagate_error(err, tmp_err);
+        return;
+    }
+
+    speed_pos = gsl_vector_calloc(3);
+    gsl_vector *temp = gsl_vector_calloc(3);
     gsl_blas_dgemv(CblasNoTrans, 1.0, jq,
                     speed, 0.0, temp);
     gsl_blas_dgemv(CblasNoTrans, 1.0, jp_inv,
                     temp, 0.0, speed_pos);
+    gdouble a = geometry->a;
+    gdouble h = geometry->h;
+    gdouble r = geometry->r;
     for (int i = 0; i < jqd->size1 ; i++) {
         gdouble phi = G_PI * 120.0 / 180.0 * (gdouble)i;
         gdouble t = gsl_vector_get(axes, i);
@@ -505,12 +578,24 @@ d_dynamic_model_update_model_mass (DDynamicModel    *self,
     DDynamicModelPrivate *priv = D_DYNAMIC_MODEL_GET_PRIVATE(self);
 
     gsl_matrix *mass = priv->model_mass;
-    gsl_matrix *jp = d_dynamic_model_get_direct_jacobian_inv(self, axes);
-    gsl_matrix *jq = d_dynamic_model_get_inverse_jacobian(self, axes);
+    gsl_matrix *jp;
+    gsl_matrix *jq;
     gsl_matrix *mp = d_dynamic_model_get_mass_pos(self);
     gsl_matrix *mq = d_dynamic_model_get_mass_axes(self, axes);
-    gsl_matrix *temp = gsl_matrix_calloc(3, 3);
 
+    GError *tmp_err = NULL;
+    jq = d_dynamic_model_get_inverse_jacobian(self, axes, &tmp_err);
+    if (tmp_err != NULL) {
+        g_error("Can't compute mass matrix.");
+    }
+
+    tmp_err = NULL;
+    jp = d_dynamic_model_get_direct_jacobian_inv(self, axes, &tmp_err);
+    if (tmp_err != NULL) {
+        g_error("Can't compute mass matrix.");
+    }
+
+    gsl_matrix *temp = gsl_matrix_calloc(3, 3);
     gsl_matrix_set_all(mass, 0);
 
     gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0,
@@ -534,11 +619,29 @@ d_dynamic_model_update_model_inertia_inv (DDynamicModel *self,
     DDynamicModelPrivate *priv = D_DYNAMIC_MODEL_GET_PRIVATE(self);
 
     gsl_matrix *inertia = priv->model_inertia_inv;
-    gsl_matrix *jp = d_dynamic_model_get_direct_jacobian_inv(self, axes);
-    gsl_matrix *jq = d_dynamic_model_get_inverse_jacobian(self, axes);
+    gsl_matrix *jp;
+    gsl_matrix *jq;
     gsl_matrix *mp = d_dynamic_model_get_mass_pos(self);
     gsl_matrix *iq = d_dynamic_model_get_inertia_axes(self);
     gsl_matrix *temp = gsl_matrix_calloc(3, 3);
+
+    GError *tmp_err = NULL;
+    jq = d_dynamic_model_get_inverse_jacobian(self, axes, &tmp_err);
+    if (tmp_err != NULL) {
+        g_error("Can't compute inertia matrix.");
+    }
+
+    tmp_err = NULL;
+    jp = d_dynamic_model_get_direct_jacobian_inv(self, axes, &tmp_err);
+    if (tmp_err != NULL) {
+        g_error("Can't compute inertia matrix.");
+    }
+
+    tmp_err = NULL;
+    jp = d_dynamic_model_get_direct_jacobian_inv(self, axes, &tmp_err);
+    if (tmp_err != NULL) {
+        g_error("Can't compute inertia matrix.");
+    }
 
     gsl_matrix_set_zero(inertia);
     gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0,
@@ -582,11 +685,36 @@ d_dynamic_model_update_model_coriolis (DDynamicModel    *self,
     DDynamicModelPrivate *priv = D_DYNAMIC_MODEL_GET_PRIVATE(self);
 
     gsl_matrix *coriolis = priv->model_coriolis;
-    gsl_matrix *jp = d_dynamic_model_get_direct_jacobian_inv(self, axes);
-    gsl_matrix *jq = d_dynamic_model_get_inverse_jacobian(self, axes);
-    gsl_matrix *jpd = d_dynamic_model_get_direct_jacobian_dt(self, axes, speed);
-    gsl_matrix *jqd = d_dynamic_model_get_inverse_jacobian_dt(self, axes, speed);
+    gsl_matrix *jp;
+    gsl_matrix *jq;
+    gsl_matrix *jpd;
+    gsl_matrix *jqd;
     gsl_matrix *mp = d_dynamic_model_get_mass_pos(self);
+
+    GError *tmp_err = NULL;
+    jq = d_dynamic_model_get_inverse_jacobian (self, axes, &tmp_err);
+    if (tmp_err != NULL) {
+        g_error("Can't compute model coriolis matrix.");
+    }
+
+    tmp_err = NULL;
+    jp = d_dynamic_model_get_direct_jacobian_inv(self, axes, &tmp_err);
+    if (tmp_err != NULL) {
+        g_error("Can't compute model coriolis matrix.");
+    }
+
+    tmp_err = NULL;
+    jpd = d_dynamic_model_get_direct_jacobian_dt(self, axes, speed, &tmp_err);
+    if (tmp_err != NULL) {
+        g_error("Can't compute model coriolis matrix.");
+    }
+
+    tmp_err = NULL;
+    jqd = d_dynamic_model_get_inverse_jacobian_dt(self, axes, speed, &tmp_err);
+    if (tmp_err != NULL) {
+        g_error("Can't compute model coriolis matrix.");
+    }
+
     gsl_matrix *term1 = gsl_matrix_calloc(3, 3);
     gsl_matrix *term2 = gsl_matrix_calloc(3, 3);
     gsl_matrix *temp = gsl_matrix_calloc(3, 3);
@@ -634,10 +762,22 @@ d_dynamic_model_update_model_torque (DDynamicModel  *self,
     gsl_vector *torque = priv->model_torque;
     gsl_vector *ff = self->force;
     gsl_vector *tt = d_manipulator_get_torque(self->manipulator);
-    gsl_matrix *jp = d_dynamic_model_get_direct_jacobian_inv(self, axes);
-    gsl_matrix *jq = d_dynamic_model_get_inverse_jacobian(self, axes);
-    gsl_vector *temp = gsl_vector_calloc(3);
+    gsl_matrix *jp;
+    gsl_matrix *jq;
 
+    GError *tmp_err = NULL;
+    jq = d_dynamic_model_get_inverse_jacobian(self, axes, &tmp_err);
+    if (tmp_err != NULL) {
+        g_error("Can't compute model torque.");
+    }
+
+    tmp_err = NULL;
+    jp = d_dynamic_model_get_direct_jacobian_inv(self, axes, &tmp_err);
+    if (tmp_err != NULL) {
+        g_error("Can't compute model torque.");
+    }
+
+    gsl_vector *temp = gsl_vector_calloc(3);
     gsl_vector_set_zero(torque);
     gsl_blas_dgemv(CblasTrans, 1.0,
                     jp, ff, 0.0, temp);
@@ -653,24 +793,40 @@ d_dynamic_model_update_model_torque (DDynamicModel  *self,
 static gsl_matrix*
 d_dynamic_model_get_inverse_jacobian_dt (DDynamicModel  *self,
                                          gsl_vector     *axes,
-                                         gsl_vector     *speed)
+                                         gsl_vector     *speed,
+                                         GError         **err)
 {
+    g_return_val_if_fail(err == NULL || *err == NULL, NULL);
+
     DDynamicModelPrivate *priv = D_DYNAMIC_MODEL_GET_PRIVATE(self);
 
     if (priv->jqd_update) {
-        d_dynamic_model_update_jqd(self, axes, speed);
+        GError *tmp_err = NULL;
+        d_dynamic_model_update_jqd(self, axes, speed, &tmp_err);
+        if (tmp_err != NULL) {
+            g_propagate_error(err, tmp_err);
+            return NULL;
+        }
     }
     return priv->jacobian_q_dot;
 }
 
 static gsl_matrix*
 d_dynamic_model_get_inverse_jacobian (DDynamicModel *self,
-                                      gsl_vector    *axes)
+                                      gsl_vector    *axes,
+                                      GError        **err)
 {
+    g_return_val_if_fail(err == NULL || *err == NULL, NULL);
+
     DDynamicModelPrivate *priv = D_DYNAMIC_MODEL_GET_PRIVATE(self);
 
     if (priv->jq_update) {
-        d_dynamic_model_update_jq(self, axes);
+        GError *tmp_err = NULL;
+        d_dynamic_model_update_jq(self, axes, &tmp_err);
+        if (tmp_err != NULL) {
+            g_propagate_error(err, tmp_err);
+            return NULL;
+        }
     }
     return priv->jacobian_q;
 }
@@ -678,24 +834,38 @@ d_dynamic_model_get_inverse_jacobian (DDynamicModel *self,
 static gsl_matrix*
 d_dynamic_model_get_direct_jacobian_dt (DDynamicModel   *self,
                                         gsl_vector      *axes,
-                                        gsl_vector      *speed)
+                                        gsl_vector      *speed,
+                                        GError          **err)
 {
+    g_return_val_if_fail(err == NULL || *err == NULL, NULL);
     DDynamicModelPrivate *priv = D_DYNAMIC_MODEL_GET_PRIVATE(self);
 
     if (priv->jpd_update) {
-        d_dynamic_model_update_jpd(self, axes, speed);
+        GError *tmp_err = NULL;
+        d_dynamic_model_update_jpd(self, axes, speed, &tmp_err);
+        if (tmp_err != NULL) {
+            g_propagate_error(err, tmp_err);
+            return NULL;
+        }
     }
     return priv->jacobian_p_dot;
 }
 
 static gsl_matrix*
 d_dynamic_model_get_direct_jacobian_inv (DDynamicModel  *self,
-                                         gsl_vector     *axes)
+                                         gsl_vector     *axes,
+                                         GError         **err)
 {
+    g_return_val_if_fail(err == NULL || *err == NULL, NULL);
     DDynamicModelPrivate *priv = D_DYNAMIC_MODEL_GET_PRIVATE(self);
 
     if (priv->jpi_update) {
-        d_dynamic_model_update_jpi(self, axes);
+        GError *tmp_err = NULL;
+        d_dynamic_model_update_jpi(self, axes, &tmp_err);
+        if (tmp_err != NULL) {
+            g_propagate_error(err, tmp_err);
+            return NULL;
+        }
     }
     return priv->jacobian_p_inv;
 }
