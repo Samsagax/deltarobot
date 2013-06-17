@@ -438,7 +438,7 @@ d_trajectory_control_set_current_destination (DTrajectoryControl    *self,
                                               gsl_vector            *dest,
                                               GError                **err)
 {
-    g_return_if_fail(err != NULL || *err != NULL);
+    g_return_if_fail(err == NULL || *err == NULL);
     g_return_if_fail(dest != NULL);
 
     gsl_vector *new_dest = gsl_vector_calloc(3);
@@ -470,7 +470,7 @@ d_trajectory_control_set_current_destination_axes (DTrajectoryControl   *self,
                                                    gsl_vector           *dest_axes,
                                                    GError               **err)
 {
-    g_return_if_fail(err != NULL || *err != NULL);
+    g_return_if_fail(err == NULL || *err == NULL);
     g_return_if_fail(dest_axes != NULL);
 
     gsl_vector *new_dest_axes = gsl_vector_calloc(3);
@@ -527,7 +527,7 @@ d_trajectory_control_set_current_position (DTrajectoryControl   *self,
                                            gsl_vector           *pos,
                                            GError               **err)
 {
-    g_return_if_fail(err != NULL || *err != NULL);
+    g_return_if_fail(err == NULL || *err == NULL);
     g_return_if_fail(pos != NULL);
 
     gsl_vector *new_pos = gsl_vector_calloc(3);
@@ -561,7 +561,7 @@ d_trajectory_control_set_current_position_axes (DTrajectoryControl  *self,
                                                 gsl_vector          *axes,
                                                 GError              **err)
 {
-    g_return_if_fail(err != NULL || *err != NULL);
+    g_return_if_fail(err == NULL || *err == NULL);
     g_return_if_fail(axes != NULL);
 
     gsl_vector *new_axes = gsl_vector_calloc(3);
