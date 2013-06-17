@@ -113,7 +113,7 @@ static void
 sync_spinners_axes(gsl_vector *pos)
 {
     gsl_vector *axes = gsl_vector_calloc(3);
-    d_solver_solve_inverse(robot, pos, axes, NULL);
+    d_solver_solve_inverse(robot, pos, axes, NULL, NULL);
     for (int i=0; i < pos->size; i++) {
         gtk_spin_button_set_value(
             GTK_SPIN_BUTTON(axis_controls[i]),
@@ -126,7 +126,7 @@ static void
 sync_spinners_pos(gsl_vector *axes)
 {
     gsl_vector *pos = gsl_vector_calloc(3);
-    d_solver_solve_direct(robot, axes, pos);
+    d_solver_solve_direct(robot, axes, pos, NULL);
     for (int i=0; i < axes->size; i++) {
         gtk_spin_button_set_value(
             GTK_SPIN_BUTTON(pos_controls[i]),
@@ -220,7 +220,7 @@ d_trajectory_viewport_link_joint (gsl_vector    *axes,
                 gsl_vector_get(axes, 1),
                 gsl_vector_get(axes, 2));
     gsl_vector *pos = gsl_vector_calloc(3);
-    d_solver_solve_direct(robot, axes, pos);
+    d_solver_solve_direct(robot, axes, pos, NULL);
 
     d_viewport_set_pos(viewport, pos);
     gsl_vector_free(pos);
