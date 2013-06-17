@@ -32,7 +32,7 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-#include <math.h>
+//#include <math.h>
 
 #include <dsim/dsim.h>
 #include "dviewer_engine.h"
@@ -52,7 +52,7 @@ struct _DViewport {
 
     /* Robot Geometry */
     DGeometry       *geometry;
-    gsl_matrix        *extaxes;
+    gsl_matrix      *extaxes;
     //gsl_vector            *robot_pos;
 
     /* Mouse button pressed or 0 */
@@ -68,7 +68,7 @@ struct _DViewport {
     GdkGLConfig     *glconfig;
 
     /* Define a sphere containing the geometry */
-    gsl_vector         *scene_center;
+    gsl_vector      *scene_center;
     gdouble         scene_distance;
     gdouble         polar_angle;
     gdouble         azimuth_angle;
@@ -105,11 +105,11 @@ GType       d_viewport_get_type                 (void);
 GtkWidget*  d_viewport_new                      (DGeometry  *geometry);
 
 GtkWidget*  d_viewport_new_with_pos             (DGeometry  *geometry,
-                                                 gsl_vector       *pos);
+                                                 gsl_vector *pos);
 
 GtkWidget*  d_viewport_new_full                 (DGeometry  *geometry,
-                                                 gsl_matrix   *extaxes,
-                                                 gsl_vector    *scene_center,
+                                                 gsl_matrix *extaxes,
+                                                 gsl_vector *scene_center,
                                                  gdouble    scene_distance,
                                                  gdouble    polar_angle,
                                                  gdouble    azimuth_angle,
@@ -117,20 +117,20 @@ GtkWidget*  d_viewport_new_full                 (DGeometry  *geometry,
                                                  gdouble    far_clip,
                                                  gdouble    eye_angle);
 
-gsl_vector *   d_viewport_get_pos                  (const DViewport    *self);
+gsl_vector* d_viewport_get_pos                  (const DViewport    *self);
 
 void        d_viewport_set_pos                  (DViewport  *self,
-                                                 gsl_vector       *pos);
+                                                 gsl_vector *pos);
 
-gsl_matrix*   d_viewport_get_ext_axes             (const DViewport    *self);
+gsl_matrix* d_viewport_get_ext_axes             (const DViewport    *self);
 
 void        d_viewport_set_ext_axes             (DViewport  *self,
-                                                 gsl_matrix   *extaxes);
+                                                 gsl_matrix *extaxes);
 
-gsl_vector *   d_viewport_get_scene_center         (const DViewport    *self);
+gsl_vector* d_viewport_get_scene_center         (const DViewport    *self);
 
 void        d_viewport_set_scene_center         (DViewport  *self,
-                                                 gsl_vector    *scene_center);
+                                                 gsl_vector *scene_center);
 
 void        d_viewport_set_scene_center_xyz     (DViewport  *self,
                                                  gdouble    x,
@@ -168,7 +168,7 @@ void        d_viewport_set_eye_angle            (DViewport  *self,
                                                  gdouble    eye_angle);
 
 void        d_viewport_configure_view           (DViewport  *self,
-                                                 gsl_vector    *scene_center,
+                                                 gsl_vector *scene_center,
                                                  gdouble    scene_distance,
                                                  gdouble    polar_angle,
                                                  gdouble    azimuth_angle,

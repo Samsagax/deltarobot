@@ -31,6 +31,7 @@ enum
 {
     PROP_0,
     PROP_GEOMETRY,
+    PROP_POSITION,
 //    PROP_EXTAXES,
 //    PROP_SCENE_CENTER,
     PROP_SCENE_DISTANCE,
@@ -793,7 +794,8 @@ d_viewport_set_pos (DViewport   *self,
     d_solver_solve_inverse(self->geometry,
                            pos,
                            NULL,
-                           extaxes);
+                           extaxes,
+                           NULL);
 
     d_viewport_set_ext_axes (self, extaxes);
     gsl_matrix_free(extaxes);
@@ -805,7 +807,10 @@ d_viewport_get_pos (const DViewport *self)
     g_return_val_if_fail (D_IS_VIEWPORT(self), NULL);
 
     gsl_vector *pos;
-    d_solver_solve_direct_with_ext_axes(self->geometry, self->extaxes, pos);
+    d_solver_solve_direct_with_ext_axes(self->geometry,
+                            self->extaxes,
+                            pos,
+                            NULL);
     return pos;
 }
 
