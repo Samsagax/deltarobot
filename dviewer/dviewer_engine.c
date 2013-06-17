@@ -346,7 +346,7 @@ d_viewer_draw_robot_with_ext_axes (DGeometry    *geometry,
     // Moving platform
     glColor3f(0.0, 1.0, 0.4);
     gsl_vector *p = gsl_vector_calloc(3);
-    d_solver_solve_direct_with_ext_axes(geometry, extaxes, p);
+    d_solver_solve_direct_with_ext_axes(geometry, extaxes, p, NULL);
     glTranslatef(gsl_vector_get(p, 0),
                  gsl_vector_get(p, 1),
                  gsl_vector_get(p, 2));
@@ -371,7 +371,8 @@ d_viewer_draw_robot_at_pos (DGeometry   *geometry,
     d_solver_solve_inverse (geometry,
                             pos,
                             NULL,
-                            extaxes);
+                            extaxes,
+                            NULL);
     d_viewer_draw_robot_with_ext_axes (geometry, extaxes);
     // Release used memory
     gsl_matrix_free(extaxes);
