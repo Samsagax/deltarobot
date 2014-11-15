@@ -833,16 +833,12 @@ d_dynamic_model_equation (double        t,
     gsl_vector *mt;
 
     /* Speed and positions in axes space */
-//    gsl_vector_const_view q, q_dot;
     gsl_vector_view q_dot_dot, q_dot_2;
 
     /* Fill the axes position and speed, request an update in the model */
-    //Remove gsl_vectors, use gsl_vector_views
-    //TODO: silent const warnings
-    gsl_vector_const_view q = gsl_vector_const_view_array(&(y[0]), 3);
-    gsl_vector_const_view q_dot = gsl_vector_const_view_array(&(y[3]), 3);
-    //d_dynamic_model_set_axes(model, q);
-    //d_dynamic_model_set_speed(model, q_dot);
+    double y_ptr[6] = {y[0], y[1], y[2], y[3], y[4], y[5]};
+    gsl_vector_view q = gsl_vector_view_array(&(y_ptr[0]), 3);
+    gsl_vector_view q_dot = gsl_vector_view_array(&(y_ptr[3]), 3);
 
     d_dynamic_model_matrices_outdated(model);
     /* Fill model matrices */
@@ -982,8 +978,8 @@ d_dynamic_model_solve_inverse (DDynamicModel    *self,
         g_warning("driver returned %d\n", s);
         //TODO: Error handling
     }
-    gsl_vector_const_view q = gsl_vector_const_view_array(&(y[0]), 3);
-    gsl_vector_const_view q_dot = gsl_vector_const_view_array(&(y[3]), 3);
+    gsl_vector_view q = gsl_vector_view_array(&(y[0]), 3);
+    gsl_vector_view q_dot = gsl_vector_view_array(&(y[3]), 3);
     d_dynamic_model_set_axes(self, &q.vector);
     d_dynamic_model_set_speed(self, &q_dot.vector);
     gsl_odeiv2_driver_free(driver);
