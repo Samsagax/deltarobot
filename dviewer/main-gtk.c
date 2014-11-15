@@ -115,8 +115,9 @@ sync_spinners_axes(gsl_vector *pos)
     gsl_vector *axes = gsl_vector_calloc(3);
     d_solver_solve_inverse(robot, pos, axes, NULL);
     for (int i=0; i < pos->size; i++) {
-        gtk_spin_button_set_value(axis_controls[i],
-                gsl_vector_get(axes, i));
+        gtk_spin_button_set_value(
+            GTK_SPIN_BUTTON(axis_controls[i]),
+            gsl_vector_get(axes, i));
     }
     gsl_vector_free(axes);
 }
@@ -127,8 +128,9 @@ sync_spinners_pos(gsl_vector *axes)
     gsl_vector *pos = gsl_vector_calloc(3);
     d_solver_solve_direct(robot, axes, pos);
     for (int i=0; i < axes->size; i++) {
-        gtk_spin_button_set_value(pos_controls[i],
-                gsl_vector_get(pos, i));
+        gtk_spin_button_set_value(
+            GTK_SPIN_BUTTON(pos_controls[i]),
+            gsl_vector_get(pos, i));
     }
     gsl_vector_free(pos);
 }
@@ -142,11 +144,12 @@ go_button_joint_clicked (GtkButton  *button,
 
     axes = gsl_vector_calloc(3);
     for (int i = 0; i < axes->size; i++) {
-        gsl_vector_set (axes, i, gtk_spin_button_get_value(axis_controls[i]));
+        gsl_vector_set (axes, i,
+            gtk_spin_button_get_value(GTK_SPIN_BUTTON(axis_controls[i])));
     }
     cmd = d_trajectory_command_new(OT_MOVEJ, axes);
     d_trajectory_control_push_order(trajcontrol, cmd);
-    if (gtk_toggle_button_get_active(fine_check)) {
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(fine_check))) {
         d_trajectory_control_push_order(trajcontrol, cmd);
     }
     sync_spinners_pos(axes);
@@ -163,11 +166,12 @@ go_button_linear_clicked (GtkButton *button,
 
     pos = gsl_vector_calloc(3);
     for (int i = 0; i < pos->size; i++) {
-        gsl_vector_set (pos, i, gtk_spin_button_get_value(pos_controls[i]));
+        gsl_vector_set (pos, i,
+            gtk_spin_button_get_value(GTK_SPIN_BUTTON(pos_controls[i])));
     }
     cmd = d_trajectory_command_new(OT_MOVEL, pos);
     d_trajectory_control_push_order(trajcontrol, cmd);
-    if (gtk_toggle_button_get_active(fine_check)) {
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(fine_check))) {
         d_trajectory_control_push_order(trajcontrol, cmd);
     }
     sync_spinners_axes(pos);
@@ -206,7 +210,7 @@ show_about (void)
 
 static void
 d_trajectory_viewport_link_joint (gsl_vector    *axes,
-                                  gpointer      *data)
+                                  gpointer      data)
 {
     g_return_if_fail(D_IS_VIEWPORT(data));
     DViewport *viewport = D_VIEWPORT(data);
@@ -224,7 +228,7 @@ d_trajectory_viewport_link_joint (gsl_vector    *axes,
 
 static void
 d_trajectory_viewport_link_linear (gsl_vector   *pos,
-                                   gpointer     *data)
+                                   gpointer     data)
 {
     g_return_if_fail(D_IS_VIEWPORT(data));
     DViewport *viewport = D_VIEWPORT(data);
