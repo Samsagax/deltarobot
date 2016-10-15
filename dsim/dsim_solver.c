@@ -218,65 +218,9 @@ d_solver_solve_inverse (DGeometry   *geometry,
             gsl_vector_set(axes, i, atan2(sen1, cos1));
         }
     }
+
     /* No error occured */
     g_assert(err == NULL || *err == NULL);
-}
-
-/* GType Register */
-G_DEFINE_TYPE (DSolver, d_solver, G_TYPE_OBJECT);
-
-/* Constructor */
-DSolver*
-d_solver_get_instance (void)
-{
-    return D_SOLVER(g_object_new(D_TYPE_SOLVER, NULL));
-}
-
-static GObject*
-constructor (GType type,
-             guint n_construct_params,
-             GObjectConstructParam *construct_params )
-{
-    static GObject *self = NULL;
-
-    if (self == NULL) {
-        self = G_OBJECT_CLASS (d_solver_parent_class)->constructor(
-                    type, n_construct_params, construct_params);
-        g_object_add_weak_pointer (self, (gpointer) &self);
-        return (self);
-    }
-
-    return g_object_ref(self);
-}
-
-/* Destructor */
-static void
-d_solver_dispose (GObject *object)
-{
-    G_OBJECT_CLASS (d_solver_parent_class)->dispose(object);
-}
-
-static void
-d_solver_finalize (GObject *object)
-{
-    G_OBJECT_CLASS (d_solver_parent_class)->finalize(object);
-}
-
-/* Init class and instance */
-static void
-d_solver_class_init (DSolverClass *klass)
-{
-    //TODO: Initialize destructors
-    GObjectClass *object_class = G_OBJECT_CLASS(klass);
-    object_class->constructor = constructor;
-    object_class->dispose = d_solver_dispose;
-    object_class->finalize = d_solver_finalize;
-}
-
-static void
-d_solver_init (DSolver *self)
-{
-    //TODO: Initialize members?
 }
 
 /* Error handling functions */

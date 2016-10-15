@@ -19,46 +19,20 @@
  */
 
 /*
- * dsim_solver.h : Singleton Class being the main solver for the
- * Delta Simulator library.
+ * dsim_solver.h : Solver for the Delta Simulator library.
+ *                 A group of static methods for solving direct
+ *                 and inverse kinematic problem.
  */
 
 #ifndef  DSIM_SOLVER_INC
 #define  DSIM_SOLVER_INC
 
 #include <glib-object.h>
-#include <math.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 #include <dsim/dsim_geometry.h>
 
-/* Type macros */
-#define D_TYPE_SOLVER               (d_solver_get_type ())
-#define D_SOLVER(obj)               (G_TYPE_CHECK_INSTANCE_CAST ((obj), D_TYPE_SOLVER, DSolver))
-#define D_IS_SOLVER(obj)            (G_TYPE_CHECK_INSTANCE_TYPE ((obj), D_TYPE_SOLVER))
-#define D_SOLVER_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST ((klass), D_TYPE_SOLVER, DSolverClass))
-#define D_IS_SOLVER_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE ((klass), D_TYPE_SOLVER))
-#define D_SOLVER_GET_CLASS(obj)     (G_TYPE_INSTANCE_GET_CLASS ((obj), D_TYPE_SOLVER, DSolverClass))
-
-/* Instance Structure of DSolver */
-typedef struct _DSolver DSolver;
-struct _DSolver {
-    GObject         parent_instance;
-};
-
-/* Class Structure of DSolver */
-typedef struct _DSolverClass DSolverClass;
-struct _DSolverClass {
-    GObjectClass    parent_class;
-};
-
-/* Returns GType associated with this object type */
-GType       d_solver_get_type       (void);
-
-/* Get Solver instance */
-DSolver*    d_solver_get_instance   (void);
-
-/* Methods */
+/* Static Methods */
 void        d_solver_solve_direct       (DGeometry          *geometry,
                                          gsl_vector         *axes,
                                          gsl_vector         *pos,
