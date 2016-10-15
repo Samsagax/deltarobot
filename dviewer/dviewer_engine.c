@@ -134,15 +134,17 @@ d_viewer_draw_platform ( GLfloat    length,
     glPushMatrix();
 
     GLfloat x = length - jdiam / 2.0;
-    GLfloat y = jdiam / 2.0 * tan (30.0 / 180.0 * G_PI);
+    GLfloat y = jdiam * 2.0 * tan (30.0 / 180.0 * G_PI);
     GLfloat z = 0.5 * thick;
 
-    // Small sides
+    // Small sides x 3
     glBegin(GL_QUADS);
         {
-            int i;
-            for (i = 0; i < 3; i++) {
+            for (int i = 0; i < 3; i++) {
+                // Angle for each side
                 GLfloat phi = ((GLfloat) i ) * 120.0 / 180.0 * G_PI;
+                
+                // Draw a square looking outwards
                 GLfloat X = x * cos (phi) - y * sin (phi);
                 GLfloat Y = x * sin (phi) + y * cos (phi);
                 glNormal3f(X, Y, 0.0);
@@ -150,19 +152,21 @@ d_viewer_draw_platform ( GLfloat    length,
                 glVertex3f(X, Y,  z);
                 X = x * cos (phi) + y * sin (phi);
                 Y = x * sin (phi) - y * cos (phi);
-                glNormal3f(X, Y, 0.0);
                 glVertex3f(X, Y,  z);
                 glVertex3f(X, Y, -z);
             }
         }
     glEnd();
 
-    // Big sides
+    // Big sides x 3
     glBegin(GL_QUADS);
         {
             int i;
             for (i = 0; i < 3; i++) {
+                // Angle for each side
                 GLfloat phi = ((GLfloat) i ) * 120.0 / 180.0 * G_PI;
+                
+                // Draw a square looking outwards
                 GLfloat X = x * cos (phi) - y * sin (phi);
                 GLfloat Y = x * sin (phi) + y * cos (phi);
                 glNormal3f(X, Y, 0.0);
@@ -171,7 +175,6 @@ d_viewer_draw_platform ( GLfloat    length,
                 phi = ((GLfloat) i + 1) * 120.0 / 180.0 * G_PI;
                 X = x * cos (phi) + y * sin (phi);
                 Y = x * sin (phi) - y * cos (phi);
-                glNormal3f(X, Y, 0.0);
                 glVertex3f(X, Y, -z);
                 glVertex3f(X, Y,  z);
             }
@@ -315,7 +318,7 @@ d_viewer_draw_robot_with_ext_axes (DGeometry    *geometry,
                                    gsl_matrix     *extaxes)
 {
     GLfloat jdiam = 3.0;
-    GLfloat thick = 3.0;
+    GLfloat thick = 1.5;
 
     // Save current transformation
     glPushMatrix();
@@ -351,6 +354,7 @@ d_viewer_draw_robot_with_ext_axes (DGeometry    *geometry,
                  gsl_vector_get(p, 1),
                  gsl_vector_get(p, 2));
     d_viewer_draw_platform(geometry->h, thick, jdiam);
+    d_viewer_draw_reference_frame(20.0, 0.2);
     gsl_vector_free(p);
 
     // Restore current transformation

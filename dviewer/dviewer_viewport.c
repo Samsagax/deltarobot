@@ -429,7 +429,6 @@ d_viewport_realize (GtkWidget   *widget)
     glEnable(GL_LIGHT0);
     glEnable(GL_NORMALIZE);
     glEnable(GL_COLOR_MATERIAL);
-//    glFrontFace(GL_CCW);
     glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
     glClearColor(0.0, 0.0, 0.0, 1.0);
 
@@ -512,16 +511,16 @@ d_viewport_expose (GtkWidget        *widget,
               -cos(self->polar_angle) * sin(self->azimuth_angle),
               sin(self->polar_angle));
 
-	GLfloat ambientLight[] = {0.5f, 0.5f, 0.5f, 1.0f};
-	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambientLight);
+//	GLfloat ambientLight[] = {0.5f, 0.5f, 0.5f, 1.0f};
+//	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambientLight);
 
-	GLfloat lightColor[] = {0.7f, 0.7f, 0.7f, 1.0f};
-	GLfloat lightPos[] = {
-        self->scene_distance * sin(self->polar_angle) * cos(self->azimuth_angle + G_PI),
-        self->scene_distance * sin(self->polar_angle) * sin(self->azimuth_angle + G_PI),
-        self->scene_distance * cos(self->polar_angle) };
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor);
-	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+//	GLfloat lightColor[] = {0.7f, 0.7f, 0.7f, 1.0f};
+//	GLfloat lightPos[] = {
+//        self->scene_distance * sin(self->polar_angle) * cos(self->azimuth_angle + G_PI),
+//        self->scene_distance * sin(self->polar_angle) * sin(self->azimuth_angle + G_PI),
+//        self->scene_distance * cos(self->polar_angle) };
+//	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor);
+//	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 
     /*
      * Draw actors
