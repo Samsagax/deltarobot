@@ -29,9 +29,8 @@
 /* Local variables */
 enum
 {
-    PROP_0,
-    PROP_GEOMETRY,
-    PROP_POSITION,
+    PROP_GEOMETRY = 1,
+//    PROP_POSITION,
 //    PROP_EXTAXES,
 //    PROP_SCENE_CENTER,
     PROP_SCENE_DISTANCE,
@@ -43,13 +42,13 @@ enum
     N_PROPERTIES
 };
 
+static GParamSpec *viewport_properties[N_PROPERTIES] = { NULL, };
+
 enum
 {
     EXTAXES_CHANGED,
     LAST_SIGNAL
 };
-
-static GParamSpec *viewport_properties[N_PROPERTIES] = { NULL, };
 
 /* Forward declarations */
 static void     d_viewport_set_property     (GObject            *obj,
