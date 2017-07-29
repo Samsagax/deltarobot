@@ -6,7 +6,11 @@ AM_CPPFLAGS = -I$(top_builddir) \
 
 AM_CFLAGS = -std=c99
 
-LDADD = ${gl_LIBS} ${glu_LIBS} ${gtkglext_LIBS} ../lib/libdsim.la -lm -lgtkdatabox -lgsl
+LDADD = ${gl_LIBS} \
+		${glu_LIBS} \
+		${gtkglext_LIBS} \
+		${gsl_LIBS} \
+		../lib/libdsim.la
 
 sources = main-gtk.c \
 			dviewer_engine.c \

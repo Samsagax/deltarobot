@@ -7,7 +7,8 @@ AM_CFLAGS = -std=c99
 
 LDADD = ${gtk_LIBS} \
 		${gtkdatabox_LIBS} \
-		../lib/libdsim.la -lm -lgsl
+		${gsl_LIBS} \
+		../lib/libdsim.la
 
 sources = main-gtk.c \
 		  ../lib/libdsim.la
