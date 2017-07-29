@@ -2,6 +2,7 @@
 
 *.swp
 *.o
+*.orig
 *.lo
 *.la
 *.a
