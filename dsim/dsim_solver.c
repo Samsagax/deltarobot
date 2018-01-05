@@ -37,6 +37,7 @@ d_solver_solve_direct (DGeometry    *geometry,
     g_return_if_fail(err == NULL || *err == NULL);
 
     //TODO: Checkear que los centros no sean colineales
+    //TODO: Add restrictions to axes
 
     gdouble pb[3][3];
     {
@@ -97,6 +98,7 @@ d_solver_solve_direct (DGeometry    *geometry,
     gsl_vector_set(pos, 0, l[1]/l[0] + l[2]/l[0] * gsl_vector_get(pos, 2));
 
     g_assert(err == NULL || *err == NULL);
+    return;
 }
 
 void
@@ -146,6 +148,7 @@ d_solver_solve_direct_with_ext_axes (DGeometry  *geometry,
     gsl_vector_set(pos, 2, p[0][2]);
 
     g_assert(err == NULL || *err == NULL);
+    return;
 }
 
 void
@@ -160,6 +163,7 @@ d_solver_solve_inverse (DGeometry   *geometry,
     g_return_if_fail((extcalc || axescalc));
     g_return_if_fail(err == NULL || *err == NULL);
 
+    //TODO: Add hard restrictions to axes
     for (int i = 0; i < 3; i++) {
         /* Locate point Ci */
         gdouble phi = ((gdouble) i ) * G_PI * 2.0 / 3.0;
@@ -221,6 +225,7 @@ d_solver_solve_inverse (DGeometry   *geometry,
 
     /* No error occured */
     g_assert(err == NULL || *err == NULL);
+    return;
 }
 
 /* Error handling functions */
