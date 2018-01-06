@@ -21,4 +21,4 @@ sources = \
 
 lib_LTLIBRARIES = ../lib/libdsim.la
 ___lib_libdsim_la_SOURCES = ${sources}
-___lib_libdsim_la_LIBADD = ${gobject_LIBS} ${gsl_LIBS} -lm
+___lib_libdsim_la_LIBADD = ${gobject_LIBS} ${gsl_LIBS} -lm -lrt
