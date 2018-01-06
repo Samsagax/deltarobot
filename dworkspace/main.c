@@ -49,7 +49,7 @@ static GOptionEntry entries[] =
 
 
 static gdouble t_min = 0.0;
-static gdouble t_max = 90.0;
+static gdouble t_max = 120.0;
 static gdouble t_increment = 1;
 
 /*
@@ -84,14 +84,29 @@ main(int argc, char* argv[])
     DGeometry *geometry = d_geometry_new (a, b, h, r);
     g_print ( "Current geometry [ %f, %f, %f, %f ] \n", a, b, h, r );
 
+    gsl_vector *pos = gsl_vector_alloc(3);
+    gsl_vector *axes = gsl_vector_alloc(3);
+    GError *err = NULL;
     while(t3 <= t_max)
     {
         while (t2 <= t_max)
         {
             while (t1 <= t_max)
             {
-                g_print ( "Current values [ %f, %f, %f ] \n", t1, t2, t3 );
-
+                //g_print ( "Current values [ %f, %f, %f ] \n", t1, t2, t3 );
+                gsl_vector_set(axes, 0, t1 / 180.0 * G_PI);
+                gsl_vector_set(axes, 1, t2 / 180.0 * G_PI);
+                gsl_vector_set(axes, 2, t3 / 180.0 * G_PI);
+                d_solver_solve_direct (geometry, axes, pos, &err);
+                if (err)
+                {
+                    err = NULL;
+                } else {
+                g_print ( "Point [ %f, %f, %f ] \n",
+                            gsl_vector_get(pos, 0),
+                            gsl_vector_get(pos, 1),
+                            gsl_vector_get(pos, 2));
+                }
                 t1 += t_increment;
             }
             t1 = t_min;
@@ -102,5 +117,6 @@ main(int argc, char* argv[])
         t3 += t_increment;
     }
 
+    gsl_vector_free(axes);
     return 0;
 }

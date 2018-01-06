@@ -1,11 +1,14 @@
 AM_CPPFLAGS = -I$(top_builddir) \
 			-I$(top_srcdir) \
-			${glib_CFLAGS}
+			${glib_CFLAGS} \
+			${gsl_CFLAGS}
 
 AM_CFLAGS = -std=c99 \
-	${glib_CFLAGS}
+		${gsl_CFLAGS} \
+		${glib_CFLAGS}
 
 LDADD = ${glib_LIBS} \
+	${gsl_LIBS} \
 	../lib/libdsim.la
 
 sources = main.c \
