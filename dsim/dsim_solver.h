@@ -31,6 +31,7 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 #include <dsim/dsim_geometry.h>
+#include <math.h>
 
 /* Static Methods */
 void        d_solver_solve_direct       (DGeometry          *geometry,

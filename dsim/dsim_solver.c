@@ -175,17 +175,17 @@ d_solver_solve_inverse (DGeometry   *geometry,
         /* Calculate theta 3 */
         gdouble cos3 = ci[1] / geometry->b;
 
-        /* Check valid cos3 */
+        /* Check valid cos3 so we don't get an invalid sen3 */
         if ( abs(cos3) >= 1.0 ) {
             g_set_error(err,
                     D_SOLVER_ERROR,
                     D_SOLVER_ERROR_FAILED,
-                    "Target [ %d, %d, %d ] is out of working space",
+                    "Target [ %f, %f, %f ] is out of working space",
                     gsl_vector_get(pos, 0),
                     gsl_vector_get(pos, 1),
                     gsl_vector_get(pos, 2));
             return;
-        } //TODO: Add check for sen3 == 0
+        }
         gdouble sen3 = sqrt(1.0 - cos3 * cos3);
         if (extcalc) {
             gsl_matrix_set(extaxes, i, 2, atan2(sen3, cos3));
@@ -199,7 +199,7 @@ d_solver_solve_inverse (DGeometry   *geometry,
             g_set_error(err,
                     D_SOLVER_ERROR,
                     D_SOLVER_ERROR_FAILED,
-                    "Target [ %d, %d, %d ] is out of working space",
+                    "Target [ %f, %f, %f ] is out of working space",
                     gsl_vector_get(pos, 0),
                     gsl_vector_get(pos, 1),
                     gsl_vector_get(pos, 2));
