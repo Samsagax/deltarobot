@@ -23,6 +23,8 @@
  */
 
 #include <glib.h>
+#include <glib-object.h>
+#include <gio/gio.h>
 #include <dsim/dsim.h>
 
 
@@ -87,13 +89,26 @@ main(int argc, char* argv[])
     gsl_vector *pos = gsl_vector_alloc(3);
     gsl_vector *axes = gsl_vector_alloc(3);
     GError *err = NULL;
+
+    GFile *out_file = g_file_new_for_path ("workspace.asc");
+    GFileOutputStream *out_stream = g_file_replace(out_file,
+            NULL,
+            FALSE,
+            G_FILE_CREATE_NONE,
+            NULL,
+            NULL);
+    GString *buffer = g_string_new(NULL);
+
     while(t3 <= t_max)
     {
         while (t2 <= t_max)
         {
             while (t1 <= t_max)
             {
-                //g_print ( "Current values [ %f, %f, %f ] \n", t1, t2, t3 );
+                if (verbose)
+                {
+                    g_print ( "Current axes [ %f, %f, %f ] \n", t1, t2, t3 );
+                }
                 gsl_vector_set(axes, 0, t1 / 180.0 * G_PI);
                 gsl_vector_set(axes, 1, t2 / 180.0 * G_PI);
                 gsl_vector_set(axes, 2, t3 / 180.0 * G_PI);
@@ -102,10 +117,23 @@ main(int argc, char* argv[])
                 {
                     err = NULL;
                 } else {
-                g_print ( "Point [ %f, %f, %f ] \n",
+                    if (verbose)
+                    {
+                        g_print ( "Point [ %f, %f, %f ] \n",
+                                gsl_vector_get(pos, 0),
+                                gsl_vector_get(pos, 1),
+                                gsl_vector_get(pos, 2));
+                    }
+                    g_string_printf(buffer,
+                            "%f %f %f\n",
                             gsl_vector_get(pos, 0),
                             gsl_vector_get(pos, 1),
                             gsl_vector_get(pos, 2));
+                    g_output_stream_write (G_OUTPUT_STREAM (out_stream),
+                            buffer->str,
+                            buffer->len,
+                            NULL,
+                            NULL);
                 }
                 t1 += t_increment;
             }
@@ -117,6 +145,10 @@ main(int argc, char* argv[])
         t3 += t_increment;
     }
 
+    g_output_stream_close(out_stream, NULL, NULL);
     gsl_vector_free(axes);
+    g_clear_object(&geometry);
+    g_string_free(buffer, TRUE);
+
     return 0;
 }
