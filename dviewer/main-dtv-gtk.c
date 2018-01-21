@@ -201,10 +201,10 @@ static void
 show_about (void)
 {
     gtk_show_about_dialog   ( GTK_WINDOW(main_window),
-                              "title", "About DSim Viewer",
-                              "program-name", "DSim Viewer",
+                              "title", "About DSim TrajViewer",
+                              "program-name", "DSim TrajViewer",
                               "version", "0.1",
-                              "copyright", "Copyright 2012-2013. Joaquín Ignacio Aramendía GNU GPL",
+                              "copyright", "Copyright 2012-2018. Joaquín Ignacio Aramendía GNU GPL",
                               NULL );
 }
 
@@ -257,7 +257,7 @@ create_main_window (void)
      * Create the window
      */
     main_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title (GTK_WINDOW(main_window), "DSim GL Viewer");
+    gtk_window_set_title (GTK_WINDOW(main_window), "DSim GL Traj Viewer");
     gtk_window_set_icon_name(GTK_WINDOW(main_window), "applications-system");
 
     /*

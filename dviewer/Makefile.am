@@ -12,10 +12,16 @@ LDADD = ${gl_LIBS} \
 		${gsl_LIBS} \
 		../lib/libdsim.la
 
-sources = main-gtk.c \
-			dviewer_engine.c \
+dv_sources = main-dv-gtk.c
+
+dtv_sources = main-dtv-gtk.c
+
+common_sources = dviewer_engine.c \
 			dviewer_viewport.c \
 			../lib/libdsim.la
 
-bin_PROGRAMS = ../test/dviewer-gtk
-___test_dviewer_gtk_SOURCES = ${sources}
+bin_PROGRAMS = ../test/dviewer-gtk ../test/dtrajviewer-gtk
+
+___test_dviewer_gtk_SOURCES = ${dv_sources} ${common_sources}
+
+___test_dtrajviewer_gtk_SOURCES = ${dtv_sources} ${common_sources}
