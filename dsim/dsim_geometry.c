@@ -37,8 +37,8 @@ d_geometry_new ( gdouble a,
     DGeometry *g = D_GEOMETRY(g_object_new(D_TYPE_GEOMETRY, NULL));
     g->a = a;
     g->b = b;
-    g->r = h;
-    g->h = r;
+    g->h = h;
+    g->r = r;
     return g;
 }
 

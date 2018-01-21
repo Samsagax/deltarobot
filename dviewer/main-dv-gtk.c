@@ -339,7 +339,7 @@ create_controls (void)
 static void
 setup_robot (void)
 {
-    robot = d_geometry_new(a, b, r, h);
+    robot = d_geometry_new(a, b, h, r);
     pos   = gsl_vector_calloc(3);
     gsl_vector_set(pos, 2, 50.0);
 }
