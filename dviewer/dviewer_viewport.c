@@ -429,8 +429,10 @@ d_viewport_realize (GtkWidget   *widget)
     glEnable(GL_LIGHT0);
     glEnable(GL_NORMALIZE);
     glEnable(GL_COLOR_MATERIAL);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
-    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glClearColor(1.0, 1.0, 1.0, 1.0);
 
     gdk_gl_drawable_gl_end(gldrawable);
     /* OpenGL END */

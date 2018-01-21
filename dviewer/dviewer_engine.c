@@ -37,11 +37,11 @@ d_viewer_draw_reference_frame (GLfloat     axisLength,
     gluQuadricDrawStyle(pObj, GLU_FILL);
     gluQuadricNormals(pObj, GLU_SMOOTH);
     gluQuadricOrientation(pObj, GLU_OUTSIDE);
-    glColor3f(0.7f, 0.2f, 0.2f);
+    glColor4f(0.7f, 0.2f, 0.2f, 1.0f);
     gluSphere(pObj, 1.5 * axisRadius, 20, 10);
     // X axis
     glRotatef(90, 0.0, 1.0, 0.0);
-    glColor3f(1.0f, 0.0f, 0.0f);
+    glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
     glPushMatrix();
     gluCylinder ( pObj,
                   axisRadius,
@@ -67,7 +67,7 @@ d_viewer_draw_reference_frame (GLfloat     axisLength,
 
     // Y axis
     glRotatef(-90.0, 1.0, 0.0, 0.0);
-    glColor3f(0.0f, 1.0f, 0.0f);
+    glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
     glPushMatrix();
     gluCylinder ( pObj,
                   axisRadius,
@@ -93,7 +93,7 @@ d_viewer_draw_reference_frame (GLfloat     axisLength,
 
     // Z axis
     glRotatef(-90, 0.0, 1.0, 0.0);
-    glColor3f(0.0f, 0.0f, 1.0f);
+    glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
     glPushMatrix();
     gluCylinder ( pObj,
                   axisRadius,
@@ -143,7 +143,7 @@ d_viewer_draw_platform ( GLfloat    length,
             for (int i = 0; i < 3; i++) {
                 // Angle for each side
                 GLfloat phi = ((GLfloat) i ) * 120.0 / 180.0 * G_PI;
-                
+
                 // Draw a square looking outwards
                 GLfloat X = x * cos (phi) - y * sin (phi);
                 GLfloat Y = x * sin (phi) + y * cos (phi);
@@ -165,7 +165,7 @@ d_viewer_draw_platform ( GLfloat    length,
             for (i = 0; i < 3; i++) {
                 // Angle for each side
                 GLfloat phi = ((GLfloat) i ) * 120.0 / 180.0 * G_PI;
-                
+
                 // Draw a square looking outwards
                 GLfloat X = x * cos (phi) - y * sin (phi);
                 GLfloat Y = x * sin (phi) + y * cos (phi);
@@ -320,14 +320,15 @@ d_viewer_draw_robot_with_ext_axes (DGeometry    *geometry,
     GLfloat jdiam = 3.0;
     GLfloat thick = 1.5;
 
+
     // Save current transformation
     glPushMatrix();
 
-    glColor3f(0.5, 1.0, 0.0);
+    glColor4f(0.5, 1.0, 0.0, 0.6);
     // Fixed platform
     d_viewer_draw_platform(geometry->r, thick, jdiam);
 
-    glColor3f(1.0, 0.4, 0.1);
+    glColor4f(1.0, 0.4, 0.1, 1.0);
     // 3 Limbs
     {
         int i;
@@ -347,14 +348,15 @@ d_viewer_draw_robot_with_ext_axes (DGeometry    *geometry,
     }
 
     // Moving platform
-    glColor3f(0.0, 1.0, 0.4);
     gsl_vector *p = gsl_vector_calloc(3);
     d_solver_solve_direct_with_ext_axes(geometry, extaxes, p, NULL);
     glTranslatef(gsl_vector_get(p, 0),
                  gsl_vector_get(p, 1),
                  gsl_vector_get(p, 2));
-    d_viewer_draw_platform(geometry->h, thick, jdiam);
     d_viewer_draw_reference_frame(20.0, 0.2);
+
+    glColor4f(0.0, 1.0, 0.4, 0.6);
+    d_viewer_draw_platform(geometry->h, thick, jdiam);
     gsl_vector_free(p);
 
     // Restore current transformation
