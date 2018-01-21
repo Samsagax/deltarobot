@@ -41,6 +41,8 @@ static gdouble h = 10.0;
 /* Joint motion */
 static GtkWidget            *axis_controls[3];
 static GtkWidget            *pos_controls[3];
+static gulong               pos_handlers[3];
+static gulong               axis_handlers[3];
 
 /* Forward declarations */
 static GtkWidget*   create_menu_bar (GtkWidget *window);
@@ -117,9 +119,11 @@ sync_spinners_axes(gsl_vector *pos)
     gsl_vector *axes = gsl_vector_calloc(3);
     d_solver_solve_inverse(robot, pos, axes, NULL, NULL);
     for (int i=0; i < pos->size; i++) {
+        g_signal_handler_block(G_OBJECT(axis_controls[i]), axis_handlers[i]);
         gtk_spin_button_set_value(
             GTK_SPIN_BUTTON(axis_controls[i]),
             gsl_vector_get(axes, i));
+        g_signal_handler_unblock(G_OBJECT(axis_controls[i]), axis_handlers[i]);
     }
     gsl_vector_free(axes);
 }
@@ -130,9 +134,11 @@ sync_spinners_pos(gsl_vector *axes)
     gsl_vector *pos = gsl_vector_calloc(3);
     d_solver_solve_direct(robot, axes, pos, NULL);
     for (int i=0; i < axes->size; i++) {
+        g_signal_handler_block(G_OBJECT(pos_controls[i]), pos_handlers[i]);
         gtk_spin_button_set_value(
             GTK_SPIN_BUTTON(pos_controls[i]),
             gsl_vector_get(pos, i));
+        g_signal_handler_unblock(G_OBJECT(pos_controls[i]), pos_handlers[i]);
     }
     gsl_vector_free(pos);
 }
@@ -308,7 +314,7 @@ create_controls (void)
                                   axis_controls[i],
                                   1, 2,
                                   i, i+1);
-        g_signal_connect_swapped (G_OBJECT(axis_controls[i]),
+        axis_handlers[i] = g_signal_connect_swapped (G_OBJECT(axis_controls[i]),
                                   "value-changed",
                                   G_CALLBACK(axis_spin_button_changed),
                                   NULL);
@@ -320,7 +326,7 @@ create_controls (void)
                                   pos_controls[i],
                                   3, 4,
                                   i, i+1);
-        g_signal_connect_swapped (G_OBJECT(pos_controls[i]),
+        pos_handlers[i]= g_signal_connect_swapped (G_OBJECT(pos_controls[i]),
                                   "value-changed",
                                   G_CALLBACK(pos_spin_button_changed),
                                   NULL);
