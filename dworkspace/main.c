@@ -41,18 +41,17 @@ static GOptionEntry entries[] =
       { "axes", 'x', 0, G_OPTION_ARG_NONE, &axes, "Use axes, default mode", NULL  },
       { "cartesian", 'c', 0, G_OPTION_ARG_NONE, &cartesian, "Use cartesian mode", NULL },
       { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "Be verbose", NULL  },
-      { 0, 'a', 0, G_OPTION_ARG_DOUBLE, &a, "value of 'a' length in robot", 'A' },
-      { 0, 'b', 0, G_OPTION_ARG_DOUBLE, &b, "value of 'b' length in robot", 'B' },
-      { 0, 'h', 0, G_OPTION_ARG_DOUBLE, &h, "value of 'h' length in robot", 'H' },
-      { 0, 'r', 0, G_OPTION_ARG_DOUBLE, &r, "value of 'r' length in robot", 'R' },
+      { 0, 'a', 0, G_OPTION_ARG_DOUBLE, &a, "value of 'a' length in robot", "A" },
+      { 0, 'b', 0, G_OPTION_ARG_DOUBLE, &b, "value of 'b' length in robot", "B" },
+      { 0, 'h', 0, G_OPTION_ARG_DOUBLE, &h, "value of 'h' length in robot", "H" },
+      { 0, 'r', 0, G_OPTION_ARG_DOUBLE, &r, "value of 'r' length in robot", "R" },
       { NULL  }
 
 };
 
-
-static gdouble t_min = 0.0;
+static gdouble t_min = -20.0;
 static gdouble t_max = 120.0;
-static gdouble t_increment = 1;
+static gdouble t_increment = 4.0;
 
 /*
  * Main function
@@ -115,7 +114,7 @@ main(int argc, char* argv[])
                 d_solver_solve_direct (geometry, axes, pos, &err);
                 if (err)
                 {
-                    err = NULL;
+                    g_clear_error(&err);
                 } else {
                     if (verbose)
                     {
