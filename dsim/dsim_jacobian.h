@@ -19,89 +19,27 @@
  */
 
 /*
- * dsim_jacobian.h: Objects representing direct/inverse DirectJacobian of the manipulator
+ * dsim_jacobian.h: Objects representing direct/inverse jacobian of the manipulator
  */
 
-#ifndef  DSIM_DIRECT_JACOBIAN_INC
-#define  DSIM_DIRECT_JACOBIAN_INC
+#ifndef  DSIM_JACOBIAN_INC
+#define  DSIM_JACOBIAN_INC
 
-#include <dsim/dsim_matrix.h>
-#include <dsim/dsim_axes.h>
+#include <math.h>
+#include <glib.h>
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_vector.h>
+#include <dsim_geometry.h>
 
-/* Type macros */
-#define D_TYPE_JACOBIAN             (d_jacobian_get_type ())
-#define D_JACOBIAN(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), D_TYPE_JACOBIAN, DJacobian))
-#define D_IS_JACOBIAN(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), D_TYPE_JACOBIAN))
-#define D_JACOBIAN_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), D_TYPE_JACOBIAN, DJacobianClass))
-#define D_IS_JACOBIAN_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), D_TYPE_JACOBIAN))
-#define D_JACOBIAN_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), D_TYPE_JACOBIAN, DJacobianClass))
+/* Static Methods */
+void    d_jacobian_direct (gsl_matrix   *direct,
+                           DGeometry    *geometry,
+                           gsl_matrix   *ext_axes);
 
-/* Instance Structure of DJacobian */
-typedef struct _DJacobian DJacobian;
-struct _DJacobian {
-    DMatrix         parent_instance;
-};
+void    d_jacobian_inverse (gsl_matrix  *inverse,
+                            DGeometry   *geometry,
+                            gsl_matrix  *ext_axes);
 
-/* Class Structure of DJacobian */
-typedef struct _DJacobianClass DJacobianClass;
-struct _DJacobianClass {
-    DMatrixClass    parent_class;
 
-    /* Virtual methods */
-    gboolean    (*is_singular)      (DJacobian  *self);
-};
-
-GType       d_jacobian_get_type     (void);
-
-gboolean    d_jacobian_is_singular  (DJacobian  *self);
-
-/* Type macros */
-#define D_TYPE_DIRECT_JACOBIAN             (d_direct_jacobian_get_type ())
-#define D_DIRECT_JACOBIAN(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), D_TYPE_DIRECT_JACOBIAN, DDirectJacobian))
-#define D_IS_DIRECT_JACOBIAN(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), D_TYPE_DIRECT_JACOBIAN))
-#define D_DIRECT_JACOBIAN_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), D_TYPE_DIRECT_JACOBIAN, DDirectJacobianClass))
-#define D_IS_DIRECT_JACOBIAN_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), D_TYPE_DIRECT_JACOBIAN))
-#define D_DIRECT_JACOBIAN_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), D_TYPE_DIRECT_JACOBIAN, DDirectJacobianClass))
-
-/* Instance Structure of DDirectJacobian */
-typedef struct _DDirectJacobian DDirectJacobian;
-struct _DDirectJacobian {
-    DJacobian           parent_instance;
-};
-
-/* Class Structure of DDirectJacobian */
-typedef struct _DDirectJacobianClass DDirectJacobianClass;
-struct _DDirectJacobianClass {
-    DJacobianClass      parent_class;
-};
-
-GType       d_direct_jacobian_get_type      (void);
-
-DMatrix*    d_direct_jacobian_new           (DExtAxes    *axes);
-
-/* Type macros */
-#define D_TYPE_INVERSE_JACOBIAN             (d_inverse_jacobian_get_type ())
-#define D_INVERSE_JACOBIAN(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), D_TYPE_INVERSE_JACOBIAN, DInverseJacobian))
-#define D_IS_INVERSE_JACOBIAN(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), D_TYPE_INVERSE_JACOBIAN))
-#define D_INVERSE_JACOBIAN_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), D_TYPE_INVERSE_JACOBIAN, DInverseJacobianClass))
-#define D_IS_INVERSE_JACOBIAN_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), D_TYPE_INVERSE_JACOBIAN))
-#define D_INVERSE_JACOBIAN_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), D_TYPE_INVERSE_JACOBIAN, DInverseJacobianClass))
-
-/* Instance Structure of DInverseJacobian */
-typedef struct _DInverseJacobian DInverseJacobian;
-struct _DInverseJacobian {
-    DJacobian       parent_instance;
-};
-
-/* Class Structure of DInverseJacobian */
-typedef struct _DInverseJacobianClass DInverseJacobianClass;
-struct _DInverseJacobianClass {
-    DJacobianClass  parent_class;
-};
-
-GType       d_inverse_jacobian_get_type     (void);
-
-DMatrix*    d_inverse_jacobian_new          (DExtAxes    *axes);
-
-#endif   /* ----- #ifndef DSIM_DIRECT_JACOBIAN_INC  ----- */
+#endif   /* ----- #ifndef DSIM_JACOBIAN_INC  ----- */
 

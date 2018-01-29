@@ -20,63 +20,48 @@
 
 #include "dsim_jacobian.h"
 
-/* Forward declarations */
-static void     d_jacobian_class_init       (DJacobianClass *klass);
-
-static void     d_jacobian_init             (DJacobian      *self);
-
-static void     d_jacobian_dispose          (GObject        *obj);
-
-static void     d_jacobian_finalize         (GObject        *obj);
-
-static gboolean d_jacobian_real_is_singular (DJacobian      *self);
-
-/* GType register */
-G_DEFINE_TYPE (DJacobian, d_jacobian, D_TYPE_MATRIX);
-
-/* Implementation internals */
-static void
-d_jacobian_class_init (DJacobianClass *klass)
+/* Static Methods */
+void
+d_jacobian_direct (gsl_matrix   *direct,
+                   DGeometry    *geometry,
+                   gsl_matrix   *ext_axes)
 {
-    GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-    gobject_class->dispose = d_jacobian_dispose;
-    gobject_class->finalize = d_jacobian_finalize;
-
-    klass->is_singular = d_jacobian_real_is_singular;
-}
-
-static void
-d_jacobian_init (DJacobian* self)
-{
-    D_MATRIX(self)->matrix = gsl_matrix_calloc(3, 3);
-}
-
-static void
-d_jacobian_dispose (GObject *obj)
-{
-    /* Chain up */
-    G_OBJECT_CLASS(d_jacobian_parent_class)->dispose(obj);
-}
-
-static void
-d_jacobian_finalize (GObject *gobject)
-{
-    /* Chain up */
-    G_OBJECT_CLASS(d_jacobian_parent_class)->finalize(gobject);
-}
-
-static gboolean
-d_jacobian_real_is_singular (DJacobian  *self)
-{
-    if (d_matrix_determinant(D_MATRIX(self)) < FLT_EPSILON) {
-        return TRUE;
+    for (int i = 0; i < direct->size1; i++) {
+        gdouble phi = i * G_PI * 120.0 / 180.0;
+        gdouble t[] = {
+            gsl_matrix_get(ext_axes, i, 0),
+            gsl_matrix_get(ext_axes, i, 1),
+            gsl_matrix_get(ext_axes, i, 2)
+        };
+        gdouble j[] = {
+            cos(t[0] + t[1]) * sin(t[2]) * cos(phi) - cos(t[2]) * sin(phi),
+            cos(t[0] + t[1]) * sin(t[2]) * sin(phi) + cos(t[2]) * cos(phi),
+            sin(t[0] + t[1]) * sin(t[2])
+        };
+        for (int k = 0; k < direct->size2; k++) {
+            gsl_matrix_set(direct, i, k, j[k]);
+        }
     }
-    return FALSE;
 }
 
-/* Public API */
-gboolean
-d_jacobian_is_singular (DJacobian   *self)
+void
+d_jacobian_inverse (gsl_matrix   *inverse,
+                   DGeometry    *geometry,
+                   gsl_matrix   *ext_axes)
 {
-    return D_JACOBIAN_GET_CLASS(self)->is_singular(self);
+    for (int i = 0; i < inverse->size1; i++) {
+        gdouble t[] = {
+            gsl_matrix_get(ext_axes, i, 0),
+            gsl_matrix_get(ext_axes, i, 1),
+            gsl_matrix_get(ext_axes, i, 2)
+        };
+        for (int k = 0; k < inverse->size2; k++) {
+            if (i == k) {
+                gdouble j = sin(t[1]) * sin (t[2]);
+                gsl_matrix_set(inverse, i, k, j);
+            } else {
+                gsl_matrix_set(inverse, i, k, 0.0);
+            }
+        }
+    }
 }

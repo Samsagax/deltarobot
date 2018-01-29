@@ -10,6 +10,7 @@ sources = \
 	dsim.h \
 	dsim_geometry.c \
 	dsim_solver.c \
+	dsim_jacobian.c \
 	dsim_trajectory.c \
 	dsim_trajectory_joint.c \
 	dsim_trajectory_linear.c \
