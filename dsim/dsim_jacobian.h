@@ -40,6 +40,12 @@ void    d_jacobian_inverse (gsl_matrix  *inverse,
                             DGeometry   *geometry,
                             gsl_matrix  *ext_axes);
 
+void    d_jacobian_conventional (gsl_matrix     *jacobian,
+                                 DGeometry      *geometry,
+                                 gsl_matrix     *ext_axes);
+
+gdouble d_jacobian_dexterity (DGeometry     *geometry,
+                              gsl_matrix    *ext_axes);
 
 #endif   /* ----- #ifndef DSIM_JACOBIAN_INC  ----- */
 
