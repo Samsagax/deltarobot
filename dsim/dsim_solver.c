@@ -176,7 +176,7 @@ d_solver_solve_inverse (DGeometry   *geometry,
         gdouble cos3 = ci[1] / geometry->b;
 
         /* Check valid cos3 so we don't get an invalid sen3 */
-        if ( abs(cos3) >= 1.0 ) {
+        if ( abs(cos3) > 1.0 ) {
             g_set_error(err,
                     D_SOLVER_ERROR,
                     D_SOLVER_ERROR_FAILED,
@@ -195,7 +195,7 @@ d_solver_solve_inverse (DGeometry   *geometry,
         gdouble cnormsq = ci[0] * ci[0] + ci[1] * ci[1] + ci[2] * ci[2];
         gdouble cos2 = (cnormsq - geometry->a * geometry->a - geometry->b * geometry->b) / (2.0 * geometry->a * geometry->b * sen3);
         /* Check for valid cos2 */
-        if ( abs(cos2) >= 1.0 ) {
+        if ( abs(cos2) > 1.0 ) {
             g_set_error(err,
                     D_SOLVER_ERROR,
                     D_SOLVER_ERROR_FAILED,
