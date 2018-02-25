@@ -986,3 +986,51 @@ d_viewport_queve_redraw (DViewport  *self)
         gdk_window_invalidate_rect(widget->window, &allocation, FALSE);
     }
 }
+
+void
+d_viewport_save_image (DViewport    *self,
+                       gchar        *filename)
+{
+    gint h, w;
+    GtkAllocation allocation;
+    gtk_widget_get_allocation (GTK_WIDGET(self), &allocation);
+    w = allocation.width;
+    h = allocation.height;
+
+
+    if (!gtk_widget_is_gl_capable(GTK_WIDGET(self))) {
+        g_error("d_viewport_save_image: widget is not GL capable");
+    }
+    GdkGLContext *glcontext = gtk_widget_get_gl_context(GTK_WIDGET(self));
+    GdkGLDrawable *gldrawable = gtk_widget_get_gl_drawable(GTK_WIDGET(self));
+
+    /* OpenGL BEGIN */
+    if (!gdk_gl_drawable_gl_begin (gldrawable, glcontext)) {
+        return;
+    }
+
+    unsigned char *pixels = g_malloc ( w * h * 3 );
+    glReadPixels(0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+
+    gdk_gl_drawable_gl_end (gldrawable);
+    /* OpenGL END */
+
+    GdkPixbuf *pixbuf = NULL;
+    pixbuf = gdk_pixbuf_new_from_data (pixels,
+                              GDK_COLORSPACE_RGB,
+                              FALSE,
+                              8,
+                              w,
+                              h,
+                              3 * w,
+                              NULL,
+                              NULL);
+
+    GdkPixbuf *mirrored = gdk_pixbuf_flip(pixbuf, FALSE);
+
+    gdk_pixbuf_save (mirrored, filename, "png", NULL, NULL);
+
+    g_free(pixels);
+    g_object_unref (pixbuf);
+    g_object_unref (mirrored);
+}

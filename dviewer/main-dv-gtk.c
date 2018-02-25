@@ -154,6 +154,31 @@ show_about (void)
                               NULL );
 }
 
+void
+save_image (void)
+{
+    GtkWidget *file_dialog;
+    file_dialog = gtk_file_chooser_dialog_new ("Save screenshot",
+                                               GTK_WINDOW(main_window),
+                                               GTK_FILE_CHOOSER_ACTION_SAVE,
+                                               GTK_STOCK_CANCEL,
+                                               GTK_RESPONSE_CANCEL,
+                                               GTK_STOCK_SAVE,
+                                               GTK_RESPONSE_ACCEPT,
+                                               NULL);
+    gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (file_dialog), TRUE);
+    gtk_file_chooser_set_current_folder (GTK_FILE_CHOOSER (file_dialog), "~");
+    gtk_file_chooser_set_current_name (GTK_FILE_CHOOSER (file_dialog), "screenshot.png");
+
+    if ( gtk_dialog_run (GTK_DIALOG (file_dialog)) == GTK_RESPONSE_ACCEPT ) {
+        gchar *filename;
+        filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (file_dialog));
+        d_viewport_save_image (D_VIEWPORT (viewport), filename);
+        g_free(filename);
+    }
+    gtk_widget_destroy(file_dialog);
+}
+
 static void
 axis_spin_button_changed (GtkSpinButton *button,
                           gpointer      data)
@@ -254,6 +279,7 @@ create_menu_bar (GtkWidget  *window)
 {
     static GtkItemFactoryEntry menu_items[] = {
         { "/_File",         NULL,           NULL,           0,  "<Branch>" },
+        { "/File/_Screenshot","<control>S", save_image,     0,  "<Item>" },
         { "/File/_Quit",    "<control>Q",   gtk_main_quit,  0,  "<StockItem>",  GTK_STOCK_QUIT },
         { "/_Help",         NULL,           NULL,           0,  "<Branch>" },
         { "/Help/_About",   NULL,           show_about,     0,  "<StockItem>",  GTK_STOCK_ABOUT },

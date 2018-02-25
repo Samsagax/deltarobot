@@ -178,5 +178,8 @@ void        d_viewport_configure_view           (DViewport  *self,
 
 void        d_viewport_queve_redraw             (DViewport  *self);
 
+void        d_viewport_save_image               (DViewport  *self,
+                                                 gchar      *filename);
+
 #endif   /* ----- #ifndef DVIEWER_VIEWPORT_INC  ----- */
 
