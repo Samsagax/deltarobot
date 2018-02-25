@@ -468,7 +468,8 @@ d_viewport_configure (GtkWidget           *widget,
     glViewport (0, 0, w, h);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(self->eye_angle, aspect, self->near_clip, self->far_clip);
+    //gluPerspective(self->eye_angle, aspect, self->near_clip, self->far_clip);
+    glOrtho(-80, 80, -100/aspect, 60/aspect, self->near_clip, self->far_clip);
 
     gdk_gl_drawable_gl_end (gldrawable);
     /* OpenGL END */
