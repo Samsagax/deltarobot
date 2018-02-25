@@ -1009,8 +1009,9 @@ d_viewport_save_image (DViewport    *self,
         return;
     }
 
-    unsigned char *pixels = g_malloc ( w * h * 3 );
-    glReadPixels(0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+    unsigned char *pixels = g_malloc ( w * h * 3 * sizeof(gint) );
+    glPixelStorei (GL_PACK_ALIGNMENT, 1);
+    glReadPixels (0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, pixels);
 
     gdk_gl_drawable_gl_end (gldrawable);
     /* OpenGL END */
