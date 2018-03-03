@@ -38,6 +38,8 @@ static gdouble b = 50.0;
 static gdouble r = 25.0;
 static gdouble h = 10.0;
 
+static GtkWidget            *geometry_controls[4];
+
 /* Joint motion */
 static GtkWidget            *axis_controls[3];
 static GtkWidget            *pos_controls[3];
@@ -180,6 +182,26 @@ save_image (void)
 }
 
 static void
+geometry_button_pressed (GtkSpinButton  *button,
+                         gpointer       data)
+{
+    a = gtk_spin_button_get_value(geometry_controls[0]);
+    b = gtk_spin_button_get_value(geometry_controls[1]);
+    h = gtk_spin_button_get_value(geometry_controls[2]);
+    r = gtk_spin_button_get_value(geometry_controls[3]);
+
+    GValue g = G_VALUE_INIT;
+    g_value_init (&g, D_TYPE_GEOMETRY);
+    g_value_set_object (&g, d_geometry_new (a, b, h, r));
+
+    g_object_set_property (G_OBJECT (viewport),
+                           "geometry",
+                            &g);
+
+    g_value_unset (&g);
+}
+
+static void
 axis_spin_button_changed (GtkSpinButton *button,
                           gpointer      data)
 {
@@ -308,7 +330,7 @@ create_controls (void)
     /*
      * Table with spinbuttons
      */
-    guint rows = 3;
+    guint rows = 7;
     guint columns = 4;
     table = gtk_table_new(rows, columns, FALSE);
 
@@ -355,6 +377,27 @@ create_controls (void)
         pos_handlers[i]= g_signal_connect_swapped (G_OBJECT(pos_controls[i]),
                                   "value-changed",
                                   G_CALLBACK(pos_spin_button_changed),
+                                  NULL);
+    }
+
+    geometry_controls[0] = gtk_spin_button_new_with_range(0.0, 100.0, 1.0);
+    geometry_controls[1] = gtk_spin_button_new_with_range(0.0, 100.0, 1.0);
+    geometry_controls[2] = gtk_spin_button_new_with_range(0.0, 100.0, 1.0);
+    geometry_controls[3] = gtk_spin_button_new_with_range(0.0, 100.0, 1.0);
+
+    gtk_spin_button_set_value(geometry_controls[0], a);
+    gtk_spin_button_set_value(geometry_controls[1], b);
+    gtk_spin_button_set_value(geometry_controls[2], h);
+    gtk_spin_button_set_value(geometry_controls[3], r);
+
+    for(int i = 3; i < 7; i++) {
+        gtk_table_attach_defaults (GTK_TABLE(table),
+                                   geometry_controls[i-3],
+                                   2, 4,
+                                   i, i+1);
+        g_signal_connect_swapped (G_OBJECT (geometry_controls[i-3]),
+                                  "value_changed",
+                                  G_CALLBACK (geometry_button_pressed),
                                   NULL);
     }
 
