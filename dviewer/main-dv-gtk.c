@@ -182,6 +182,16 @@ save_image (void)
 }
 
 static void
+spinbuttons_update_range (void)
+{
+    for (int i = 0; i < 3; i++) {
+        gtk_spin_button_set_range (pos_controls[i],
+                                   -(robot->a + robot->b),
+                                   robot->a + robot->b);
+    }
+}
+
+static void
 geometry_button_pressed (GtkSpinButton  *button,
                          gpointer       data)
 {
@@ -191,6 +201,7 @@ geometry_button_pressed (GtkSpinButton  *button,
     r = gtk_spin_button_get_value(geometry_controls[3]);
 
     d_geometry_reconfigure (robot, a, b, h, r);
+    spinbuttons_update_range ();
     axis_spin_button_changed (NULL, NULL);
     d_viewport_queve_redraw (viewport);
 }
@@ -377,8 +388,8 @@ create_controls (void)
     GtkWidget *geometry_labels[] = {
         gtk_label_new("Near Arm:"),
         gtk_label_new("Far Arm:"),
-        gtk_label_new("Fixed pl. size:"),
-        gtk_label_new("Moving pl. size:")
+        gtk_label_new("Moving pl. size:"),
+        gtk_label_new("Fixed pl. size:")
     };
 
     geometry_controls[0] = gtk_spin_button_new_with_range(0.0, 100.0, 1.0);
