@@ -62,4 +62,10 @@ DGeometry*  d_geometry_new          (gdouble a,
                                      gdouble h,
                                      gdouble r);
 
+void        d_geometry_reconfigure  (DGeometry  *self,
+                                     gdouble    a,
+                                     gdouble    b,
+                                     gdouble    h,
+                                     gdouble    r);
+
 #endif   /* ----- #ifndef DSIM_GEOMETRY_INC  ----- */

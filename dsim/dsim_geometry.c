@@ -27,21 +27,6 @@
 /* GType Register */
 G_DEFINE_TYPE(DGeometry, d_geometry, G_TYPE_OBJECT);
 
-/* Create new DGeometry object */
-DGeometry*
-d_geometry_new ( gdouble a,
-                 gdouble b,
-                 gdouble h,
-                 gdouble r )
-{
-    DGeometry *g = D_GEOMETRY(g_object_new(D_TYPE_GEOMETRY, NULL));
-    g->a = a;
-    g->b = b;
-    g->h = h;
-    g->r = r;
-    return g;
-}
-
 /* Dispose and Finalize functions */
 static void
 d_geometry_dispose (GObject *gobject)
@@ -66,4 +51,32 @@ d_geometry_class_init ( DGeometryClass *klass )
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
     gobject_class->dispose = d_geometry_dispose;
     gobject_class->finalize = d_geometry_finalize;
+}
+
+/* Public API */
+DGeometry*
+d_geometry_new (gdouble a,
+                gdouble b,
+                gdouble h,
+                gdouble r)
+{
+    DGeometry *g = D_GEOMETRY(g_object_new(D_TYPE_GEOMETRY, NULL));
+    g->a = a;
+    g->b = b;
+    g->h = h;
+    g->r = r;
+    return g;
+}
+
+void
+d_geometry_reconfigure (DGeometry   *self,
+                        gdouble     a,
+                        gdouble     b,
+                        gdouble     h,
+                        gdouble     r)
+{
+    self->a = a;
+    self->b = b;
+    self->h = h;
+    self->r = r;
 }
