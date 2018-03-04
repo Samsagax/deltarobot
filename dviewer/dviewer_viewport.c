@@ -358,15 +358,8 @@ d_viewport_set_geometry (DViewport  *self,
         self->geometry = g_object_ref(geometry);
 
         /* Queve Redraw */
-        GtkWidget *widget = GTK_WIDGET(self);
-        if (gtk_widget_get_realized(widget)) {
-            gdk_window_invalidate_rect(widget->window,
-                                       &widget->allocation,
-                                       FALSE);
-        }
+        d_viewport_queve_redraw (self);
     }
-
-    g_object_notify(G_OBJECT(self), "geometry");
 }
 
 static void
@@ -772,8 +765,6 @@ d_viewport_set_ext_axes (DViewport  *self,
 
         d_viewport_queve_redraw(self);
     }
-
-//    g_object_notify(G_OBJECT(self), "extaxes");
 }
 
 gsl_matrix*
@@ -785,7 +776,7 @@ d_viewport_get_ext_axes (const DViewport *self)
 
 void
 d_viewport_set_pos (DViewport   *self,
-                    gsl_vector        *pos)
+                    gsl_vector  *pos)
 {
     g_return_if_fail (D_IS_VIEWPORT(self));
     g_return_if_fail (pos != NULL);
