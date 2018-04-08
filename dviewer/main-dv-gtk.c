@@ -350,9 +350,9 @@ create_controls (void)
         gtk_label_new("Pos Z:")
     };
 
-    axis_controls[0] = gtk_spin_button_new_with_range(-G_PI/8.0, G_PI/2.0, G_PI/180.0);
-    axis_controls[1] = gtk_spin_button_new_with_range(-G_PI/8.0, G_PI/2.0, G_PI/180.0);
-    axis_controls[2] = gtk_spin_button_new_with_range(-G_PI/8.0, G_PI/2.0, G_PI/180.0);
+    axis_controls[0] = gtk_spin_button_new_with_range(-G_PI/4.0, G_PI, G_PI/180.0);
+    axis_controls[1] = gtk_spin_button_new_with_range(-G_PI/4.0, G_PI, G_PI/180.0);
+    axis_controls[2] = gtk_spin_button_new_with_range(-G_PI/4.0, G_PI, G_PI/180.0);
 
     pos_controls[0] = gtk_spin_button_new_with_range(-50.0, 50.0, 1.0);
     pos_controls[1] = gtk_spin_button_new_with_range(-50.0, 50.0, 1.0);
