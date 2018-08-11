@@ -23,7 +23,7 @@ PKG_CHECK_MODULES([gio], [gio-2.0])
 #PKG_CHECK_MODULES([gthread], [gthread-2.0])
 PKG_CHECK_MODULES([gtk], [gtk+-2.0])
 PKG_CHECK_MODULES([gtkglext], [gtkglext-1.0])
-PKG_CHECK_MODULES([gtkdatabox], [gtkdatabox])
+#PKG_CHECK_MODULES([gtkdatabox], [gtkdatabox])
 PKG_CHECK_MODULES([gsl], [gsl])
 
 AC_FUNC_ERROR_AT_LINE
@@ -31,6 +31,6 @@ AC_FUNC_ERROR_AT_LINE
 AC_CONFIG_FILES([Makefile
                  dsim/Makefile
                  dworkspace/Makefile
-                 dviewer/Makefile
-                 dynviewer/Makefile])
+                 dviewer/Makefile])
+#                 dynviewer/Makefile])
 AC_OUTPUT
