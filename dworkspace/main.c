@@ -31,10 +31,10 @@
 static gboolean axes = TRUE;
 static gboolean cartesian = FALSE;
 static gboolean verbose = FALSE;
-static gdouble a = 30.0;
-static gdouble b = 50.0;
-static gdouble h = 10.0;
-static gdouble r = 25.0;
+static gdouble a = 29.3;
+static gdouble b = 64.5;
+static gdouble h = 3.8;
+static gdouble r = 10.0;
 
 static GOptionEntry entries[] =
 {
@@ -49,9 +49,9 @@ static GOptionEntry entries[] =
 
 };
 
-static gdouble t_min = -20.0;
-static gdouble t_max = 120.0;
-static gdouble t_increment = 4.0;
+static gdouble t_min = 0.0;
+static gdouble t_max = 90.0;
+static gdouble t_increment = 5.0;
 
 /*
  * Main function

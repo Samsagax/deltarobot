@@ -33,10 +33,10 @@ static DGeometry            *robot;
 static gsl_vector           *pos;
 
 /* Robot parameters */
-static gdouble a = 30.0;
-static gdouble b = 50.0;
-static gdouble r = 25.0;
-static gdouble h = 10.0;
+static gdouble a = 29.3;
+static gdouble b = 64.5;
+static gdouble h = 3.8;
+static gdouble r = 10.0;
 
 static GtkWidget            *geometry_controls[4];
 
@@ -350,13 +350,13 @@ create_controls (void)
         gtk_label_new("Pos Z:")
     };
 
-    axis_controls[0] = gtk_spin_button_new_with_range(-G_PI/4.0, G_PI, G_PI/180.0);
-    axis_controls[1] = gtk_spin_button_new_with_range(-G_PI/4.0, G_PI, G_PI/180.0);
-    axis_controls[2] = gtk_spin_button_new_with_range(-G_PI/4.0, G_PI, G_PI/180.0);
+    axis_controls[0] = gtk_spin_button_new_with_range(-G_PI/4.0, G_PI, G_PI/360.0);
+    axis_controls[1] = gtk_spin_button_new_with_range(-G_PI/4.0, G_PI, G_PI/360.0);
+    axis_controls[2] = gtk_spin_button_new_with_range(-G_PI/4.0, G_PI, G_PI/360.0);
 
-    pos_controls[0] = gtk_spin_button_new_with_range(-50.0, 50.0, 1.0);
-    pos_controls[1] = gtk_spin_button_new_with_range(-50.0, 50.0, 1.0);
-    pos_controls[2] = gtk_spin_button_new_with_range(20.0, 70.0, 1.0);
+    pos_controls[0] = gtk_spin_button_new_with_range(-50.0, 50.0, 0.01);
+    pos_controls[1] = gtk_spin_button_new_with_range(-50.0, 50.0, 0.01);
+    pos_controls[2] = gtk_spin_button_new_with_range(20.0, 70.0, 0.01);
 
     for (int i = 0; i < 3; i++) {
         gtk_table_attach_defaults(GTK_TABLE(table),
@@ -392,10 +392,10 @@ create_controls (void)
         gtk_label_new("Fixed pl. size:")
     };
 
-    geometry_controls[0] = gtk_spin_button_new_with_range(0.0, 100.0, 1.0);
-    geometry_controls[1] = gtk_spin_button_new_with_range(0.0, 100.0, 1.0);
-    geometry_controls[2] = gtk_spin_button_new_with_range(0.0, 100.0, 1.0);
-    geometry_controls[3] = gtk_spin_button_new_with_range(0.0, 100.0, 1.0);
+    geometry_controls[0] = gtk_spin_button_new_with_range(0.0, 100.0, 0.1);
+    geometry_controls[1] = gtk_spin_button_new_with_range(0.0, 100.0, 0.1);
+    geometry_controls[2] = gtk_spin_button_new_with_range(0.0, 100.0, 0.1);
+    geometry_controls[3] = gtk_spin_button_new_with_range(0.0, 100.0, 0.1);
 
     gtk_spin_button_set_value(geometry_controls[0], a);
     gtk_spin_button_set_value(geometry_controls[1], b);
