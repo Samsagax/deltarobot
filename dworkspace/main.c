@@ -62,7 +62,7 @@ main(int argc, char* argv[])
     GError *parse_error = NULL;
     GOptionContext *context;
 
-    context = g_option_context_new ("<min> <max> <increment>-- test a range of input values against the workspace");
+    context = g_option_context_new ("<min> <max> <increment> -- test a range of input values against the workspace");
     g_option_context_add_main_entries (context, entries, NULL);
     if (!g_option_context_parse(context, &argc, &argv, &parse_error))
     {
