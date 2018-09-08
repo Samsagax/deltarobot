@@ -35,23 +35,23 @@ static gdouble a = 29.3;
 static gdouble b = 64.5;
 static gdouble h = 3.8;
 static gdouble r = 10.0;
-
-static GOptionEntry entries[] =
-{
-      { "axes", 'x', 0, G_OPTION_ARG_NONE, &axes, "Use axes, default mode", NULL  },
-      { "cartesian", 'c', 0, G_OPTION_ARG_NONE, &cartesian, "Use cartesian mode", NULL },
-      { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "Be verbose", NULL  },
-      { 0, 'a', 0, G_OPTION_ARG_DOUBLE, &a, "value of 'a' length in robot", "A" },
-      { 0, 'b', 0, G_OPTION_ARG_DOUBLE, &b, "value of 'b' length in robot", "B" },
-      { 0, 'h', 0, G_OPTION_ARG_DOUBLE, &h, "value of 'h' length in robot", "H" },
-      { 0, 'r', 0, G_OPTION_ARG_DOUBLE, &r, "value of 'r' length in robot", "R" },
-      { NULL  }
-
-};
-
 static gdouble t_min = 0.0;
 static gdouble t_max = 90.0;
 static gdouble t_increment = 5.0;
+
+
+static GOptionEntry entries[] =
+{
+      { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose, "be verbose", NULL  },
+      { "t-min", NULL, 0, G_OPTION_ARG_DOUBLE, &t_min, "minimum value of arm angle to test", NULL },
+      { "t-max", NULL, 0, G_OPTION_ARG_DOUBLE, &t_max, "maximum value of arm angle to test", NULL },
+      { "t-increment", NULL, 0, G_OPTION_ARG_DOUBLE, &t_increment, "increment value to test", NULL },
+      { "near-arm", 'a', 0, G_OPTION_ARG_DOUBLE, &a, "value of 'a' length in robot", "A" },
+      { "far-arm", 'b', 0, G_OPTION_ARG_DOUBLE, &b, "value of 'b' length in robot", "B" },
+      { "moving-plt", 'h', 0, G_OPTION_ARG_DOUBLE, &h, "value of 'h' length in robot", "H" },
+      { "fix-plt", 'r', 0, G_OPTION_ARG_DOUBLE, &r, "value of 'r' length in robot", "R" },
+      { NULL  }
+};
 
 /*
  * Main function
@@ -62,25 +62,17 @@ main(int argc, char* argv[])
     GError *parse_error = NULL;
     GOptionContext *context;
 
-    context = g_option_context_new ("<min> <max> <increment> -- test a range of input values against the workspace");
+    context = g_option_context_new ("- generate non uniform grid of cartesian points in the robot workspace");
     g_option_context_add_main_entries (context, entries, NULL);
     if (!g_option_context_parse(context, &argc, &argv, &parse_error))
     {
         g_print("Options parsing failed: %s\n", parse_error->message);
+        g_option_context_free(context);
         exit(1);
     }
+    g_option_context_free(context);
 
-    if(argc >= 3)
-    {
-        t_min = g_strtod(argv[0], NULL);
-        t_max = g_strtod(argv[1], NULL);
-        t_increment = g_strtod(argv[2], NULL);
-    }
     g_print("Using values interval [ %f , %f ], increment: %f \n", t_min, t_max, t_increment);
-
-    gdouble t1 = t_min;
-    gdouble t2 = t_min;
-    gdouble t3 = t_min;
 
     DGeometry *geometry = d_geometry_new (a, b, h, r);
     g_print ( "Current geometry [ %f, %f, %f, %f ] \n", a, b, h, r );
@@ -97,6 +89,10 @@ main(int argc, char* argv[])
             NULL,
             NULL);
     GString *buffer = g_string_new(NULL);
+
+    gdouble t1 = t_min;
+    gdouble t2 = t_min;
+    gdouble t3 = t_min;
 
     while(t3 <= t_max)
     {
